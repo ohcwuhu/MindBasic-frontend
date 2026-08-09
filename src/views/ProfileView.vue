@@ -13,6 +13,7 @@ const router = useRouter()
 
 const nickname = ref(auth.user?.nickname ?? '')
 const error = ref('')
+const errorDetails = ref<{ field: string; message: string }[]>([])
 const success = ref('')
 const savingNickname = ref(false)
 const uploadingAvatar = ref(false)
@@ -28,6 +29,11 @@ const coachStatus = ref<'none' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'loading'
 function flash(message: string) {
   success.value = message
   setTimeout(() => (success.value = ''), 3000)
+}
+
+function showError(e: unknown) {
+  error.value = e instanceof Error ? e.message : '操作失败'
+  errorDetails.value = e instanceof ApiError && e.errors?.length ? e.errors : []
 }
 
 onMounted(async () => {
@@ -58,7 +64,7 @@ async function saveNickname() {
     await auth.updateProfile({ nickname: nickname.value.trim() })
     flash('已保存')
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '保存失败'
+    showError(e)
   } finally {
     savingNickname.value = false
   }
@@ -75,7 +81,7 @@ async function onAvatarChange(event: Event) {
     await auth.updateProfile({ avatarUrl: result.url })
     flash('头像已更新')
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '头像上传失败'
+    showError(e)
   } finally {
     uploadingAvatar.value = false
     input.value = ''
@@ -101,7 +107,7 @@ async function changePassword() {
     showPassword.value = false
     flash('密码已修改')
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '修改失败'
+    showError(e)
   } finally {
     savingPassword.value = false
   }
@@ -114,7 +120,7 @@ async function deactivate() {
     await auth.logout()
     router.push({ name: 'login' })
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '注销失败'
+    showError(e)
   }
 }
 
@@ -129,7 +135,7 @@ async function logout() {
     <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">个人资料</h1>
     <p class="mt-2 text-sm text-ink-soft">管理你的账号信息。</p>
 
-    <ErrorBanner v-if="error" :message="error" class="mt-6" />
+    <ErrorBanner v-if="error" :message="error" :details="errorDetails" class="mt-6" />
     <p v-if="success" class="mt-6 text-sm text-pine-deep">{{ success }}</p>
 
     <div class="mt-8 bg-card border border-hairline rounded-[14px] divide-y divide-hairline overflow-hidden">

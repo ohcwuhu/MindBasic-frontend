@@ -28,6 +28,7 @@ type WorkTab = 'appointments' | 'cases' | 'services' | 'slots' | 'profile'
 
 const loading = ref(true)
 const error = ref('')
+const errorDetails = ref<{ field: string; message: string }[]>([])
 const profile = ref<CoachProfile | null>(null)
 const mode = ref<'form' | 'status' | 'workbench'>('form')
 const submitting = ref(false)
@@ -85,6 +86,11 @@ function toggleTag(id: number) {
     : [...selectedTagIds.value, id]
 }
 
+function showError(e: unknown) {
+  error.value = e instanceof Error ? e.message : '操作失败'
+  errorDetails.value = e instanceof ApiError && e.errors?.length ? e.errors : []
+}
+
 function addServiceRow() {
   serviceRows.value.push({
     name: '',
@@ -137,8 +143,21 @@ function fileName(url: string): string {
 }
 
 async function submitProfile() {
-  submitting.value = true
   error.value = ''
+  errorDetails.value = []
+  const years = Number(form.yearsOfExperience)
+  if (!Number.isInteger(years) || years < 0 || years > 60) {
+    error.value = '从业年限需为 0-60 之间的整数'
+    return
+  }
+  const badService = serviceRows.value.find(
+    (s) => s.name.trim() && (Number(s.priceInCents) <= 0 || Number(s.durationMin) < 15),
+  )
+  if (badService) {
+    error.value = `服务「${badService.name}」价格需大于 0，时长至少 15 分钟`
+    return
+  }
+  submitting.value = true
   try {
     profile.value = await post<CoachProfile>('/coach/profile', {
       realName: form.realName,
@@ -161,7 +180,7 @@ async function submitProfile() {
     })
     mode.value = 'status'
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '提交失败，请重试'
+    showError(e)
   } finally {
     submitting.value = false
   }
@@ -452,7 +471,7 @@ const auditText = computed(() =>
     <p class="catalog-tab">COACH 教练工作台</p>
     <h1 class="mt-3 text-2xl md:text-3xl font-semibold tracking-tight">教练工作台</h1>
 
-    <ErrorBanner v-if="error" :message="error" class="mt-8" />
+    <ErrorBanner v-if="error" :message="error" :details="errorDetails" class="mt-8" />
 
     <div v-if="loading" class="mt-8 h-96 rounded-[14px] bg-hairline/60 animate-pulse"></div>
 
