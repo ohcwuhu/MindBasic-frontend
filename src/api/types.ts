@@ -146,3 +146,76 @@ export interface ArticleCategory {
   name: string
   sortOrder: number
 }
+
+export interface Tag {
+  id: number
+  name: string
+  type: 'FIELD' | 'AUDIENCE'
+}
+
+export interface CoachService {
+  id: number
+  name: string
+  serviceType: 'SINGLE' | 'PACKAGE'
+  durationMin: number
+  priceInCents: number
+  description: string | null
+  isEnabled: boolean
+}
+
+export interface CoachProfile {
+  id: number
+  userId: number
+  realName: string
+  bio: string | null
+  trainingExp: string | null
+  serviceConcept: string | null
+  yearsOfExperience: number
+  tags: Tag[]
+  services: CoachService[]
+  auditStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
+  auditRemark: string | null
+  rating: number
+  reviewCount: number
+  createdAt: string
+}
+
+export interface CoachSlotItem {
+  id: number
+  coachId: number
+  date: string
+  startTime: string
+  endTime: string
+  status: 'AVAILABLE' | 'BOOKED' | 'OFF'
+}
+
+export interface CoachAppointment {
+  id: number
+  appointmentNo: string
+  user: { id: number; nickname: string; phone: string }
+  service: { id: number; name: string; serviceType: string; priceInCents: number }
+  slot: { id: number; date: string; startTime: string; endTime: string }
+  needDesc: string
+  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'
+  cancelReason: string | null
+  createdAt: string
+  completedAt: string | null
+}
+
+export interface CaseRecord {
+  id: number
+  appointmentId: number | null
+  clientNickname: string | null
+  keyPoints: string | null
+  userGains: string | null
+  followupAdvice: string | null
+  durationMin: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CaseStats {
+  totalCases: number
+  serviceMinutes: number
+  clientCount: number
+}

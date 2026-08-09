@@ -66,5 +66,12 @@ async function logout() {
     >
       <SignOut :size="17" /> 退出登录
     </button>
+
+    <RouterLink
+      to="/coach"
+      class="mt-8 block w-full h-12 rounded-full border border-hairline bg-card text-ink font-medium flex items-center justify-center pressable"
+    >
+      进入教练工作台
+    </RouterLink>
   </div>
 </template>

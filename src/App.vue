@@ -78,6 +78,7 @@ const pageTitle = computed(() => {
         <div class="flex items-center gap-3">
           <template v-if="auth.isLoggedIn">
             <RouterLink to="/my" class="text-sm text-ink-soft hover:text-ink">我的成长</RouterLink>
+            <RouterLink to="/coach" class="text-sm text-ink-soft hover:text-ink">教练工作台</RouterLink>
             <RouterLink
               to="/profile"
               class="w-8 h-8 rounded-full bg-pine-soft text-pine flex items-center justify-center"

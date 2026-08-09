@@ -111,6 +111,11 @@ export async function patch<T>(url: string, data?: unknown): Promise<T> {
   return resp.data.data
 }
 
+export async function put<T>(url: string, data?: unknown): Promise<T> {
+  const resp = await client.put<ApiEnvelope<T>>(url, data)
+  return resp.data.data
+}
+
 export async function del(url: string): Promise<void> {
   await client.delete(url)
 }
