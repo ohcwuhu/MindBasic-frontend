@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f4f5f2;
+  --color-card: #ffffff;
+  --color-ink: #1c1c1a;
+  --color-ink-soft: #5b5b54;
+  --color-ink-faint: #8a8a82;
+  --color-hairline: #e2e3dd;
+  --color-pine: #1f6b52;
+  --color-pine-deep: #17533f;
+  --color-pine-soft: #e4efe9;
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
+    ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "SF Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 目录角标：世界签名 */
+.catalog-tab {
+  @apply font-mono text-[11px] tracking-[0.08em] uppercase text-ink-faint;
+}
+
+/* 细线卡片 */
+.card {
+  @apply bg-card border border-hairline rounded-[14px];
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 按钮按压反馈 */
+.pressable {
+  @apply transition-transform duration-100;
+}
+.pressable:active {
+  transform: scale(0.98);
+}

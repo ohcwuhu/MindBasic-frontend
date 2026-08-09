@@ -1,0 +1,37 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+export const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/', name: 'home', component: () => import('@/views/HomeView.vue') },
+    { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue') },
+    { path: '/register', name: 'register', component: () => import('@/views/RegisterView.vue') },
+    { path: '/self-coaching', name: 'templates', component: () => import('@/views/TemplatesView.vue'), meta: { auth: true } },
+    { path: '/self-coaching/:id', name: 'coach-flow', component: () => import('@/views/CoachFlowView.vue'), meta: { auth: true } },
+    { path: '/emotion-journal', name: 'emotion-journal', component: () => import('@/views/EmotionJournalView.vue'), meta: { auth: true } },
+    { path: '/coaches', name: 'coaches', component: () => import('@/views/CoachesView.vue') },
+    { path: '/coaches/:id', name: 'coach-detail', component: () => import('@/views/CoachDetailView.vue') },
+    { path: '/coaches/:id/book', name: 'booking', component: () => import('@/views/BookingView.vue'), meta: { auth: true } },
+    { path: '/articles', name: 'articles', component: () => import('@/views/ArticlesView.vue') },
+    { path: '/articles/:id', name: 'article-detail', component: () => import('@/views/ArticleDetailView.vue') },
+    { path: '/my', name: 'my', component: () => import('@/views/MyGrowthView.vue'), meta: { auth: true } },
+    { path: '/profile', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { auth: true } },
+    { path: '/:pathMatch(.*)*', redirect: '/' },
+  ],
+  scrollBehavior() {
+    return { top: 0 }
+  },
+})
+
+router.beforeEach(async (to) => {
+  const auth = useAuthStore()
+  if (!auth.initialized) {
+    await auth.fetchMe()
+    auth.initialized = true
+  }
+  if (to.meta.auth && !auth.isLoggedIn) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  return true
+})
