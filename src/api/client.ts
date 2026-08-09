@@ -120,4 +120,15 @@ export async function del(url: string): Promise<void> {
   await client.delete(url)
 }
 
+export async function uploadFile(
+  file: File,
+  usage: string,
+): Promise<{ fileId: string; url: string; isPrivate: boolean }> {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('usage', usage)
+  const resp = await client.post<ApiEnvelope<{ fileId: string; url: string; isPrivate: boolean }>>('/files', form)
+  return resp.data.data
+}
+
 export default client

@@ -173,6 +173,8 @@ export interface CoachProfile {
   yearsOfExperience: number
   tags: Tag[]
   services: CoachService[]
+  credentialUrls: string[]
+  idCardUrl: string | null
   auditStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
   auditRemark: string | null
   rating: number
