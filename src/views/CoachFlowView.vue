@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { PhArrowLeft as ArrowLeft, PhArrowRight as ArrowRight, PhCheck as Check, PhSparkle as Sparkle } from '@phosphor-icons/vue'
+import {
+  PhArrowLeft as ArrowLeft,
+  PhArrowRight as ArrowRight,
+  PhCheck as Check,
+  PhImageSquare as ImageSquare,
+  PhShareNetwork as ShareNetwork,
+  PhSparkle as Sparkle,
+} from '@phosphor-icons/vue'
+import { toPng } from 'html-to-image'
 import { get, post, patch } from '@/api/client'
 import type { ActionCard, CoachingTemplate, SelfCoachingRecord } from '@/api/types'
 import ErrorBanner from '@/components/ErrorBanner.vue'
@@ -17,6 +25,8 @@ const saving = ref(false)
 const error = ref('')
 const recordId = ref<number | null>(null)
 const actionCard = ref<ActionCard | null>(null)
+const cardEl = ref<HTMLElement | null>(null)
+const shareMsg = ref('')
 
 const stepKeys = ['STATUS', 'IDEAL', 'RESOURCES', 'ACTION'] as const
 const stepIndex = ref(0)
@@ -82,6 +92,50 @@ function next() {
 
 function prev() {
   if (stepIndex.value > 0) stepIndex.value -= 1
+}
+
+function flashShare(message: string) {
+  shareMsg.value = message
+  setTimeout(() => (shareMsg.value = ''), 3000)
+}
+
+async function shareCard() {
+  if (!actionCard.value) return
+  const text = `${actionCard.value.title}\n\n${actionCard.value.content}`
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: actionCard.value.title, text })
+      return
+    }
+    await navigator.clipboard.writeText(text)
+    flashShare('已复制到剪贴板')
+  } catch (e) {
+    if (e instanceof Error && e.name === 'AbortError') return
+    try {
+      await navigator.clipboard.writeText(text)
+      flashShare('已复制到剪贴板')
+    } catch {
+      error.value = '分享失败，请重试'
+    }
+  }
+}
+
+async function saveImage() {
+  if (!cardEl.value) return
+  try {
+    const dataUrl = await toPng(cardEl.value, {
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+      cacheBust: true,
+    })
+    const link = document.createElement('a')
+    link.download = 'mindbasic-action-card.png'
+    link.href = dataUrl
+    link.click()
+    flashShare('图片已保存')
+  } catch {
+    error.value = '图片生成失败，请重试'
+  }
 }
 </script>
 
@@ -164,7 +218,7 @@ function prev() {
         </p>
       </section>
 
-      <section v-else class="card mt-6 p-6 md:p-10 text-center">
+      <section ref="cardEl" v-else class="card mt-6 p-6 md:p-10 text-center">
         <span class="w-14 h-14 rounded-full bg-pine-soft text-pine flex items-center justify-center mx-auto">
           <Check :size="28" weight="bold" />
         </span>
@@ -173,18 +227,30 @@ function prev() {
         <div class="mt-8 flex flex-wrap justify-center gap-3">
           <button
             type="button"
-            @click="router.push('/self-coaching')"
             class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full bg-pine text-card font-medium pressable"
+            @click="shareCard"
+          >
+            <ShareNetwork :size="17" weight="bold" /> 分享行动卡
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full border border-hairline bg-card text-ink pressable"
+            @click="saveImage"
+          >
+            <ImageSquare :size="17" /> 保存图片
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full border border-hairline bg-card text-ink-soft pressable"
+            @click="router.push('/self-coaching')"
           >
             再做一次
           </button>
-          <RouterLink
-            to="/my"
-            class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full border border-hairline bg-card text-ink pressable"
-          >
+          <RouterLink to="/my" class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full border border-hairline bg-card text-ink pressable">
             查看我的成长
           </RouterLink>
         </div>
+        <p v-if="shareMsg" class="mt-4 text-sm text-pine-deep">{{ shareMsg }}</p>
       </section>
     </template>
   </div>

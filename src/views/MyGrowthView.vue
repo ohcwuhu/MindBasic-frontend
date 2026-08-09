@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { PhCalendarCheck as CalendarCheck, PhCardsThree as CardsThree, PhBookmarkSimple as BookmarkSimple } from '@phosphor-icons/vue'
+import {
+  PhCalendarCheck as CalendarCheck,
+  PhCardsThree as CardsThree,
+  PhBookmarkSimple as BookmarkSimple,
+  PhShareNetwork as ShareNetwork,
+} from '@phosphor-icons/vue'
 import { get, post } from '@/api/client'
 import type { Appointment, ArticleListItem, SelfCoachingRecord } from '@/api/types'
 import EmptyState from '@/components/EmptyState.vue'
@@ -16,6 +21,7 @@ const favorites = ref<ArticleListItem[]>([])
 const loading = ref(true)
 const error = ref('')
 const cancelTarget = ref<Appointment | null>(null)
+const shareMsg = ref('')
 
 const statusLabel: Record<string, string> = {
   PENDING: '待确认',
@@ -56,6 +62,23 @@ async function confirmCancel() {
     await load(activeTab.value)
   } catch (e) {
     error.value = e instanceof Error ? e.message : '取消失败，请重试'
+  }
+}
+
+async function shareRecord(record: SelfCoachingRecord) {
+  if (!record.actionCard) return
+  const text = `${record.actionCard.title}\n\n${record.actionCard.content}`
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: record.actionCard.title, text })
+      return
+    }
+    await navigator.clipboard.writeText(text)
+    shareMsg.value = '已复制到剪贴板'
+    setTimeout(() => (shareMsg.value = ''), 3000)
+  } catch (e) {
+    if (e instanceof Error && e.name === 'AbortError') return
+    error.value = '分享失败，请重试'
   }
 }
 
@@ -147,13 +170,25 @@ function switchTab(tab: Tab) {
           <div v-for="record in records" :key="record.id" class="py-5">
             <div class="flex items-center justify-between gap-4">
               <p class="font-medium">模板 #{{ record.templateId }}</p>
-              <span
-                class="text-xs px-2.5 py-1 rounded-full"
-                :class="record.status === 'COMPLETED' ? 'bg-pine-soft text-pine-deep' : 'bg-paper text-ink-faint border border-hairline'"
-              >
-                {{ record.status === 'COMPLETED' ? '已生成行动卡' : '草稿' }}
-              </span>
+              <div class="flex items-center gap-2">
+                <button
+                  v-if="record.actionCard"
+                  type="button"
+                  class="inline-flex items-center gap-1 h-8 px-3 rounded-full border border-hairline bg-card text-xs text-ink-soft pressable"
+                  :aria-label="`分享记录 ${record.id}`"
+                  @click="shareRecord(record)"
+                >
+                  <ShareNetwork :size="14" /> 分享
+                </button>
+                <span
+                  class="text-xs px-2.5 py-1 rounded-full"
+                  :class="record.status === 'COMPLETED' ? 'bg-pine-soft text-pine-deep' : 'bg-paper text-ink-faint border border-hairline'"
+                >
+                  {{ record.status === 'COMPLETED' ? '已生成行动卡' : '草稿' }}
+                </span>
+              </div>
             </div>
+            <p v-if="shareMsg" class="mt-2 text-sm text-pine-deep">{{ shareMsg }}</p>
             <p class="mt-2 text-sm text-ink-soft">
               {{ new Date(record.createdAt).toLocaleString('zh-CN', { hour12: false }) }}
             </p>
