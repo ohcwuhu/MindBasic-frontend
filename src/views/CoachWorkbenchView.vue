@@ -40,8 +40,8 @@ const form = reactive({
   serviceConcept: '',
   yearsOfExperience: '',
 })
-const credentialUrls = ref<string[]>([])
-const idCardUrl = ref('')
+const credentialFiles = ref<{ url: string; name: string }[]>([])
+const idCardFile = ref<{ url: string; name: string } | null>(null)
 const uploadingFile = ref(false)
 const tags = ref<Tag[]>([])
 const selectedTagIds = ref<number[]>([])
@@ -104,7 +104,7 @@ async function onCredentialsChange(event: Event) {
   try {
     for (const file of files) {
       const result = await uploadFile(file, 'credential')
-      credentialUrls.value.push(result.url)
+      credentialFiles.value.push({ url: result.url, name: result.originalName || file.name })
     }
   } catch (e) {
     error.value = e instanceof Error ? e.message : '上传失败'
@@ -122,7 +122,7 @@ async function onIdCardChange(event: Event) {
   error.value = ''
   try {
     const result = await uploadFile(file, 'idcard')
-    idCardUrl.value = result.url
+    idCardFile.value = { url: result.url, name: result.originalName || file.name }
   } catch (e) {
     error.value = e instanceof Error ? e.message : '上传失败'
   } finally {
@@ -132,7 +132,8 @@ async function onIdCardChange(event: Event) {
 }
 
 function fileName(url: string): string {
-  return url.split('/').pop() ?? url
+  const parts = url.split('/')
+  return parts[parts.length - 2] ?? url
 }
 
 async function submitProfile() {
@@ -145,8 +146,8 @@ async function submitProfile() {
       trainingExp: form.trainingExp || null,
       serviceConcept: form.serviceConcept || null,
       yearsOfExperience: Number(form.yearsOfExperience) || 0,
-      credentialUrls: credentialUrls.value,
-      idCardUrl: idCardUrl.value || null,
+      credentialUrls: credentialFiles.value.map((f) => f.url),
+      idCardUrl: idCardFile.value?.url ?? null,
       tagIds: selectedTagIds.value,
       services: serviceRows.value
         .filter((s) => s.name.trim())
@@ -398,8 +399,8 @@ function fillFormFromProfile() {
   form.trainingExp = profile.value.trainingExp ?? ''
   form.serviceConcept = profile.value.serviceConcept ?? ''
   form.yearsOfExperience = String(profile.value.yearsOfExperience)
-  credentialUrls.value = profile.value.credentialUrls ?? []
-  idCardUrl.value = profile.value.idCardUrl ?? ''
+  credentialFiles.value = (profile.value.credentialUrls ?? []).map((url) => ({ url, name: fileName(url) }))
+  idCardFile.value = profile.value.idCardUrl ? { url: profile.value.idCardUrl, name: fileName(profile.value.idCardUrl) } : null
   selectedTagIds.value = profile.value.tags.map((t) => t.id)
 }
 
@@ -413,8 +414,8 @@ async function saveProfile() {
       trainingExp: form.trainingExp || null,
       serviceConcept: form.serviceConcept || null,
       yearsOfExperience: Number(form.yearsOfExperience) || 0,
-      credentialUrls: credentialUrls.value,
-      idCardUrl: idCardUrl.value || null,
+      credentialUrls: credentialFiles.value.map((f) => f.url),
+      idCardUrl: idCardFile.value?.url ?? null,
       tagIds: selectedTagIds.value,
     })
     mode.value = profile.value.auditStatus === 'APPROVED' ? 'workbench' : 'status'
@@ -486,10 +487,10 @@ const auditText = computed(() =>
               class="mt-2 block w-full text-sm text-ink-soft file:mr-3 file:h-10 file:rounded-full file:border-0 file:bg-pine file:px-4 file:text-card file:text-sm file:font-medium file:cursor-pointer"
               @change="onCredentialsChange"
             />
-            <ul v-if="credentialUrls.length" class="mt-2 space-y-1">
-              <li v-for="(url, i) in credentialUrls" :key="url" class="flex items-center justify-between gap-3 text-sm bg-paper border border-hairline rounded-[10px] px-3 py-2">
-                <span class="truncate">{{ fileName(url) }}</span>
-                <button type="button" class="text-ink-faint hover:text-red-800 pressable" :aria-label="`移除第 ${i + 1} 个文件`" @click="credentialUrls.splice(i, 1)">
+            <ul v-if="credentialFiles.length" class="mt-2 space-y-1">
+              <li v-for="(file, i) in credentialFiles" :key="file.url" class="flex items-center justify-between gap-3 text-sm bg-paper border border-hairline rounded-[10px] px-3 py-2">
+                <span class="truncate">{{ file.name }}</span>
+                <button type="button" class="text-ink-faint hover:text-red-800 pressable" :aria-label="`移除第 ${i + 1} 个文件`" @click="credentialFiles.splice(i, 1)">
                   <X :size="16" />
                 </button>
               </li>
@@ -504,9 +505,9 @@ const auditText = computed(() =>
               class="mt-2 block w-full text-sm text-ink-soft file:mr-3 file:h-10 file:rounded-full file:border-0 file:bg-pine file:px-4 file:text-card file:text-sm file:font-medium file:cursor-pointer"
               @change="onIdCardChange"
             />
-            <div v-if="idCardUrl" class="mt-2 flex items-center justify-between gap-3 text-sm bg-paper border border-hairline rounded-[10px] px-3 py-2">
-              <span class="truncate">{{ fileName(idCardUrl) }}</span>
-              <button type="button" class="text-ink-faint hover:text-red-800 pressable" aria-label="移除身份证文件" @click="idCardUrl = ''">
+            <div v-if="idCardFile" class="mt-2 flex items-center justify-between gap-3 text-sm bg-paper border border-hairline rounded-[10px] px-3 py-2">
+              <span class="truncate">{{ idCardFile.name }}</span>
+              <button type="button" class="text-ink-faint hover:text-red-800 pressable" aria-label="移除身份证文件" @click="idCardFile = null">
                 <X :size="16" />
               </button>
             </div>
@@ -776,10 +777,10 @@ const auditText = computed(() =>
               class="mt-2 block w-full text-sm text-ink-soft file:mr-3 file:h-10 file:rounded-full file:border-0 file:bg-pine file:px-4 file:text-card file:text-sm file:font-medium file:cursor-pointer"
               @change="onCredentialsChange"
             />
-            <ul v-if="credentialUrls.length" class="mt-2 space-y-1">
-              <li v-for="(url, i) in credentialUrls" :key="url" class="flex items-center justify-between gap-3 text-sm bg-paper border border-hairline rounded-[10px] px-3 py-2">
-                <span class="truncate">{{ fileName(url) }}</span>
-                <button type="button" class="text-ink-faint hover:text-red-800 pressable" @click="credentialUrls.splice(i, 1)">
+            <ul v-if="credentialFiles.length" class="mt-2 space-y-1">
+              <li v-for="(file, i) in credentialFiles" :key="file.url" class="flex items-center justify-between gap-3 text-sm bg-paper border border-hairline rounded-[10px] px-3 py-2">
+                <span class="truncate">{{ file.name }}</span>
+                <button type="button" class="text-ink-faint hover:text-red-800 pressable" @click="credentialFiles.splice(i, 1)">
                   <X :size="16" />
                 </button>
               </li>
@@ -794,7 +795,7 @@ const auditText = computed(() =>
               class="mt-2 block w-full text-sm text-ink-soft file:mr-3 file:h-10 file:rounded-full file:border-0 file:bg-pine file:px-4 file:text-card file:text-sm file:font-medium file:cursor-pointer"
               @change="onIdCardChange"
             />
-            <p v-if="idCardUrl" class="mt-2 text-sm text-ink-soft">已上传：{{ fileName(idCardUrl) }}</p>
+            <p v-if="idCardFile" class="mt-2 text-sm text-ink-soft">已上传：{{ idCardFile.name }}</p>
           </label>
           <div>
             <p class="text-sm font-medium text-ink">擅长标签</p>

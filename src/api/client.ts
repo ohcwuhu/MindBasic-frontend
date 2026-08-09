@@ -123,11 +123,13 @@ export async function del(url: string): Promise<void> {
 export async function uploadFile(
   file: File,
   usage: string,
-): Promise<{ fileId: string; url: string; isPrivate: boolean }> {
+): Promise<{ fileId: string; url: string; isPrivate: boolean; originalName: string }> {
   const form = new FormData()
   form.append('file', file)
   form.append('usage', usage)
-  const resp = await client.post<ApiEnvelope<{ fileId: string; url: string; isPrivate: boolean }>>('/files', form)
+  const resp = await client.post<
+    ApiEnvelope<{ fileId: string; url: string; isPrivate: boolean; originalName: string }>
+  >('/files', form)
   return resp.data.data
 }
 
