@@ -2,10 +2,11 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { PhCalendarCheck as CalendarCheck, PhCardsThree as CardsThree, PhBookmarkSimple as BookmarkSimple } from '@phosphor-icons/vue'
-import { get } from '@/api/client'
+import { get, post } from '@/api/client'
 import type { Appointment, ArticleListItem, SelfCoachingRecord } from '@/api/types'
 import EmptyState from '@/components/EmptyState.vue'
 import ErrorBanner from '@/components/ErrorBanner.vue'
+import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 
 type Tab = 'appointments' | 'records' | 'favorites'
 const activeTab = ref<Tab>('appointments')
@@ -14,6 +15,7 @@ const records = ref<SelfCoachingRecord[]>([])
 const favorites = ref<ArticleListItem[]>([])
 const loading = ref(true)
 const error = ref('')
+const cancelTarget = ref<Appointment | null>(null)
 
 const statusLabel: Record<string, string> = {
   PENDING: '待确认',
@@ -44,6 +46,18 @@ async function load(tab: Tab) {
 }
 
 onMounted(() => load(activeTab.value))
+
+async function confirmCancel() {
+  if (!cancelTarget.value) return
+  const id = cancelTarget.value.id
+  cancelTarget.value = null
+  try {
+    await post(`/appointments/${id}/cancel`)
+    await load(activeTab.value)
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '取消失败，请重试'
+  }
+}
 
 function switchTab(tab: Tab) {
   activeTab.value = tab
@@ -108,6 +122,15 @@ function switchTab(tab: Tab) {
                 {{ statusLabel[item.status] }}
               </span>
             </div>
+            <div v-if="item.canCancel" class="mt-3">
+              <button
+                type="button"
+                class="h-9 px-4 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
+                @click="cancelTarget = item"
+              >
+                取消预约
+              </button>
+            </div>
             <p v-if="item.cancelReason" class="mt-2 text-sm text-ink-soft">取消原因：{{ item.cancelReason }}</p>
           </div>
         </div>
@@ -158,5 +181,15 @@ function switchTab(tab: Tab) {
         <EmptyState v-else title="还没有收藏" hint="在科普中心收藏感兴趣的文章。" />
       </section>
     </template>
+
+    <ConfirmDialog
+      :open="!!cancelTarget"
+      title="取消预约"
+      :message="`确认取消与「${cancelTarget?.coach.nickname ?? ''}」的预约？取消后时段将释放。`"
+      confirm-text="取消预约"
+      danger
+      @confirm="confirmCancel"
+      @cancel="cancelTarget = null"
+    />
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   PhArrowRight as ArrowRight,
@@ -9,7 +9,7 @@ import {
   PhSparkle as Sparkle,
 } from '@phosphor-icons/vue'
 import { get } from '@/api/client'
-import type { HomeOut } from '@/api/types'
+import type { Banner, HomeOut } from '@/api/types'
 import Reveal from '@/components/Reveal.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import ErrorBanner from '@/components/ErrorBanner.vue'
@@ -24,6 +24,17 @@ const entries = [
   { key: 'coaches', title: '找教练', desc: '找到经审核、可信任的教练', to: '/coaches', icon: CardsThree },
   { key: 'science', title: '科普中心', desc: '成长技巧、教练故事、常见困惑', to: '/articles', icon: BookOpenText },
 ]
+
+function bannerTarget(banner: Banner): { to?: string; external?: string } {
+  if (banner.linkType === 'ARTICLE' && banner.linkValue) return { to: `/articles/${banner.linkValue}` }
+  if (banner.linkType === 'URL' && banner.linkValue) return { external: banner.linkValue }
+  if (banner.linkType === 'ACTIVITY') return { to: '/coaches' }
+  return {}
+}
+
+const bannerItems = computed(() =>
+  (data.value?.banners ?? []).map((banner) => ({ ...banner, target: bannerTarget(banner) })),
+)
 
 onMounted(async () => {
   try {
@@ -120,6 +131,45 @@ function priceText(cents: number): string {
             打开 <ArrowRight :size="15" weight="bold" />
           </span>
         </RouterLink>
+      </div>
+    </section>
+
+    <section v-if="bannerItems.length" class="pb-14" aria-label="活动轮播">
+      <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 md:mx-0 md:px-0 pb-1">
+        <RouterLink
+          v-for="banner in bannerItems.filter((b) => b.target.to)"
+          :key="banner.id"
+          :to="banner.target.to!"
+          class="relative w-[82vw] max-w-[560px] shrink-0 snap-start rounded-[14px] overflow-hidden bg-card border border-hairline aspect-[3/1] pressable"
+        >
+          <img :src="banner.imageUrl" :alt="banner.title" class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+          <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent px-5 pt-12 pb-4 text-card font-medium">
+            {{ banner.title }}
+          </span>
+        </RouterLink>
+        <a
+          v-for="banner in bannerItems.filter((b) => b.target.external)"
+          :key="banner.id"
+          :href="banner.target.external!"
+          target="_blank"
+          rel="noopener"
+          class="relative w-[82vw] max-w-[560px] shrink-0 snap-start rounded-[14px] overflow-hidden bg-card border border-hairline aspect-[3/1] pressable"
+        >
+          <img :src="banner.imageUrl" :alt="banner.title" class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+          <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent px-5 pt-12 pb-4 text-card font-medium">
+            {{ banner.title }}
+          </span>
+        </a>
+        <div
+          v-for="banner in bannerItems.filter((b) => !b.target.to && !b.target.external)"
+          :key="banner.id"
+          class="relative w-[82vw] max-w-[560px] shrink-0 snap-start rounded-[14px] overflow-hidden bg-card border border-hairline aspect-[3/1]"
+        >
+          <img :src="banner.imageUrl" :alt="banner.title" class="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+          <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent px-5 pt-12 pb-4 text-card font-medium">
+            {{ banner.title }}
+          </span>
+        </div>
       </div>
     </section>
 
