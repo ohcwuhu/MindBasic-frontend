@@ -18,6 +18,7 @@ export const router = createRouter({
     { path: '/articles/:id', name: 'article-detail', component: () => import('@/views/ArticleDetailView.vue') },
     { path: '/my', name: 'my', component: () => import('@/views/MyGrowthView.vue'), meta: { auth: true } },
     { path: '/profile', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { auth: true } },
+    { path: '/notifications', name: 'notifications', component: () => import('@/views/NotificationsView.vue'), meta: { auth: true } },
     { path: '/coach', name: 'coach-workbench', component: () => import('@/views/CoachWorkbenchView.vue'), meta: { auth: true } },
     { path: '/admin', name: 'admin', component: () => import('@/views/admin/AdminConsoleView.vue'), meta: { auth: true, admin: true } },
     { path: '/:pathMatch(.*)*', redirect: '/' },

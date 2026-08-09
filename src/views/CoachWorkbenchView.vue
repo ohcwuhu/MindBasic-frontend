@@ -434,6 +434,35 @@ async function toggleService(service: CoachService) {
   }
 }
 
+const editingService = ref<CoachService | null>(null)
+const serviceEditForm = reactive({ name: '', serviceType: 'SINGLE' as 'SINGLE' | 'PACKAGE', durationMin: '60', priceInCents: '9900', description: '' })
+
+function startEditService(service: CoachService) {
+  editingService.value = service
+  serviceEditForm.name = service.name
+  serviceEditForm.serviceType = service.serviceType
+  serviceEditForm.durationMin = String(service.durationMin)
+  serviceEditForm.priceInCents = String(service.priceInCents)
+  serviceEditForm.description = service.description ?? ''
+}
+
+async function saveServiceEdit() {
+  if (!editingService.value || !serviceEditForm.name.trim()) return
+  try {
+    await patch(`/coach/services/${editingService.value.id}`, {
+      name: serviceEditForm.name.trim(),
+      serviceType: serviceEditForm.serviceType,
+      durationMin: Number(serviceEditForm.durationMin) || 60,
+      priceInCents: Number(serviceEditForm.priceInCents) || 0,
+      description: serviceEditForm.description || null,
+    })
+    editingService.value = null
+    await loadServices()
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '保存失败'
+  }
+}
+
 // 时段
 const slots = ref<CoachSlotItem[]>([])
 const weekdays = ref([1, 2, 3, 4, 5])
@@ -791,6 +820,26 @@ const auditText = computed(() =>
 
       <!-- 服务 -->
       <section v-else-if="activeTab === 'services'" class="mt-8">
+        <div v-if="editingService" class="card p-6 mb-6">
+          <p class="catalog-tab">编辑服务项目</p>
+          <div class="mt-4 grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-3 items-end">
+            <FieldInput v-model="serviceEditForm.name" label="名称" />
+            <label class="block">
+              <span class="text-sm font-medium text-ink">类型</span>
+              <select v-model="serviceEditForm.serviceType" class="mt-2 w-full h-12 px-3 rounded-[10px] border border-hairline bg-card text-[15px] outline-none focus:border-pine">
+                <option value="SINGLE">单次</option>
+                <option value="PACKAGE">套餐</option>
+              </select>
+            </label>
+            <FieldInput v-model="serviceEditForm.durationMin" label="时长(分钟)" type="number" />
+            <FieldInput v-model="serviceEditForm.priceInCents" label="价格(分)" type="number" />
+          </div>
+          <FieldInput v-model="serviceEditForm.description" label="说明（可选）" class="mt-4" />
+          <div class="mt-5 flex gap-2">
+            <button type="button" class="h-11 px-6 rounded-full bg-pine text-card text-sm font-medium pressable" @click="saveServiceEdit">保存</button>
+            <button type="button" class="h-11 px-6 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable" @click="editingService = null">取消</button>
+          </div>
+        </div>
         <div class="card p-6">
           <p class="catalog-tab">新增服务项目</p>
           <div class="mt-4 grid md:grid-cols-[2fr_1fr_1fr_1fr] gap-3 items-end">
@@ -813,11 +862,14 @@ const auditText = computed(() =>
               <p class="font-medium">{{ service.name }}</p>
               <p class="mt-1 text-sm text-ink-soft">{{ service.serviceType === 'SINGLE' ? '单次' : '套餐' }} · {{ service.durationMin }} 分钟 · {{ priceText(service.priceInCents) }}</p>
             </div>
-            <button type="button" class="h-9 px-4 rounded-full border text-sm pressable"
-              :class="service.isEnabled ? 'bg-pine-soft border-pine-soft text-pine-deep' : 'bg-paper border-hairline text-ink-faint'"
-              @click="toggleService(service)">
-              {{ service.isEnabled ? '已上架' : '已下架' }}
-            </button>
+            <div class="flex gap-2 shrink-0">
+              <button type="button" class="h-9 px-4 rounded-full border border-hairline bg-card text-sm pressable" @click="startEditService(service)">编辑</button>
+              <button type="button" class="h-9 px-4 rounded-full border text-sm pressable"
+                :class="service.isEnabled ? 'bg-pine-soft border-pine-soft text-pine-deep' : 'bg-paper border-hairline text-ink-faint'"
+                @click="toggleService(service)">
+                {{ service.isEnabled ? '已上架' : '已下架' }}
+              </button>
+            </div>
           </div>
         </div>
         <EmptyState v-else class="mt-6" title="还没有服务项目" hint="添加第一个服务，用户才能预约。" />

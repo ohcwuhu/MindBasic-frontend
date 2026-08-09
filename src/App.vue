@@ -1,12 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { PhHouse as House, PhCardsThree as CardsThree, PhChartLineUp as ChartLineUp, PhBookOpenText as BookOpenText, PhUserCircle as UserCircle, PhSignOut as SignOut } from '@phosphor-icons/vue'
+import { get } from '@/api/client'
+import {
+  PhHouse as House,
+  PhCardsThree as CardsThree,
+  PhChartLineUp as ChartLineUp,
+  PhBookOpenText as BookOpenText,
+  PhUserCircle as UserCircle,
+  PhBell as Bell,
+} from '@phosphor-icons/vue'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const unread = ref(0)
 
 const navLinks = [
   { to: '/', label: '首页' },
@@ -30,8 +39,24 @@ function onLogoutEvent() {
   router.push({ name: 'login' })
 }
 
-onMounted(() => window.addEventListener('mb:logout', onLogoutEvent))
+async function refreshUnread() {
+  if (!auth.isLoggedIn) {
+    unread.value = 0
+    return
+  }
+  try {
+    unread.value = (await get<{ count: number }>('/notifications/unread-count')).count
+  } catch {
+    unread.value = 0
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('mb:logout', onLogoutEvent)
+  refreshUnread()
+})
 onUnmounted(() => window.removeEventListener('mb:logout', onLogoutEvent))
+watch(() => route.fullPath, refreshUnread)
 
 const pageTitle = computed(() => {
   const map: Record<string, string> = {
@@ -81,6 +106,15 @@ const pageTitle = computed(() => {
             <RouterLink v-if="auth.user?.role === 'ADMIN'" to="/admin" class="text-sm text-ink-soft hover:text-ink">
               管理后台
             </RouterLink>
+            <RouterLink to="/notifications" class="relative text-ink-soft hover:text-ink" aria-label="通知">
+              <Bell :size="20" weight="duotone" />
+              <span
+                v-if="unread > 0"
+                class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-pine text-card text-[10px] flex items-center justify-center"
+              >
+                {{ unread > 99 ? '99+' : unread }}
+              </span>
+            </RouterLink>
             <RouterLink
               to="/profile"
               class="w-8 h-8 rounded-full bg-pine-soft text-pine flex items-center justify-center"
@@ -109,6 +143,20 @@ const pageTitle = computed(() => {
             <span class="w-2 h-2 bg-card rounded-[2px]" aria-hidden="true"></span>
           </span>
           {{ pageTitle }}
+        </RouterLink>
+        <RouterLink
+          v-if="auth.isLoggedIn"
+          to="/notifications"
+          class="relative w-8 h-8 rounded-full flex items-center justify-center text-ink-soft"
+          aria-label="通知"
+        >
+          <Bell :size="20" weight="duotone" />
+          <span
+            v-if="unread > 0"
+            class="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-pine text-card text-[10px] flex items-center justify-center"
+          >
+            {{ unread > 99 ? '99+' : unread }}
+          </span>
         </RouterLink>
         <RouterLink
           v-if="auth.isLoggedIn"

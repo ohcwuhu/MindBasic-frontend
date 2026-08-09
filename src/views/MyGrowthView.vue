@@ -232,12 +232,19 @@ function switchTab(tab: Tab) {
             </div>
             <div v-if="item.status === 'COMPLETED'" class="mt-3">
               <button
+                v-if="!item.reviewed"
                 type="button"
                 class="h-9 px-4 rounded-full bg-pine-soft text-pine-deep text-sm pressable"
                 @click="reviewTarget = item"
               >
                 评价这次服务
               </button>
+              <span
+                v-else
+                class="inline-flex items-center h-9 px-4 rounded-full bg-paper border border-hairline text-ink-faint text-sm"
+              >
+                已评价
+              </span>
             </div>
             <p v-if="item.cancelReason" class="mt-2 text-sm text-ink-soft">取消原因：{{ item.cancelReason }}</p>
           </div>

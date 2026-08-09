@@ -138,6 +138,7 @@ export interface Appointment {
   status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'
   cancelReason: string | null
   canCancel: boolean
+  reviewed: boolean
   createdAt: string
 }
 
@@ -379,4 +380,13 @@ export interface PlatformPhrase {
   id: number
   category: string
   content: string
+}
+
+export interface Notification {
+  id: number
+  type: string
+  title: string
+  content: string
+  isRead: boolean
+  createdAt: string
 }
