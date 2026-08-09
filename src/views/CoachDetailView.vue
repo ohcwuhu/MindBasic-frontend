@@ -3,24 +3,28 @@ import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { PhArrowRight as ArrowRight } from '@phosphor-icons/vue'
 import { get } from '@/api/client'
-import type { CoachDetail, CoachSlot } from '@/api/types'
+import type { CoachDetail, CoachSlot, ReviewItem } from '@/api/types'
 import ErrorBanner from '@/components/ErrorBanner.vue'
+import { PhStar as Star } from '@phosphor-icons/vue'
 
 const route = useRoute()
 const coachId = Number(route.params.id)
 const coach = ref<CoachDetail | null>(null)
 const slots = ref<CoachSlot[]>([])
+const reviews = ref<ReviewItem[]>([])
 const loading = ref(true)
 const error = ref('')
 
 onMounted(async () => {
   try {
-    const [detail, slotData] = await Promise.all([
+    const [detail, slotData, reviewData] = await Promise.all([
       get<CoachDetail>(`/coaches/${coachId}`),
       get<{ items: CoachSlot[] }>(`/coaches/${coachId}/slots`),
+      get<{ items: ReviewItem[] }>(`/coaches/${coachId}/reviews?page=1&pageSize=20`),
     ])
     coach.value = detail
     slots.value = slotData.items
+    reviews.value = reviewData.items
   } catch (e) {
     error.value = e instanceof Error ? e.message : '教练信息加载失败'
   } finally {
@@ -108,6 +112,28 @@ function priceText(cents: number): string {
         </div>
         <div v-else class="mt-4 card p-8 text-center text-sm text-ink-soft">
           教练暂时没有开放的时段，请稍后再来看看。
+        </div>
+      </section>
+
+      <section v-if="reviews.length" class="mt-8">
+        <h2 class="text-lg font-semibold tracking-tight">用户评价</h2>
+        <div class="mt-4 divide-y divide-hairline border-y border-hairline">
+          <div v-for="review in reviews" :key="review.id" class="py-4">
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-sm">{{ review.nickname }}</span>
+              <span class="flex gap-0.5">
+                <Star
+                  v-for="n in 5"
+                  :key="n"
+                  :size="14"
+                  weight="fill"
+                  :class="n <= review.rating ? 'text-pine' : 'text-hairline'"
+                />
+              </span>
+            </div>
+            <p v-if="review.content" class="mt-2 text-sm text-ink-soft leading-relaxed">{{ review.content }}</p>
+            <p class="catalog-tab mt-2">{{ new Date(review.createdAt).toLocaleDateString('zh-CN') }}</p>
+          </div>
         </div>
       </section>
 

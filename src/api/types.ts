@@ -319,3 +319,64 @@ export interface AdminStats {
   todayUserCount: number
   todayAppointmentCount: number
 }
+
+export interface ReviewItem {
+  id: number
+  appointmentId: number
+  coachId: number
+  nickname: string
+  rating: number
+  content: string | null
+  createdAt: string
+}
+
+export interface CheckInItem {
+  id: number
+  checkDate: string
+  content: string | null
+  createdAt: string
+}
+
+export interface Badge {
+  id: number
+  key: string
+  name: string
+  description: string
+  icon: string | null
+  earnedAt: string
+}
+
+export interface LeaderboardItem {
+  rank: number
+  nickname: string
+  count: number
+}
+
+export interface CheckInStats {
+  streakDays: number
+  totalCount: number
+  monthCount: number
+}
+
+export interface Client {
+  id: number
+  userId: number
+  nickname: string
+  phone: string
+  lastAppointmentAt: string | null
+  remark: string | null
+}
+
+export interface Phrase {
+  id: number
+  category: string
+  content: string
+  source: string
+  createdAt: string
+}
+
+export interface PlatformPhrase {
+  id: number
+  category: string
+  content: string
+}

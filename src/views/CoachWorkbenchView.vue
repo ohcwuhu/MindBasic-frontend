@@ -9,6 +9,8 @@ import {
   PhCardsThree as CardsThree,
   PhClock as Clock,
   PhSparkle as Sparkle,
+  PhUsers as UsersIcon,
+  PhChatCircleText as ChatIcon,
 } from '@phosphor-icons/vue'
 import { ApiError, del, get, patch, post, put, uploadFile } from '@/api/client'
 import type {
@@ -18,13 +20,16 @@ import type {
   CoachProfile,
   CoachService,
   CoachSlotItem,
+  Client,
+  Phrase,
+  PlatformPhrase,
   Tag,
 } from '@/api/types'
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import FieldInput from '@/components/FieldInput.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
-type WorkTab = 'appointments' | 'cases' | 'services' | 'slots' | 'profile'
+type WorkTab = 'appointments' | 'cases' | 'services' | 'slots' | 'clients' | 'phrases' | 'profile'
 
 const loading = ref(true)
 const error = ref('')
@@ -319,6 +324,80 @@ const serviceForm = reactive({
   description: '',
 })
 
+// ---------- 客户管理 ----------
+const clients = ref<Client[]>([])
+const clientKeyword = ref('')
+const clientRemarks = ref<Record<number, string>>({})
+
+async function loadClients() {
+  try {
+    const params = new URLSearchParams({ page: '1', pageSize: '50' })
+    if (clientKeyword.value) params.set('keyword', clientKeyword.value)
+    const data = await get<{ items: Client[] }>(`/coach/clients?${params.toString()}`)
+    clients.value = data.items
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '客户加载失败'
+  }
+}
+
+async function saveClientRemark(client: Client) {
+  try {
+    await patch(`/coach/clients/${client.id}`, { remark: clientRemarks.value[client.id] ?? null })
+    client.remark = clientRemarks.value[client.id] ?? null
+    error.value = ''
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '保存失败'
+  }
+}
+
+// ---------- 话术库 ----------
+const platformPhrases = ref<PlatformPhrase[]>([])
+const phraseCategory = ref('')
+const myPhrases = ref<Phrase[]>([])
+const phraseForm = reactive({ category: 'OPENING' as string, content: '' })
+
+async function loadPhrases() {
+  try {
+    const [platform, mine] = await Promise.all([
+      get<{ items: PlatformPhrase[] }>(`/phrase-library${phraseCategory.value ? `?category=${phraseCategory.value}` : ''}`),
+      get<{ items: Phrase[] }>('/coach/phrases'),
+    ])
+    platformPhrases.value = platform.items
+    myPhrases.value = mine.items
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '话术加载失败'
+  }
+}
+
+async function savePlatformPhrase(id: number) {
+  try {
+    await post('/coach/phrases/save', { phraseId: id })
+    await loadPhrases()
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '收藏失败'
+  }
+}
+
+async function createCustomPhrase() {
+  if (!phraseForm.content.trim()) return
+  try {
+    await post('/coach/phrases', { category: phraseForm.category, content: phraseForm.content.trim() })
+    phraseForm.content = ''
+    await loadPhrases()
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '保存失败'
+  }
+}
+
+async function removePhrase(id: number) {
+  try {
+    await del(`/coach/phrases/${id}`)
+    await loadPhrases()
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '删除失败'
+  }
+}
+
 async function loadServices() {
   try {
     const data = await get<{ items: CoachService[] }>('/coach/services')
@@ -452,7 +531,17 @@ async function switchTab(tab: WorkTab) {
   else if (tab === 'cases') await loadCases()
   else if (tab === 'services') await loadServices()
   else if (tab === 'slots') await loadSlots()
+  else if (tab === 'clients') await loadClients()
+  else if (tab === 'phrases') await loadPhrases()
   else fillFormFromProfile()
+}
+
+const phraseCategoryLabel: Record<string, string> = {
+  OPENING: '开场',
+  RESOURCE: '资源问句',
+  FUTURE: '未来导向',
+  ACTION: '行动引导',
+  OTHER: '其他',
 }
 
 const statusLabel: Record<string, string> = { PENDING: '待确认', CONFIRMED: '已确认', COMPLETED: '已完成', CANCELLED: '已取消' }
@@ -613,6 +702,8 @@ const auditText = computed(() =>
           { key: 'cases', label: '个案记录', icon: CardsThree },
           { key: 'services', label: '服务项目', icon: Plus },
           { key: 'slots', label: '时段设置', icon: Clock },
+          { key: 'clients', label: '客户管理', icon: UsersIcon },
+          { key: 'phrases', label: '话术库', icon: ChatIcon },
           { key: 'profile', label: '资料设置', icon: Sparkle },
         ] as const" :key="tab.key" type="button" class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm pressable"
           :class="activeTab === tab.key ? 'bg-pine border-pine text-card' : 'border-hairline bg-card text-ink-soft'"
@@ -768,6 +859,102 @@ const auditText = computed(() =>
             </div>
           </div>
           <EmptyState v-else class="mt-3" title="还没有时段" hint="选择星期与时间后保存。" />
+        </div>
+      </section>
+
+      <!-- 客户管理 -->
+      <section v-else-if="activeTab === 'clients'" class="mt-8">
+        <form class="flex gap-2 max-w-lg" @submit.prevent="loadClients">
+          <input
+            v-model="clientKeyword"
+            class="h-11 flex-1 px-4 rounded-[10px] border border-hairline bg-card text-sm outline-none focus:border-pine"
+            placeholder="搜索客户昵称"
+          />
+          <button type="submit" class="h-11 px-6 rounded-full bg-pine text-card text-sm font-medium pressable">查询</button>
+        </form>
+        <div v-if="clients.length" class="mt-5 bg-card border border-hairline rounded-[14px] divide-y divide-hairline">
+          <div v-for="client in clients" :key="client.id" class="px-5 py-4">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p class="font-medium">{{ client.nickname }} <span class="text-sm text-ink-faint">{{ client.phone }}</span></p>
+                <p class="mt-1 text-sm text-ink-soft">
+                  最近服务：{{ client.lastAppointmentAt ? new Date(client.lastAppointmentAt).toLocaleDateString('zh-CN') : '—' }}
+                </p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <input
+                  v-model="clientRemarks[client.id]"
+                  :placeholder="client.remark ?? '备注（可选）'"
+                  class="h-9 w-44 px-3 rounded-full border border-hairline bg-card text-sm outline-none focus:border-pine"
+                />
+                <button
+                  type="button"
+                  class="h-9 px-4 rounded-full bg-pine-soft text-pine-deep text-sm pressable"
+                  @click="saveClientRemark(client)"
+                >
+                  保存备注
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <EmptyState v-else class="mt-5" title="还没有客户" hint="服务完成后，客户会自动出现在这里。" />
+      </section>
+
+      <!-- 话术库 -->
+      <section v-else-if="activeTab === 'phrases'" class="mt-8">
+        <div class="card p-6">
+          <p class="catalog-tab">新增自定义话术</p>
+          <form class="mt-4 flex flex-wrap gap-2" @submit.prevent="createCustomPhrase">
+            <select v-model="phraseForm.category" class="h-11 px-3 rounded-[10px] border border-hairline bg-card text-sm outline-none focus:border-pine">
+              <option v-for="(label, key) in phraseCategoryLabel" :key="key" :value="key">{{ label }}</option>
+            </select>
+            <input
+              v-model="phraseForm.content"
+              class="h-11 flex-1 min-w-[220px] px-4 rounded-[10px] border border-hairline bg-card text-sm outline-none focus:border-pine"
+              placeholder="写下你的话术"
+            />
+            <button type="submit" class="h-11 px-6 rounded-full bg-pine text-card text-sm font-medium pressable">保存</button>
+          </form>
+        </div>
+
+        <div class="mt-6">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold tracking-tight">我的话术</h2>
+            <span class="catalog-tab">{{ myPhrases.length }} 条</span>
+          </div>
+          <div v-if="myPhrases.length" class="mt-3 divide-y divide-hairline border-y border-hairline">
+            <div v-for="phrase in myPhrases" :key="phrase.id" class="py-4 flex items-center justify-between gap-4">
+              <div class="min-w-0">
+                <p class="text-sm leading-relaxed">{{ phrase.content }}</p>
+                <p class="catalog-tab mt-1">{{ phraseCategoryLabel[phrase.category] ?? phrase.category }} · {{ phrase.source === 'saved' ? '收藏' : '自定义' }}</p>
+              </div>
+              <button type="button" class="h-9 w-9 rounded-full border border-hairline flex items-center justify-center text-ink-faint pressable shrink-0" @click="removePhrase(phrase.id)">
+                <Trash :size="16" />
+              </button>
+            </div>
+          </div>
+          <p v-else class="mt-3 text-sm text-ink-soft">还没有话术，可以从平台话术库收藏或自建。</p>
+        </div>
+
+        <div class="mt-8">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold tracking-tight">平台话术库</h2>
+            <select v-model="phraseCategory" class="h-9 px-3 rounded-full border border-hairline bg-card text-sm outline-none focus:border-pine" @change="loadPhrases">
+              <option value="">全部分类</option>
+              <option v-for="(label, key) in phraseCategoryLabel" :key="key" :value="key">{{ label }}</option>
+            </select>
+          </div>
+          <div v-if="platformPhrases.length" class="mt-3 divide-y divide-hairline border-y border-hairline">
+            <div v-for="phrase in platformPhrases" :key="phrase.id" class="py-4 flex items-center justify-between gap-4">
+              <div class="min-w-0">
+                <p class="text-sm leading-relaxed">{{ phrase.content }}</p>
+                <p class="catalog-tab mt-1">{{ phraseCategoryLabel[phrase.category] ?? phrase.category }}</p>
+              </div>
+              <button type="button" class="h-9 px-4 rounded-full border border-pine text-pine text-sm pressable shrink-0" @click="savePlatformPhrase(phrase.id)">收藏</button>
+            </div>
+          </div>
+          <p v-else class="mt-3 text-sm text-ink-soft">这个分类暂时没有平台话术。</p>
         </div>
       </section>
 
