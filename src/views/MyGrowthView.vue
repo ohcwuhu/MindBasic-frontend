@@ -167,16 +167,16 @@ function switchTab(tab: Tab) {
 
       <section v-else-if="activeTab === 'records'" class="mt-8">
         <div v-if="records.length" class="divide-y divide-hairline border-y border-hairline">
-          <div v-for="record in records" :key="record.id" class="py-5">
+          <RouterLink :to="`/self-coaching/records/${record.id}`" v-for="record in records" :key="record.id" class="py-5 block group">
             <div class="flex items-center justify-between gap-4">
-              <p class="font-medium">模板 #{{ record.templateId }}</p>
+              <p class="font-medium group-hover:text-pine transition-colors">模板 #{{ record.templateId }}</p>
               <div class="flex items-center gap-2">
                 <button
                   v-if="record.actionCard"
                   type="button"
                   class="inline-flex items-center gap-1 h-8 px-3 rounded-full border border-hairline bg-card text-xs text-ink-soft pressable"
                   :aria-label="`分享记录 ${record.id}`"
-                  @click="shareRecord(record)"
+                  @click.prevent="shareRecord(record)"
                 >
                   <ShareNetwork :size="14" /> 分享
                 </button>
@@ -196,7 +196,7 @@ function switchTab(tab: Tab) {
               v-if="record.actionCard"
               class="mt-3 text-sm leading-relaxed whitespace-pre-wrap font-sans text-ink-soft bg-paper rounded-[10px] p-4 border border-hairline"
             >{{ record.actionCard.content }}</pre>
-          </div>
+          </RouterLink>
         </div>
         <EmptyState v-else title="还没有自我教练记录" hint="从一张行动卡开始。" />
       </section>

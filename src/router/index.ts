@@ -9,6 +9,7 @@ export const router = createRouter({
     { path: '/register', name: 'register', component: () => import('@/views/RegisterView.vue') },
     { path: '/self-coaching', name: 'templates', component: () => import('@/views/TemplatesView.vue'), meta: { auth: true } },
     { path: '/self-coaching/:id', name: 'coach-flow', component: () => import('@/views/CoachFlowView.vue'), meta: { auth: true } },
+    { path: '/self-coaching/records/:id', name: 'self-coaching-record', component: () => import('@/views/SelfCoachingRecordDetailView.vue'), meta: { auth: true } },
     { path: '/emotion-journal', name: 'emotion-journal', component: () => import('@/views/EmotionJournalView.vue'), meta: { auth: true } },
     { path: '/coaches', name: 'coaches', component: () => import('@/views/CoachesView.vue') },
     { path: '/coaches/:id', name: 'coach-detail', component: () => import('@/views/CoachDetailView.vue') },
