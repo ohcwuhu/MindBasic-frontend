@@ -104,11 +104,10 @@ function priceText(cents: number): string {
     <section v-else-if="data" class="pb-16">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <RouterLink
-          v-for="(entry, i) in entries"
+          v-for="entry in entries"
           :key="entry.key"
           :to="entry.to"
           class="card p-5 md:p-6 pressable group"
-          :class="i === 0 ? 'md:col-span-2 md:row-span-2' : ''"
         >
           <span class="w-10 h-10 rounded-full bg-pine-soft text-pine flex items-center justify-center">
             <component :is="entry.icon" :size="22" weight="duotone" />
