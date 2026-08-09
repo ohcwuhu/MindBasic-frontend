@@ -221,3 +221,101 @@ export interface CaseStats {
   serviceMinutes: number
   clientCount: number
 }
+
+export interface AdminUser {
+  id: number
+  phone: string
+  nickname: string
+  role: string
+  isDisabled: boolean
+  createdAt: string
+  lastLoginAt: string | null
+}
+
+export interface AuditItem {
+  id: number
+  coachId: number
+  coachName: string
+  submitVersion: number
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  remark: string | null
+  submittedAt: string
+  reviewedAt: string | null
+}
+
+export interface AuditDetail extends AuditItem {
+  phone: string
+  snapshot: {
+    realName?: string
+    bio?: string | null
+    trainingExp?: string | null
+    serviceConcept?: string | null
+    yearsOfExperience?: number
+    credentialUrls?: string[]
+    idCardUrl?: string | null
+    tagIds?: number[]
+    services?: { name: string; serviceType: string; durationMin: number; priceInCents: number }[]
+  }
+}
+
+export interface ArticleAdmin {
+  id: number
+  title: string
+  summary: string | null
+  content: string
+  coverUrl: string | null
+  categoryId: number | null
+  isPinned: boolean
+  status: 'PUBLISHED' | 'DRAFT' | 'OFFLINE'
+  viewCount: number
+  publishedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CategoryAdmin {
+  id: number
+  name: string
+  sortOrder: number
+  isEnabled: boolean
+}
+
+export interface BannerAdmin {
+  id: number
+  title: string
+  imageUrl: string
+  linkType: 'NONE' | 'ARTICLE' | 'ACTIVITY' | 'URL'
+  linkValue: string | null
+  sortOrder: number
+  isEnabled: boolean
+  startAt: string | null
+  endAt: string | null
+  createdAt: string
+}
+
+export interface TagAdmin {
+  id: number
+  name: string
+  type: 'FIELD' | 'AUDIENCE'
+  sortOrder: number
+  isEnabled: boolean
+}
+
+export interface FeedbackAdmin {
+  id: number
+  moodType: string
+  content: string
+  sortOrder: number
+  isEnabled: boolean
+}
+
+export interface AdminStats {
+  userCount: number
+  coachCount: number
+  approvedCoachCount: number
+  appointmentCount: number
+  pendingAppointmentCount: number
+  articleCount: number
+  todayUserCount: number
+  todayAppointmentCount: number
+}

@@ -18,6 +18,7 @@ export const router = createRouter({
     { path: '/my', name: 'my', component: () => import('@/views/MyGrowthView.vue'), meta: { auth: true } },
     { path: '/profile', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { auth: true } },
     { path: '/coach', name: 'coach-workbench', component: () => import('@/views/CoachWorkbenchView.vue'), meta: { auth: true } },
+    { path: '/admin', name: 'admin', component: () => import('@/views/AdminConsoleView.vue'), meta: { auth: true, admin: true } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
   scrollBehavior() {
@@ -33,6 +34,9 @@ router.beforeEach(async (to) => {
   }
   if (to.meta.auth && !auth.isLoggedIn) {
     return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (to.meta.admin && auth.user?.role !== 'ADMIN') {
+    return { name: 'home' }
   }
   return true
 })
