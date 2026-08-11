@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { PhCheck as Check, PhTrash as Trash } from '@phosphor-icons/vue'
 import { del, get, post } from '@/api/client'
-import type { EmotionJournal } from '@/api/types'
+import type { EmotionJournal, EmotionTrend } from '@/api/types'
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
@@ -20,6 +20,7 @@ type MoodKey = (typeof moods)[number]['key']
 const selectedMood = ref<MoodKey | null>(null)
 const content = ref('')
 const journals = ref<EmotionJournal[]>([])
+const trend = ref<EmotionTrend | null>(null)
 const loading = ref(true)
 const submitting = ref(false)
 const error = ref('')
@@ -27,8 +28,12 @@ const lastFeedback = ref('')
 
 async function load() {
   try {
-    const data = await get<{ items: EmotionJournal[] }>('/emotion-journals?page=1&pageSize=50')
+    const [data, trendData] = await Promise.all([
+      get<{ items: EmotionJournal[] }>('/emotion-journals?page=1&pageSize=50'),
+      get<EmotionTrend>('/emotion-journals/trend?days=30'),
+    ])
     journals.value = data.items
+    trend.value = trendData
   } catch (e) {
     error.value = e instanceof Error ? e.message : '日记加载失败'
   } finally {
@@ -69,6 +74,23 @@ async function removeJournal(id: number) {
 
 function moodLabel(key: string): string {
   return moods.find((m) => m.key === key)?.label ?? key
+}
+
+function moodColor(key: string): string {
+  return moods.find((m) => m.key === key)?.color ?? '#5b5b54'
+}
+
+const trendMax = computed(() => {
+  if (!trend.value) return 0
+  return Math.max(1, ...Object.values(trend.value.summary))
+})
+
+const hasTrendData = computed(() =>
+  Object.values(trend.value?.summary ?? {}).some((count) => count > 0),
+)
+
+function barWidth(count: number): string {
+  return `${Math.round((count / (trendMax.value || 1)) * 100)}%`
 }
 </script>
 
@@ -125,6 +147,49 @@ function moodLabel(key: string): string {
     >
       {{ lastFeedback }}
     </div>
+
+    <section v-if="trend" class="mt-12">
+      <h2 class="text-lg font-semibold tracking-tight">情绪趋势</h2>
+      <div class="card mt-5 p-5 md:p-6">
+        <p class="catalog-tab">最近 7 天</p>
+        <div class="mt-3 space-y-2.5">
+          <div
+            v-for="day in trend.items.slice(-7)"
+            :key="day.date"
+            class="flex items-center gap-3 text-sm"
+          >
+            <span class="w-20 shrink-0 text-ink-soft">{{ day.date.slice(5) }}</span>
+            <span v-if="Object.keys(day.moods).length" class="flex flex-wrap gap-1.5">
+              <span
+                v-for="mood in moods"
+                v-show="(day.moods[mood.key] ?? 0) > 0"
+                :key="mood.key"
+                class="inline-flex items-center gap-1 px-2 py-1 rounded-full border border-hairline bg-paper text-xs"
+              >
+                <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: moodColor(mood.key) }"></span>
+                {{ mood.label }} ×{{ day.moods[mood.key] }}
+              </span>
+            </span>
+            <span v-else class="text-ink-faint">—</span>
+          </div>
+        </div>
+
+        <p class="catalog-tab mt-6">最近 30 天分布</p>
+        <div v-if="hasTrendData" class="mt-3 space-y-2.5">
+          <div v-for="mood in moods" :key="mood.key" class="flex items-center gap-3 text-sm">
+            <span class="w-12 shrink-0 text-ink-soft">{{ mood.label }}</span>
+            <div class="flex-1 h-2 rounded-full bg-paper overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all"
+                :style="{ width: barWidth(trend.summary[mood.key] ?? 0), backgroundColor: mood.color }"
+              ></div>
+            </div>
+            <span class="w-7 text-right text-ink-soft">{{ trend.summary[mood.key] ?? 0 }}</span>
+          </div>
+        </div>
+        <p v-else class="mt-3 text-sm text-ink-soft">最近 30 天还没有记录，写下第一条开始观察变化。</p>
+      </div>
+    </section>
 
     <section class="mt-12">
       <h2 class="text-lg font-semibold tracking-tight">我的记录</h2>

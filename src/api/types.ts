@@ -128,6 +128,17 @@ export interface EmotionJournal {
   createdAt: string
 }
 
+export interface EmotionTrendDay {
+  date: string
+  moods: Record<string, number>
+}
+
+export interface EmotionTrend {
+  days: number
+  items: EmotionTrendDay[]
+  summary: Record<string, number>
+}
+
 export interface Appointment {
   id: number
   appointmentNo: string
