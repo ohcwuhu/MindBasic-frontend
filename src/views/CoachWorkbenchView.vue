@@ -281,6 +281,30 @@ async function loadCases() {
   }
 }
 
+async function exportCases() {
+  const token = localStorage.getItem('mb_access_token')
+  try {
+    const resp = await fetch('/api/v1/coach/cases/export', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (!resp.ok) {
+      error.value = '导出失败，请重试'
+      return
+    }
+    const blob = await resp.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `个案记录_${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  } catch {
+    error.value = '导出失败，请重试'
+  }
+}
+
 async function createCase() {
   try {
     await post('/coach/cases', {
@@ -786,6 +810,16 @@ const auditText = computed(() =>
             <p class="text-2xl font-semibold text-pine">{{ caseStats.clientCount }}</p>
             <p class="catalog-tab mt-1">客户数</p>
           </div>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+          <button
+            type="button"
+            class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
+            @click="exportCases"
+          >
+            导出 CSV
+          </button>
         </div>
 
         <div class="card mt-4 p-6">
