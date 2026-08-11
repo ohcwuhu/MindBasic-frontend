@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { get } from '@/api/client'
+import type { PublicPlatformConfig } from '@/api/types'
 import {
   PhHouse as House,
   PhCardsThree as CardsThree,
@@ -16,6 +17,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const unread = ref(0)
+const platform = ref<PublicPlatformConfig | null>(null)
 
 const navLinks = [
   { to: '/', label: '首页' },
@@ -54,6 +56,9 @@ async function refreshUnread() {
 onMounted(() => {
   window.addEventListener('mb:logout', onLogoutEvent)
   refreshUnread()
+  get<PublicPlatformConfig>('/platform/config')
+    .then((data) => (platform.value = data))
+    .catch(() => (platform.value = null))
 })
 onUnmounted(() => window.removeEventListener('mb:logout', onLogoutEvent))
 watch(() => route.fullPath, refreshUnread)
@@ -173,6 +178,19 @@ const pageTitle = computed(() => {
     <main class="flex-1 pb-20 md:pb-0">
       <RouterView />
     </main>
+
+    <footer
+      v-if="platform"
+      class="bg-card border-t border-hairline"
+    >
+      <div class="max-w-[1100px] mx-auto px-4 md:px-6 py-6 md:py-8 pb-24 md:pb-8">
+        <p class="text-sm font-medium text-ink-soft">{{ platform.platformName }}</p>
+        <p class="mt-2 text-xs text-ink-faint leading-relaxed">
+          心理援助热线：{{ platform.hotline }} —— {{ platform.emergencyHint }}
+        </p>
+        <p class="mt-1.5 text-xs text-ink-faint leading-relaxed">{{ platform.disclaimer }}</p>
+      </div>
+    </footer>
 
     <nav
       class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-hairline"

@@ -390,3 +390,16 @@ export interface Notification {
   isRead: boolean
   createdAt: string
 }
+
+export interface SystemConfigItem {
+  key: string
+  value: string
+  description: string | null
+}
+
+export interface PublicPlatformConfig {
+  platformName: string
+  hotline: string
+  emergencyHint: string
+  disclaimer: string
+}
