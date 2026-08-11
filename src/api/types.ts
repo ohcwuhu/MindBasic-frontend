@@ -139,6 +139,19 @@ export interface EmotionTrend {
   summary: Record<string, number>
 }
 
+export interface EmotionCalendarDay {
+  date: string
+  moods: Record<string, number>
+  count: number
+}
+
+export interface EmotionCalendar {
+  year: number
+  month: number
+  days: EmotionCalendarDay[]
+  summary: Record<string, number>
+}
+
 export interface Appointment {
   id: number
   appointmentNo: string
