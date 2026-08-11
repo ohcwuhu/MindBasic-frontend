@@ -197,6 +197,12 @@ function switchTab(tab: Tab) {
     >
       成长测评 · 看见自己的五个成长方向
     </RouterLink>
+    <RouterLink
+      to="/communities"
+      class="mt-3 inline-flex items-center gap-1.5 h-11 px-6 rounded-full bg-card border border-hairline text-pine-deep text-sm font-medium pressable"
+    >
+      我的社群 · 找到同路的伙伴
+    </RouterLink>
 
     <div class="mt-8 flex gap-2" role="tablist" aria-label="成长记录分类">
       <button

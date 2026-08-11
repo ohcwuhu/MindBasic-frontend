@@ -25,6 +25,7 @@ const navLinks = [
   { to: '/emotion-journal', label: '情绪日记' },
   { to: '/coaches', label: '找教练' },
   { to: '/articles', label: '科普' },
+  { to: '/communities', label: '社群' },
 ]
 
 const tabItems = [

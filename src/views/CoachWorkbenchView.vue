@@ -24,6 +24,7 @@ import type {
   CoachSlotItem,
   Client,
   CoachReview,
+  CommunityBrief,
   Phrase,
   PlatformPhrase,
   Tag,
@@ -33,7 +34,7 @@ import FieldInput from '@/components/FieldInput.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { renderMarkdown } from '@/utils/markdown'
 
-type WorkTab = 'appointments' | 'cases' | 'services' | 'slots' | 'clients' | 'reviews' | 'phrases' | 'profile'
+type WorkTab = 'appointments' | 'cases' | 'services' | 'slots' | 'clients' | 'reviews' | 'communities' | 'phrases' | 'profile'
 
 const loading = ref(true)
 const error = ref('')
@@ -445,6 +446,36 @@ async function loadReviews() {
   }
 }
 
+// 社群管理
+const myCommunities = ref<CommunityBrief[]>([])
+const communityForm = reactive({ name: '', description: '' })
+
+async function loadMyCommunities() {
+  try {
+    const data = await get<{ items: CommunityBrief[] }>('/communities/mine')
+    myCommunities.value = data.items
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '社群加载失败'
+  }
+}
+
+async function createCommunity() {
+  if (!communityForm.name.trim() || !communityForm.description.trim()) {
+    error.value = '请填写社群名称与简介'
+    return
+  }
+  try {
+    await post('/communities', {
+      name: communityForm.name.trim(),
+      description: communityForm.description.trim(),
+    })
+    Object.assign(communityForm, { name: '', description: '' })
+    await loadMyCommunities()
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '创建失败'
+  }
+}
+
 async function saveClientRemark(client: Client) {
   try {
     await patch(`/coach/clients/${client.id}`, { remark: clientRemarks.value[client.id] ?? null })
@@ -674,6 +705,7 @@ async function switchTab(tab: WorkTab) {
   else if (tab === 'slots') await loadSlots()
   else if (tab === 'clients') await loadClients()
   else if (tab === 'reviews') await loadReviews()
+  else if (tab === 'communities') await loadMyCommunities()
   else if (tab === 'phrases') await loadPhrases()
   else fillFormFromProfile()
 }
@@ -852,6 +884,7 @@ const auditText = computed(() =>
           { key: 'slots', label: '时段设置', icon: Clock },
           { key: 'clients', label: '客户管理', icon: UsersIcon },
           { key: 'reviews', label: '收到的评价', icon: Star },
+          { key: 'communities', label: '社群管理', icon: UsersIcon },
           { key: 'phrases', label: '话术库', icon: ChatIcon },
           { key: 'profile', label: '资料设置', icon: Sparkle },
         ] as const" :key="tab.key" type="button" class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm pressable"
@@ -1134,6 +1167,40 @@ const auditText = computed(() =>
           </div>
         </div>
         <EmptyState v-else class="mt-5" title="还没有收到评价" hint="服务完成后，用户可以在「我的成长」里给你评价。" />
+      </section>
+
+      <!-- 社群管理 -->
+      <section v-else-if="activeTab === 'communities'" class="mt-8">
+        <div class="card p-6">
+          <p class="catalog-tab">创建带队社群</p>
+          <div class="mt-4 grid md:grid-cols-2 gap-4">
+            <FieldInput v-model="communityForm.name" label="社群名称" placeholder="如：考前陪伴家长群" />
+            <div class="md:col-span-2">
+              <FieldInput v-model="communityForm.description" label="社群简介" placeholder="用一两句话说明这个群的主题和氛围" />
+            </div>
+          </div>
+          <button type="button" class="mt-5 h-10 px-6 rounded-full bg-pine text-card text-sm pressable" @click="createCommunity">
+            创建社群
+          </button>
+        </div>
+
+        <div v-if="myCommunities.length" class="mt-6 space-y-3">
+          <RouterLink
+            v-for="community in myCommunities"
+            :key="community.id"
+            :to="`/communities/${community.id}`"
+            class="card p-5 block pressable hover:border-pine/40 transition-colors"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="font-medium">{{ community.name }}</p>
+                <p class="catalog-tab mt-1">{{ community.memberCount }} 人</p>
+              </div>
+              <span class="text-sm text-pine">进入管理</span>
+            </div>
+          </RouterLink>
+        </div>
+        <EmptyState v-else class="mt-6" title="还没有创建社群" hint="创建后即可在社群详情里置顶或删除帖子。" />
       </section>
 
       <!-- 话术库 -->

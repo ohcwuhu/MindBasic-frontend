@@ -476,6 +476,50 @@ export interface AssessmentHistoryItem {
   createdAt: string
 }
 
+export interface CommunityBrief {
+  id: number
+  name: string
+  description: string
+  coverUrl: string | null
+  coachNickname: string | null
+  memberCount: number
+  joined: boolean
+}
+
+export interface CommunityDetail extends CommunityBrief {
+  canManage: boolean
+  maxMembers: number
+  createdAt: string
+}
+
+export interface CommunityPost {
+  id: number
+  communityId: number
+  userId: number
+  nickname: string
+  content: string
+  imageUrl: string | null
+  isPinned: boolean
+  likeCount: number
+  liked: boolean
+  commentCount: number
+  createdAt: string
+}
+
+export interface CommunityComment {
+  id: number
+  postId: number
+  userId: number
+  nickname: string
+  content: string
+  createdAt: string
+}
+
+export interface CommunityPostDetail {
+  post: CommunityPost
+  comments: CommunityComment[]
+}
+
 export interface SystemConfigItem {
   key: string
   value: string
