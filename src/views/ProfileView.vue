@@ -5,6 +5,7 @@ import { PhCaretDown as CaretDown, PhCamera as Camera } from '@phosphor-icons/vu
 import { useAuthStore } from '@/stores/auth'
 import { ApiError, get, post, uploadFile } from '@/api/client'
 import type { CoachProfile } from '@/api/types'
+import { useCountdown } from '@/utils/useCountdown'
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 
@@ -24,7 +25,13 @@ const oldPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
 const deactivateOpen = ref(false)
+const showEmail = ref(false)
+const bindEmail = ref('')
+const bindCode = ref('')
+const savingEmail = ref(false)
+const sendingEmailCode = ref(false)
 const coachStatus = ref<'none' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'loading'>('loading')
+const { remaining, start: startCountdown } = useCountdown()
 
 function flash(message: string) {
   success.value = message
@@ -34,6 +41,47 @@ function flash(message: string) {
 function showError(e: unknown) {
   error.value = e instanceof Error ? e.message : '操作失败'
   errorDetails.value = e instanceof ApiError && e.errors?.length ? e.errors : []
+}
+
+async function sendEmailCode() {
+  if (!bindEmail.value.trim()) {
+    error.value = '请先输入邮箱'
+    return
+  }
+  sendingEmailCode.value = true
+  error.value = ''
+  try {
+    await post('/auth/email-code', { email: bindEmail.value.trim(), purpose: 'BIND' })
+    startCountdown()
+  } catch (e) {
+    showError(e)
+  } finally {
+    sendingEmailCode.value = false
+  }
+}
+
+async function saveEmail() {
+  if (!bindEmail.value.trim() || !bindCode.value.trim()) {
+    error.value = '请填写邮箱与验证码'
+    return
+  }
+  savingEmail.value = true
+  error.value = ''
+  try {
+    const user = await post<typeof auth.user>('/users/me/email', {
+      email: bindEmail.value.trim(),
+      code: bindCode.value,
+      purpose: 'BIND',
+    })
+    auth.user = user
+    showEmail.value = false
+    bindCode.value = ''
+    flash('邮箱已绑定')
+  } catch (e) {
+    showError(e)
+  } finally {
+    savingEmail.value = false
+  }
 }
 
 onMounted(async () => {
@@ -187,6 +235,52 @@ async function logout() {
       <div class="px-6 py-5 flex items-center justify-between gap-4">
         <span class="text-sm text-ink-soft">手机号</span>
         <span class="text-sm font-medium">{{ auth.user?.phone }}</span>
+      </div>
+
+      <!-- 邮箱 -->
+      <div class="px-6 py-5 flex items-center justify-between gap-4">
+        <span class="text-sm text-ink-soft">邮箱</span>
+        <span class="text-sm font-medium">{{ auth.user?.email ?? '未绑定' }}</span>
+        <button
+          type="button"
+          class="text-sm text-pine pressable shrink-0"
+          @click="showEmail = !showEmail"
+        >
+          {{ auth.user?.email ? '更换' : '绑定' }}
+        </button>
+      </div>
+      <div v-if="showEmail" class="px-6 pb-6 space-y-3">
+        <input
+          v-model="bindEmail"
+          type="email"
+          :placeholder="auth.user?.email ?? '邮箱地址'"
+          class="w-full h-11 px-4 rounded-[10px] border border-hairline bg-paper/60 text-sm outline-none focus:border-pine"
+        />
+        <div class="flex gap-2">
+          <input
+            v-model="bindCode"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="6 位验证码"
+            class="flex-1 h-11 px-4 rounded-[10px] border border-hairline bg-paper/60 text-sm outline-none focus:border-pine"
+          />
+          <button
+            type="button"
+            :disabled="sendingEmailCode || remaining > 0"
+            class="shrink-0 h-11 px-4 rounded-[10px] border border-hairline bg-card text-sm text-pine pressable disabled:opacity-50"
+            @click="sendEmailCode"
+          >
+            {{ remaining > 0 ? `${remaining}s` : '获取验证码' }}
+          </button>
+        </div>
+        <button
+          type="button"
+          :disabled="savingEmail"
+          class="w-full h-11 rounded-full bg-pine text-card text-sm font-medium disabled:opacity-60 pressable"
+          @click="saveEmail"
+        >
+          {{ savingEmail ? '提交中…' : '绑定邮箱' }}
+        </button>
       </div>
 
       <!-- 角色 -->

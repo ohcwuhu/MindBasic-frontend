@@ -69,6 +69,7 @@ const pageTitle = computed(() => {
     home: 'MindBasic',
     login: '登录',
     register: '注册',
+    'forgot-password': '找回密码',
     templates: '自我教练',
     'coach-flow': '自我教练',
     'emotion-journal': '情绪日记',

@@ -16,6 +16,12 @@ export const useAuthStore = defineStore('auth', () => {
     return data.user
   }
 
+  async function loginByEmail(email: string, code: string): Promise<User> {
+    const data = await post<AuthOut>('/auth/email-login', { email, code })
+    applyAuth(data)
+    return data.user
+  }
+
   async function register(phone: string, password: string, nickname: string): Promise<User> {
     const data = await post<AuthOut>('/auth/register', {
       phone,
@@ -57,5 +63,16 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('mb_access_token')
   }
 
-  return { token, user, initialized, isLoggedIn, login, register, fetchMe, updateProfile, logout }
+  return {
+    token,
+    user,
+    initialized,
+    isLoggedIn,
+    login,
+    loginByEmail,
+    register,
+    fetchMe,
+    updateProfile,
+    logout,
+  }
 })
