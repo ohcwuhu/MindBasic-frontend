@@ -9,6 +9,7 @@ import {
   PhCheckCircle as CheckCircle,
   PhTrophy as Trophy,
   PhStar as Star,
+  PhSmiley as Smiley,
 } from '@phosphor-icons/vue'
 import { get, post } from '@/api/client'
 import type {
@@ -17,6 +18,7 @@ import type {
   Badge,
   CheckInItem,
   CheckInStats,
+  EmotionJournal,
   LeaderboardItem,
   SelfCoachingRecord,
 } from '@/api/types'
@@ -24,11 +26,12 @@ import EmptyState from '@/components/EmptyState.vue'
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 
-type Tab = 'appointments' | 'records' | 'favorites' | 'checkins'
+type Tab = 'appointments' | 'records' | 'journals' | 'checkins' | 'favorites'
 const activeTab = ref<Tab>('appointments')
 const appointments = ref<Appointment[]>([])
 const records = ref<SelfCoachingRecord[]>([])
 const favorites = ref<ArticleListItem[]>([])
+const journals = ref<EmotionJournal[]>([])
 const loading = ref(true)
 const error = ref('')
 const cancelTarget = ref<Appointment | null>(null)
@@ -55,6 +58,24 @@ const statusLabel: Record<string, string> = {
   CANCELLED: '已取消',
 }
 
+const moodEmoji: Record<string, string> = {
+  CALM: '😌',
+  HAPPY: '😄',
+  ANXIOUS: '😟',
+  DOWN: '😢',
+  IRRITATED: '😠',
+  OTHER: '🙂',
+}
+
+const moodLabel: Record<string, string> = {
+  CALM: '平静',
+  HAPPY: '开心',
+  ANXIOUS: '焦虑',
+  DOWN: '低落',
+  IRRITATED: '烦躁',
+  OTHER: '其他',
+}
+
 async function load(tab: Tab) {
   loading.value = true
   error.value = ''
@@ -65,6 +86,9 @@ async function load(tab: Tab) {
     } else if (tab === 'records') {
       const data = await get<{ items: SelfCoachingRecord[] }>('/self-coaching/records?page=1&pageSize=50')
       records.value = data.items
+    } else if (tab === 'journals') {
+      const data = await get<{ items: EmotionJournal[] }>('/emotion-journals?page=1&pageSize=50')
+      journals.value = data.items
     } else {
       const data = await get<{ items: ArticleListItem[] }>('/users/me/favorites?page=1&pageSize=50')
       favorites.value = data.items
@@ -173,6 +197,7 @@ function switchTab(tab: Tab) {
         v-for="tab in [
           { key: 'appointments', label: '我的预约', icon: CalendarCheck },
           { key: 'records', label: '自我教练记录', icon: CardsThree },
+          { key: 'journals', label: '情绪日记', icon: Smiley },
           { key: 'checkins', label: '成长打卡', icon: CheckCircle },
           { key: 'favorites', label: '我的收藏', icon: BookmarkSimple },
         ] as const"
@@ -368,6 +393,27 @@ function switchTab(tab: Tab) {
           </div>
           <p v-else class="mt-3 text-sm text-ink-soft">本期还没有人打卡。</p>
         </div>
+      </section>
+
+      <section v-else-if="activeTab === 'journals'" class="mt-8">
+        <div v-if="journals.length" class="divide-y divide-hairline border-y border-hairline">
+          <div v-for="journal in journals" :key="journal.id" class="py-4 flex gap-4">
+            <span class="mt-1 text-xl leading-none shrink-0" aria-hidden="true">
+              {{ moodEmoji[journal.moodType] }}
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-[15px] leading-relaxed">{{ journal.content }}</p>
+              <p v-if="journal.feedback" class="mt-2 text-sm text-ink-soft leading-relaxed">
+                {{ journal.feedback }}
+              </p>
+              <p class="catalog-tab mt-2">
+                {{ moodLabel[journal.moodType] }} ·
+                {{ new Date(journal.createdAt).toLocaleString('zh-CN', { hour12: false }) }}
+              </p>
+            </div>
+          </div>
+        </div>
+        <EmptyState v-else title="还没有情绪日记" hint="在情绪日记里写下第一条感受。" />
       </section>
 
       <section v-else class="mt-8">

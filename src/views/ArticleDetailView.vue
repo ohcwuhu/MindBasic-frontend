@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { PhArrowLeft as ArrowLeft, PhBookmark as Bookmark, PhBookmarkSimple as BookmarkSimple } from '@phosphor-icons/vue'
+import {
+  PhArrowLeft as ArrowLeft,
+  PhBookmark as Bookmark,
+  PhBookmarkSimple as BookmarkSimple,
+  PhShareNetwork as ShareNetwork,
+} from '@phosphor-icons/vue'
 import { get, post } from '@/api/client'
 import type { ArticleDetail } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
@@ -16,6 +21,8 @@ const loading = ref(true)
 const error = ref('')
 
 const favoriteBusy = ref(false)
+const shareBusy = ref(false)
+const shareMsg = ref('')
 
 onMounted(async () => {
   try {
@@ -44,6 +51,28 @@ async function toggleFavorite() {
 }
 
 const isFavorite = computed(() => article.value?.isFavorite ?? false)
+
+async function shareArticle() {
+  if (!article.value) return
+  const url = window.location.href
+  const title = article.value.title
+  shareBusy.value = true
+  error.value = ''
+  try {
+    if (navigator.share) {
+      await navigator.share({ title, text: `${title}\n${url}`, url })
+      return
+    }
+    await navigator.clipboard.writeText(url)
+    shareMsg.value = '链接已复制'
+    setTimeout(() => (shareMsg.value = ''), 2500)
+  } catch (e) {
+    if (e instanceof Error && e.name === 'AbortError') return
+    error.value = '分享失败，请重试'
+  } finally {
+    shareBusy.value = false
+  }
+}
 </script>
 
 <template>
@@ -70,18 +99,29 @@ const isFavorite = computed(() => article.value?.isFavorite ?? false)
       </p>
       <div class="mt-8 flex items-center justify-between">
         <span class="catalog-tab">AR-{{ String(article.id).padStart(2, '0') }}</span>
-        <button
-          type="button"
-          :disabled="favoriteBusy"
-          class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-hairline bg-card text-sm pressable disabled:opacity-60"
-          :class="isFavorite ? 'text-pine border-pine' : 'text-ink-soft'"
-          @click="toggleFavorite"
-        >
-          <Bookmark v-if="isFavorite" :size="17" weight="fill" />
-          <BookmarkSimple v-else :size="17" />
-          {{ isFavorite ? '已收藏' : '收藏' }}
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            :disabled="shareBusy"
+            class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable disabled:opacity-60"
+            @click="shareArticle"
+          >
+            <ShareNetwork :size="17" /> 分享
+          </button>
+          <button
+            type="button"
+            :disabled="favoriteBusy"
+            class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-hairline bg-card text-sm pressable disabled:opacity-60"
+            :class="isFavorite ? 'text-pine border-pine' : 'text-ink-soft'"
+            @click="toggleFavorite"
+          >
+            <Bookmark v-if="isFavorite" :size="17" weight="fill" />
+            <BookmarkSimple v-else :size="17" />
+            {{ isFavorite ? '已收藏' : '收藏' }}
+          </button>
+        </div>
       </div>
+      <p v-if="shareMsg" class="mt-2 text-sm text-pine-deep">{{ shareMsg }}</p>
       <div
         class="article-body mt-8"
         v-html="article.content"

@@ -12,6 +12,8 @@ const total = ref(0)
 const page = ref(1)
 const keyword = ref('')
 const statusFilter = ref('')
+const createdFrom = ref('')
+const createdTo = ref('')
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
@@ -24,6 +26,8 @@ async function load() {
     const params = new URLSearchParams({ page: String(page.value), pageSize: '10' })
     if (keyword.value) params.set('keyword', keyword.value)
     if (statusFilter.value) params.set('status', statusFilter.value)
+    if (createdFrom.value) params.set('createdFrom', createdFrom.value)
+    if (createdTo.value) params.set('createdTo', createdTo.value)
     const data = await get<{ items: AdminUser[]; pagination: { totalItems: number } }>(
       `/admin/users?${params.toString()}`,
     )
@@ -81,6 +85,24 @@ async function confirmToggle() {
         <option value="ENABLED">正常</option>
         <option value="DISABLED">已禁用</option>
       </select>
+      <label class="block">
+        <span class="text-sm font-medium text-ink">注册从</span>
+        <input
+          v-model="createdFrom"
+          type="date"
+          class="mt-1.5 h-11 px-3 rounded-[10px] border border-hairline bg-card text-sm outline-none focus:border-pine"
+          @change="page = 1; load()"
+        />
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-ink">到</span>
+        <input
+          v-model="createdTo"
+          type="date"
+          class="mt-1.5 h-11 px-3 rounded-[10px] border border-hairline bg-card text-sm outline-none focus:border-pine"
+          @change="page = 1; load()"
+        />
+      </label>
       <button
         type="button"
         class="h-11 px-6 rounded-full bg-pine text-card text-sm font-medium pressable"
