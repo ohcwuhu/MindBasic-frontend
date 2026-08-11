@@ -69,7 +69,15 @@ async function load() {
   error.value = ''
   try {
     profile.value = await get<CoachProfile>('/coach/profile')
-    mode.value = profile.value.auditStatus === 'APPROVED' ? 'workbench' : 'status'
+    if (profile.value.auditStatus === 'APPROVED') {
+      mode.value = 'workbench'
+    } else if (profile.value.auditStatus === 'REJECTED') {
+      await fetchTags()
+      fillFormFromProfile()
+      mode.value = 'form'
+    } else {
+      mode.value = 'status'
+    }
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
       mode.value = 'form'
@@ -164,7 +172,7 @@ async function submitProfile() {
   }
   submitting.value = true
   try {
-    profile.value = await post<CoachProfile>('/coach/profile', {
+    const payload = {
       realName: form.realName,
       bio: form.bio || null,
       trainingExp: form.trainingExp || null,
@@ -182,8 +190,11 @@ async function submitProfile() {
           priceInCents: Number(s.priceInCents) || 0,
           description: s.description || null,
         })),
-    })
-    mode.value = 'status'
+    }
+    profile.value = profile.value
+      ? await patch<CoachProfile>('/coach/profile', payload)
+      : await post<CoachProfile>('/coach/profile', payload)
+    mode.value = profile.value.auditStatus === 'APPROVED' ? 'workbench' : 'status'
   } catch (e) {
     showError(e)
   } finally {
@@ -192,16 +203,9 @@ async function submitProfile() {
 }
 
 async function resubmit() {
-  submitting.value = true
-  error.value = ''
-  try {
-    profile.value = await post<CoachProfile>('/coach/profile/submit-audit')
-    mode.value = 'status'
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '提交失败，请重试'
-  } finally {
-    submitting.value = false
-  }
+  await fetchTags()
+  fillFormFromProfile()
+  mode.value = 'form'
 }
 
 // ---------- 工作台 ----------
@@ -553,6 +557,13 @@ function fillFormFromProfile() {
   credentialFiles.value = (profile.value.credentialUrls ?? []).map((url) => ({ url, name: fileName(url) }))
   idCardFile.value = profile.value.idCardUrl ? { url: profile.value.idCardUrl, name: fileName(profile.value.idCardUrl) } : null
   selectedTagIds.value = profile.value.tags.map((t) => t.id)
+  serviceRows.value = (profile.value.services ?? []).map((s) => ({
+    name: s.name,
+    serviceType: s.serviceType,
+    durationMin: String(s.durationMin),
+    priceInCents: String(s.priceInCents),
+    description: s.description ?? '',
+  }))
 }
 
 async function saveProfile() {
@@ -619,6 +630,12 @@ const auditText = computed(() =>
 
     <!-- 入驻表单 -->
     <form v-else-if="mode === 'form'" class="mt-8 space-y-6" @submit.prevent="submitProfile">
+      <div
+        v-if="profile?.auditStatus === 'REJECTED'"
+        class="bg-red-50 border border-red-200 rounded-[10px] px-4 py-3 text-sm text-red-800 leading-relaxed"
+      >
+        驳回原因：{{ profile.auditRemark }}。请修改资料后保存，保存即重新提交审核。
+      </div>
       <section class="card p-6 md:p-8">
         <p class="catalog-tab">基本信息</p>
         <div class="mt-5 grid md:grid-cols-2 gap-5">
@@ -722,7 +739,7 @@ const auditText = computed(() =>
         :disabled="submitting || !form.realName.trim()"
         class="w-full md:w-auto h-12 px-8 rounded-full bg-pine text-card font-medium hover:bg-pine-deep disabled:opacity-50 pressable"
       >
-        {{ submitting ? '提交中…' : '提交入驻申请' }}
+        {{ submitting ? '提交中…' : profile ? '保存修改并重新提交' : '提交入驻申请' }}
       </button>
     </form>
 
