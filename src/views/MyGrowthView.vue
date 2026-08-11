@@ -191,6 +191,12 @@ function switchTab(tab: Tab) {
   <div class="max-w-[820px] mx-auto px-4 md:px-6 py-10 md:py-16">
     <p class="catalog-tab">ME 我的成长</p>
     <h1 class="mt-3 text-2xl md:text-3xl font-semibold tracking-tight">你走过的每一步</h1>
+    <RouterLink
+      to="/growth-assessment"
+      class="mt-5 inline-flex items-center gap-1.5 h-11 px-6 rounded-full bg-pine-soft text-pine-deep text-sm font-medium pressable"
+    >
+      成长测评 · 看见自己的五个成长方向
+    </RouterLink>
 
     <div class="mt-8 flex gap-2" role="tablist" aria-label="成长记录分类">
       <button

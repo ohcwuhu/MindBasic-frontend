@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { PhMagnifyingGlass as MagnifyingGlass } from '@phosphor-icons/vue'
 import { get } from '@/api/client'
 import type { CoachBrief } from '@/api/types'
@@ -8,6 +9,7 @@ import ErrorBanner from '@/components/ErrorBanner.vue'
 import EmptyState from '@/components/EmptyState.vue'
 
 const keyword = ref('')
+const route = useRoute()
 const coaches = ref<CoachBrief[]>([])
 const loading = ref(true)
 const error = ref('')
@@ -20,6 +22,7 @@ const filtered = computed(() => {
 })
 
 onMounted(async () => {
+  if (typeof route.query.tag === 'string') activeTag.value = route.query.tag
   try {
     const data = await get<{ items: CoachBrief[] }>('/coaches?page=1&pageSize=50')
     coaches.value = data.items

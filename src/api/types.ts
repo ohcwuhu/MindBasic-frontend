@@ -424,6 +424,58 @@ export interface CoachReview {
   createdAt: string
 }
 
+export interface AssessmentOption {
+  value: number
+  label: string
+}
+
+export interface AssessmentQuestion {
+  id: number
+  dimensionKey: string
+  dimensionName: string
+  question: string
+  options: AssessmentOption[]
+  sortOrder: number
+}
+
+export interface GrowthAssessmentTemplate {
+  id: number
+  name: string
+  description: string | null
+  version: number
+  questions: AssessmentQuestion[]
+}
+
+export interface DimensionScore {
+  dimensionKey: string
+  dimensionName: string
+  score: number
+  level: string
+  levelLabel: string
+}
+
+export interface AssessmentResult {
+  id: number
+  templateId: number
+  templateName: string
+  scores: DimensionScore[]
+  report: {
+    summary: string
+    dimensions: (DimensionScore & { interpretation: string })[]
+    recommendations: {
+      selfCoaching: { id: number; name: string }[]
+      coachTags: { id: number; name: string }[]
+    }
+  }
+  createdAt: string
+}
+
+export interface AssessmentHistoryItem {
+  id: number
+  templateName: string
+  createdAt: string
+}
+
 export interface SystemConfigItem {
   key: string
   value: string
