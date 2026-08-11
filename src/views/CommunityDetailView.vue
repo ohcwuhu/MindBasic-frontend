@@ -38,6 +38,18 @@ const expandedPosts = ref<Set<number>>(new Set())
 const commentInputs = ref<Record<number, string>>({})
 const commenting = ref<number | null>(null)
 
+const coverGradients = [
+  'linear-gradient(135deg, #1f6b52 0%, #7fb096 100%)',
+  'linear-gradient(135deg, #7a5c1f 0%, #c4b183 100%)',
+  'linear-gradient(135deg, #4b5563 0%, #98a1ab 100%)',
+  'linear-gradient(135deg, #9a3b2e 0%, #d6a49c 100%)',
+  'linear-gradient(135deg, #5b5b54 0%, #a9a59d 100%)',
+]
+
+function postCoverStyle(post: CommunityPost) {
+  return { background: coverGradients[post.id % coverGradients.length] }
+}
+
 async function load() {
   loading.value = true
   error.value = ''
@@ -251,64 +263,64 @@ onMounted(load)
 
       <section class="mt-8">
         <h2 class="text-lg font-semibold tracking-tight">社群动态</h2>
-        <div v-if="posts.length" class="mt-4 space-y-3">
+        <div v-if="posts.length" class="mt-4 columns-2 gap-3">
           <article
             v-for="post in posts"
             :key="post.id"
-            class="card p-5"
+            class="mb-3 break-inside-avoid rounded-2xl overflow-hidden border border-hairline bg-card"
             :class="post.isPinned ? 'border-pine/40' : ''"
           >
-            <div class="flex items-center justify-between gap-3">
-              <p class="font-medium text-sm">{{ post.nickname }}</p>
-              <div class="flex items-center gap-2">
-                <span v-if="post.isPinned" class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-pine-soft text-pine-deep">
-                  <Pin :size="12" weight="fill" /> 置顶
-                </span>
-                <span class="catalog-tab">{{ new Date(post.createdAt).toLocaleString('zh-CN', { hour12: false }) }}</span>
-              </div>
+            <div v-if="post.imageUrl" class="aspect-[3/4] w-full relative">
+              <img :src="post.imageUrl" alt="帖子配图" class="w-full h-full object-cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+              <p class="absolute bottom-3 left-3 right-3 text-[11px] text-white/85">
+                {{ post.nickname }} · {{ new Date(post.createdAt).toLocaleDateString('zh-CN') }}
+              </p>
             </div>
-            <p class="mt-3 text-[15px] leading-relaxed whitespace-pre-wrap">{{ post.content }}</p>
-            <img
-              v-if="post.imageUrl"
-              :src="post.imageUrl"
-              alt="帖子配图"
-              class="mt-3 max-h-72 rounded-[10px] border border-hairline object-cover"
-            />
-            <div class="mt-4 flex items-center gap-2">
+            <div v-else class="aspect-[3/4] w-full relative" :style="postCoverStyle(post)">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent"></div>
+              <p class="absolute inset-x-0 bottom-10 px-4 text-card text-sm leading-relaxed line-clamp-4 whitespace-pre-line">
+                {{ post.content }}
+              </p>
+              <p class="absolute bottom-3 left-4 right-4 text-[11px] text-white/75">
+                {{ post.nickname }} · {{ new Date(post.createdAt).toLocaleDateString('zh-CN') }}
+              </p>
+            </div>
+            <div class="p-3 flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="w-6 h-6 rounded-full bg-pine-soft text-pine-deep text-[11px] flex items-center justify-center shrink-0">
+                  {{ post.nickname.slice(0, 1) }}
+                </span>
+                <span class="text-xs text-ink-soft truncate">{{ post.nickname }}</span>
+              </div>
               <button
                 type="button"
-                class="inline-flex items-center gap-1.5 h-9 px-4 rounded-full border border-hairline bg-card text-sm pressable"
-                :class="post.liked ? 'text-pine border-pine' : 'text-ink-soft'"
+                class="inline-flex items-center gap-1 text-xs pressable shrink-0"
+                :class="post.liked ? 'text-pine' : 'text-ink-soft'"
                 @click="toggleLike(post)"
               >
-                <Heart :size="15" :weight="post.liked ? 'fill' : 'regular'" /> {{ post.likeCount }}
+                <Heart :size="13" :weight="post.liked ? 'fill' : 'regular'" /> {{ post.likeCount }}
               </button>
-              <button
-                type="button"
-                class="inline-flex items-center gap-1.5 h-9 px-4 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
-                @click="toggleComments(post)"
-              >
-                <ChatIcon :size="15" /> {{ post.commentCount }}
+            </div>
+            <div class="px-3 pb-1">
+              <p class="text-sm text-ink leading-snug line-clamp-2 whitespace-pre-line">{{ post.content }}</p>
+            </div>
+            <div class="px-3 py-3 flex items-center gap-3">
+              <button type="button" class="inline-flex items-center gap-1 text-xs text-ink-faint pressable" @click="toggleComments(post)">
+                <ChatIcon :size="13" /> {{ post.commentCount }}
               </button>
-              <div v-if="detail.canManage" class="flex-1 flex justify-end gap-2">
-                <button
-                  type="button"
-                  class="h-9 px-4 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
-                  @click="togglePin(post)"
-                >
+              <span v-if="post.isPinned" class="inline-flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded-full bg-pine-soft text-pine-deep">
+                <Pin :size="10" weight="fill" /> 置顶
+              </span>
+              <div v-if="detail.canManage" class="flex-1 flex justify-end gap-1">
+                <button type="button" class="text-xs text-ink-faint pressable" @click="togglePin(post)">
                   {{ post.isPinned ? '取消置顶' : '置顶' }}
                 </button>
-                <button
-                  type="button"
-                  class="h-9 px-4 rounded-full border border-hairline bg-card text-sm text-red-800 pressable"
-                  @click="removePost(post.id)"
-                >
-                  删除
-                </button>
+                <button type="button" class="text-xs text-red-800 pressable" @click="removePost(post.id)">删除</button>
               </div>
             </div>
 
-            <div v-if="expandedPosts.has(post.id)" class="mt-4 border-t border-hairline pt-4 space-y-3">
+            <div v-if="expandedPosts.has(post.id)" class="px-3 pb-3 border-t border-hairline pt-3 space-y-3">
               <div v-for="comment in comments[post.id] ?? []" :key="comment.id" class="text-sm">
                 <p><span class="font-medium">{{ comment.nickname }}</span>
                   <span class="text-ink-faint ml-2">{{ new Date(comment.createdAt).toLocaleString('zh-CN', { hour12: false }) }}</span>

@@ -13,6 +13,18 @@ const communities = ref<CommunityBrief[]>([])
 const loading = ref(true)
 const error = ref('')
 
+const coverGradients = [
+  'linear-gradient(135deg, #1f6b52 0%, #7fb096 100%)',
+  'linear-gradient(135deg, #7a5c1f 0%, #c4b183 100%)',
+  'linear-gradient(135deg, #4b5563 0%, #98a1ab 100%)',
+  'linear-gradient(135deg, #9a3b2e 0%, #d6a49c 100%)',
+  'linear-gradient(135deg, #5b5b54 0%, #a9a59d 100%)',
+]
+
+function coverStyle(id: number) {
+  return { background: coverGradients[id % coverGradients.length] }
+}
+
 async function load() {
   loading.value = true
   error.value = ''
@@ -44,28 +56,21 @@ onMounted(load)
       主题社群由已审核教练带队或自由运营，大家在这里分享经验、互相陪伴。
     </p>
 
-    <div class="mt-8 flex flex-wrap items-center gap-3">
-      <label class="relative flex-1 min-w-[220px] max-w-[360px]">
+    <div class="mt-8 flex items-center gap-2 max-w-[560px] mx-auto">
+      <label class="relative flex-1">
         <MagnifyingGlass :size="18" class="absolute left-4 top-1/2 -translate-y-1/2 text-ink-faint" />
         <input
           v-model="keyword"
           type="search"
-          placeholder="搜索社群名称"
-          class="w-full h-11 pl-11 pr-4 rounded-full border border-hairline bg-card text-sm outline-none focus:border-pine"
+          placeholder="搜索社群"
+          class="w-full h-11 pl-11 pr-4 rounded-full bg-paper border border-hairline text-sm outline-none focus:border-pine"
           @keyup.enter="mineOnly = false; load()"
         />
       </label>
       <button
         type="button"
-        class="h-11 px-6 rounded-full bg-pine text-card text-sm font-medium pressable"
-        @click="mineOnly = false; load()"
-      >
-        搜索
-      </button>
-      <button
-        type="button"
-        class="h-11 px-6 rounded-full border text-sm pressable"
-        :class="mineOnly ? 'bg-pine border-pine text-card' : 'border-hairline bg-card text-ink-soft'"
+        class="h-11 px-5 rounded-full text-sm font-medium pressable"
+        :class="mineOnly ? 'bg-pine text-card' : 'bg-paper border border-hairline text-ink-soft'"
         @click="mineOnly = !mineOnly; load()"
       >
         我加入的
@@ -78,29 +83,30 @@ onMounted(load)
       <div v-for="i in 4" :key="i" class="h-28 rounded-[14px] bg-hairline/60 animate-pulse"></div>
     </div>
 
-    <div v-else-if="communities.length" class="mt-6 space-y-3">
+    <div v-else-if="communities.length" class="mt-6 columns-2 gap-3">
       <RouterLink
         v-for="community in communities"
         :key="community.id"
         :to="`/communities/${community.id}`"
-        class="card p-5 block pressable hover:border-pine/40 transition-colors"
+        class="mb-3 break-inside-avoid rounded-2xl overflow-hidden relative block pressable group"
       >
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <p class="font-semibold tracking-tight">{{ community.name }}</p>
-            <p class="mt-2 text-sm text-ink-soft leading-relaxed line-clamp-2">{{ community.description }}</p>
+        <div class="aspect-[4/5] w-full relative" :style="coverStyle(community.id)">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+          <div class="absolute inset-x-0 bottom-0 p-4">
+            <p class="text-card font-semibold leading-snug">{{ community.name }}</p>
+            <p class="mt-1.5 text-[11px] leading-relaxed text-white/80 line-clamp-2">{{ community.description }}</p>
+            <p class="mt-2.5 text-[11px] text-white/70 inline-flex items-center gap-1">
+              <UsersIcon :size="12" /> {{ community.memberCount }} 人
+              <span v-if="community.coachNickname"> · {{ community.coachNickname }} 带队</span>
+            </p>
           </div>
-          <span
-            v-if="community.joined"
-            class="shrink-0 text-xs px-2.5 py-1 rounded-full bg-pine-soft text-pine-deep"
-          >
-            已加入
-          </span>
         </div>
-        <p class="catalog-tab mt-3 inline-flex items-center gap-1">
-          <UsersIcon :size="14" /> {{ community.memberCount }} 人
-          <span v-if="community.coachNickname"> · {{ community.coachNickname }} 带队</span>
-        </p>
+        <span
+          v-if="community.joined"
+          class="absolute top-3 left-3 text-[11px] px-2.5 py-1 rounded-full bg-card/90 text-pine-deep"
+        >
+          已加入
+        </span>
       </RouterLink>
     </div>
     <EmptyState
