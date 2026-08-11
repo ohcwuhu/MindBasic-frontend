@@ -83,27 +83,30 @@ onMounted(load)
       <div v-for="i in 4" :key="i" class="h-28 rounded-[14px] bg-hairline/60 animate-pulse"></div>
     </div>
 
-    <div v-else-if="communities.length" class="mt-6 columns-2 gap-3">
+    <div v-else-if="communities.length" class="mt-6 space-y-3">
       <RouterLink
         v-for="community in communities"
         :key="community.id"
         :to="`/communities/${community.id}`"
-        class="mb-3 break-inside-avoid rounded-2xl overflow-hidden relative block pressable group"
+        class="card p-4 flex items-center gap-3 pressable group"
       >
-        <div class="aspect-[4/5] w-full relative" :style="coverStyle(community.id)">
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
-          <div class="absolute inset-x-0 bottom-0 p-4">
-            <p class="text-card font-semibold leading-snug">{{ community.name }}</p>
-            <p class="mt-1.5 text-[11px] leading-relaxed text-white/80 line-clamp-2">{{ community.description }}</p>
-            <p class="mt-2.5 text-[11px] text-white/70 inline-flex items-center gap-1">
-              <UsersIcon :size="12" /> {{ community.memberCount }} 人
-              <span v-if="community.coachNickname"> · {{ community.coachNickname }} 带队</span>
-            </p>
-          </div>
+        <span
+          class="w-12 h-12 rounded-2xl text-card text-lg font-semibold flex items-center justify-center shrink-0"
+          :style="coverStyle(community.id)"
+        >
+          {{ community.name.slice(0, 1) }}
+        </span>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold tracking-tight">{{ community.name }}</p>
+          <p class="mt-0.5 text-sm text-ink-soft leading-relaxed line-clamp-1">{{ community.description }}</p>
+          <p class="catalog-tab mt-1 inline-flex items-center gap-1">
+            <UsersIcon :size="13" /> {{ community.memberCount }} 人
+            <span v-if="community.coachNickname"> · {{ community.coachNickname }} 带队</span>
+          </p>
         </div>
         <span
           v-if="community.joined"
-          class="absolute top-3 left-3 text-[11px] px-2.5 py-1 rounded-full bg-card/90 text-pine-deep"
+          class="shrink-0 text-xs px-2.5 py-1 rounded-full bg-pine-soft text-pine-deep"
         >
           已加入
         </span>
