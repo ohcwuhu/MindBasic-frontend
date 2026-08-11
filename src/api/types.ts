@@ -413,6 +413,17 @@ export interface Notification {
   createdAt: string
 }
 
+export interface CoachReview {
+  id: number
+  appointmentId: number | null
+  nickname: string
+  rating: number
+  content: string | null
+  serviceName: string | null
+  serviceDate: string | null
+  createdAt: string
+}
+
 export interface SystemConfigItem {
   key: string
   value: string

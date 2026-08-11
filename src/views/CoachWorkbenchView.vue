@@ -12,6 +12,7 @@ import {
   PhUsers as UsersIcon,
   PhChatCircleText as ChatIcon,
   PhDownloadSimple as Download,
+  PhStar as Star,
 } from '@phosphor-icons/vue'
 import { ApiError, del, get, patch, post, put, uploadFile } from '@/api/client'
 import type {
@@ -22,6 +23,7 @@ import type {
   CoachService,
   CoachSlotItem,
   Client,
+  CoachReview,
   Phrase,
   PlatformPhrase,
   Tag,
@@ -31,7 +33,7 @@ import FieldInput from '@/components/FieldInput.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import { renderMarkdown } from '@/utils/markdown'
 
-type WorkTab = 'appointments' | 'cases' | 'services' | 'slots' | 'clients' | 'phrases' | 'profile'
+type WorkTab = 'appointments' | 'cases' | 'services' | 'slots' | 'clients' | 'reviews' | 'phrases' | 'profile'
 
 const loading = ref(true)
 const error = ref('')
@@ -432,6 +434,17 @@ async function loadClients() {
   }
 }
 
+const reviews = ref<CoachReview[]>([])
+
+async function loadReviews() {
+  try {
+    const data = await get<{ items: CoachReview[] }>('/coach/reviews?page=1&pageSize=50')
+    reviews.value = data.items
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '评价加载失败'
+  }
+}
+
 async function saveClientRemark(client: Client) {
   try {
     await patch(`/coach/clients/${client.id}`, { remark: clientRemarks.value[client.id] ?? null })
@@ -660,6 +673,7 @@ async function switchTab(tab: WorkTab) {
   else if (tab === 'services') await loadServices()
   else if (tab === 'slots') await loadSlots()
   else if (tab === 'clients') await loadClients()
+  else if (tab === 'reviews') await loadReviews()
   else if (tab === 'phrases') await loadPhrases()
   else fillFormFromProfile()
 }
@@ -837,6 +851,7 @@ const auditText = computed(() =>
           { key: 'services', label: '服务项目', icon: Plus },
           { key: 'slots', label: '时段设置', icon: Clock },
           { key: 'clients', label: '客户管理', icon: UsersIcon },
+          { key: 'reviews', label: '收到的评价', icon: Star },
           { key: 'phrases', label: '话术库', icon: ChatIcon },
           { key: 'profile', label: '资料设置', icon: Sparkle },
         ] as const" :key="tab.key" type="button" class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm pressable"
@@ -1095,6 +1110,30 @@ const auditText = computed(() =>
           </div>
         </div>
         <EmptyState v-else class="mt-5" title="还没有客户" hint="服务完成后，客户会自动出现在这里。" />
+      </section>
+
+      <!-- 收到的评价 -->
+      <section v-else-if="activeTab === 'reviews'" class="mt-8">
+        <div v-if="reviews.length" class="space-y-3">
+          <div v-for="review in reviews" :key="review.id" class="card p-5">
+            <div class="flex items-center justify-between gap-3">
+              <p class="font-medium">{{ review.nickname }}</p>
+              <div class="flex gap-0.5" :aria-label="`${review.rating} 星`">
+                <span v-for="n in 5" :key="n">
+                  <Star :size="16" weight="fill" :class="n <= review.rating ? 'text-pine' : 'text-hairline'" />
+                </span>
+              </div>
+            </div>
+            <p v-if="review.serviceName" class="catalog-tab mt-1">
+              {{ review.serviceName }}{{ review.serviceDate ? ' · ' + review.serviceDate : '' }}
+            </p>
+            <p v-if="review.content" class="mt-3 text-[15px] leading-relaxed">{{ review.content }}</p>
+            <p class="catalog-tab mt-2">
+              {{ new Date(review.createdAt).toLocaleString('zh-CN', { hour12: false }) }}
+            </p>
+          </div>
+        </div>
+        <EmptyState v-else class="mt-5" title="还没有收到评价" hint="服务完成后，用户可以在「我的成长」里给你评价。" />
       </section>
 
       <!-- 话术库 -->
