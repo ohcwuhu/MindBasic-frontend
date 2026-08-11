@@ -422,17 +422,25 @@ const serviceForm = reactive({
 // ---------- 客户管理 ----------
 const clients = ref<Client[]>([])
 const clientKeyword = ref('')
+const clientFilter = ref<'all' | 'followup'>('all')
+const followupDays = ref('30')
 const clientRemarks = ref<Record<number, string>>({})
 
 async function loadClients() {
   try {
     const params = new URLSearchParams({ page: '1', pageSize: '50' })
     if (clientKeyword.value) params.set('keyword', clientKeyword.value)
+    if (clientFilter.value === 'followup') params.set('followupDays', followupDays.value)
     const data = await get<{ items: Client[] }>(`/coach/clients?${params.toString()}`)
     clients.value = data.items
   } catch (e) {
     error.value = e instanceof Error ? e.message : '客户加载失败'
   }
+}
+
+function daysSince(dateStr: string | null): number | null {
+  if (!dateStr) return null
+  return Math.max(0, Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000))
 }
 
 const reviews = ref<CoachReview[]>([])
@@ -1108,19 +1116,58 @@ const auditText = computed(() =>
 
       <!-- 客户管理 -->
       <section v-else-if="activeTab === 'clients'" class="mt-8">
-        <form class="flex gap-2 max-w-lg" @submit.prevent="loadClients">
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="flex gap-1 p-1 rounded-full bg-paper border border-hairline">
+            <button
+              type="button"
+              class="h-9 px-4 rounded-full text-sm pressable transition-colors"
+              :class="clientFilter === 'all' ? 'bg-card text-ink shadow-sm' : 'text-ink-soft'"
+              @click="clientFilter = 'all'; loadClients()"
+            >
+              全部
+            </button>
+            <button
+              type="button"
+              class="h-9 px-4 rounded-full text-sm pressable transition-colors"
+              :class="clientFilter === 'followup' ? 'bg-card text-ink shadow-sm' : 'text-ink-soft'"
+              @click="clientFilter = 'followup'; loadClients()"
+            >
+              待跟进
+            </button>
+          </div>
+          <select
+            v-if="clientFilter === 'followup'"
+            v-model="followupDays"
+            class="h-9 px-3 rounded-full border border-hairline bg-card text-sm outline-none focus:border-pine"
+            @change="loadClients()"
+          >
+            <option value="7">超过 7 天</option>
+            <option value="14">超过 14 天</option>
+            <option value="30">超过 30 天</option>
+          </select>
+          <form class="flex gap-2 flex-1 min-w-[220px] max-w-md" @submit.prevent="loadClients">
           <input
             v-model="clientKeyword"
             class="h-11 flex-1 px-4 rounded-[10px] border border-hairline bg-card text-sm outline-none focus:border-pine"
             placeholder="搜索客户昵称"
           />
           <button type="submit" class="h-11 px-6 rounded-full bg-pine text-card text-sm font-medium pressable">查询</button>
-        </form>
+          </form>
+        </div>
         <div v-if="clients.length" class="mt-5 bg-card border border-hairline rounded-[14px] divide-y divide-hairline">
           <div v-for="client in clients" :key="client.id" class="px-5 py-4">
             <div class="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p class="font-medium">{{ client.nickname }} <span class="text-sm text-ink-faint">{{ client.phone }}</span></p>
+                <p class="font-medium">
+                  {{ client.nickname }}
+                  <span class="text-sm text-ink-faint">{{ client.phone }}</span>
+                  <span
+                    v-if="clientFilter === 'followup' && daysSince(client.lastAppointmentAt) !== null && (daysSince(client.lastAppointmentAt) ?? 0) >= 1"
+                    class="ml-2 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-900"
+                  >
+                    {{ daysSince(client.lastAppointmentAt) }} 天未联系
+                  </span>
+                </p>
                 <p class="mt-1 text-sm text-ink-soft">
                   最近服务：{{ client.lastAppointmentAt ? new Date(client.lastAppointmentAt).toLocaleDateString('zh-CN') : '—' }}
                 </p>
@@ -1142,7 +1189,12 @@ const auditText = computed(() =>
             </div>
           </div>
         </div>
-        <EmptyState v-else class="mt-5" title="还没有客户" hint="服务完成后，客户会自动出现在这里。" />
+        <EmptyState
+          v-else
+          class="mt-5"
+          :title="clientFilter === 'followup' ? '没有待跟进的客户' : '还没有客户'"
+          :hint="clientFilter === 'followup' ? '超过设定天数未联系的客户会出现在这里。' : '服务完成后，客户会自动出现在这里。'"
+        />
       </section>
 
       <!-- 收到的评价 -->
