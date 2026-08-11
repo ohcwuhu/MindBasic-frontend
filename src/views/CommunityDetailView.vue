@@ -10,11 +10,10 @@ import {
   PhHeart as Heart,
   PhImage as ImageIcon,
   PhPushPin as Pin,
-  PhTrash as Trash,
   PhUsers as UsersIcon,
 } from '@phosphor-icons/vue'
 import { del, get, patch, post, uploadFile } from '@/api/client'
-import type { CommunityComment, CommunityDetail, CommunityPost } from '@/api/types'
+import type { CommunityDetail, CommunityPost } from '@/api/types'
 import { useAuthStore } from '@/stores/auth'
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -33,10 +32,6 @@ const submittingPost = ref(false)
 const uploadingImage = ref(false)
 const postContent = ref('')
 const postImage = ref('')
-const comments = ref<Record<number, CommunityComment[]>>({})
-const expandedPosts = ref<Set<number>>(new Set())
-const commentInputs = ref<Record<number, string>>({})
-const commenting = ref<number | null>(null)
 
 async function load() {
   loading.value = true
@@ -126,40 +121,8 @@ async function toggleLike(item: CommunityPost) {
   }
 }
 
-async function toggleComments(item: CommunityPost) {
-  if (expandedPosts.value.has(item.id)) {
-    expandedPosts.value.delete(item.id)
-    return
-  }
-  try {
-    const data = await get<{ post: CommunityPost; comments: CommunityComment[] }>(
-      `/communities/${communityId}/posts/${item.id}`,
-    )
-    comments.value[item.id] = data.comments
-    expandedPosts.value.add(item.id)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '评论加载失败'
-  }
-}
-
-async function addComment(item: CommunityPost) {
-  const content = commentInputs.value[item.id]?.trim()
-  if (!content) return
-  commenting.value = item.id
-  error.value = ''
-  try {
-    const comment = await post<CommunityComment>(
-      `/communities/${communityId}/posts/${item.id}/comments`,
-      { content },
-    )
-    comments.value[item.id] = [...(comments.value[item.id] ?? []), comment]
-    commentInputs.value[item.id] = ''
-    item.commentCount += 1
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : '评论失败'
-  } finally {
-    commenting.value = null
-  }
+function openPost(post: CommunityPost) {
+  router.push(`/communities/${communityId}/posts/${post.id}`)
 }
 
 async function togglePin(item: CommunityPost) {
@@ -255,8 +218,9 @@ onMounted(load)
           <article
             v-for="post in posts"
             :key="post.id"
-            class="card p-4"
+            class="card p-4 cursor-pointer pressable group"
             :class="post.isPinned ? 'border-pine/40' : ''"
+            @click="openPost(post)"
           >
             <div class="flex items-center gap-2.5">
               <span class="w-9 h-9 rounded-full bg-pine-soft text-pine-deep text-sm flex items-center justify-center shrink-0">
@@ -287,47 +251,22 @@ onMounted(load)
                 type="button"
                 class="inline-flex items-center gap-1.5 h-9 px-4 rounded-full border border-hairline bg-card text-sm pressable"
                 :class="post.liked ? 'text-pine border-pine' : 'text-ink-soft'"
-                @click="toggleLike(post)"
+                @click.stop="toggleLike(post)"
               >
                 <Heart :size="15" :weight="post.liked ? 'fill' : 'regular'" /> {{ post.likeCount }}
               </button>
               <button
                 type="button"
                 class="inline-flex items-center gap-1.5 h-9 px-4 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
-                @click="toggleComments(post)"
+                @click.stop="openPost(post)"
               >
                 <ChatIcon :size="15" /> {{ post.commentCount }}
               </button>
               <div v-if="detail.canManage" class="flex-1 flex justify-end gap-1">
-                <button type="button" class="h-9 px-4 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable" @click="togglePin(post)">
+                <button type="button" class="h-9 px-4 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable" @click.stop="togglePin(post)">
                   {{ post.isPinned ? '取消置顶' : '置顶' }}
                 </button>
-                <button type="button" class="h-9 px-4 rounded-full border border-hairline bg-card text-sm text-red-800 pressable" @click="removePost(post.id)">删除</button>
-              </div>
-            </div>
-
-            <div v-if="expandedPosts.has(post.id)" class="mt-4 border-t border-hairline pt-4 space-y-3">
-              <div v-for="comment in comments[post.id] ?? []" :key="comment.id" class="text-sm">
-                <p><span class="font-medium">{{ comment.nickname }}</span>
-                  <span class="text-ink-faint ml-2">{{ new Date(comment.createdAt).toLocaleString('zh-CN', { hour12: false }) }}</span>
-                </p>
-                <p class="mt-1 text-ink-soft leading-relaxed">{{ comment.content }}</p>
-              </div>
-              <div class="flex gap-2">
-                <input
-                  v-model="commentInputs[post.id]"
-                  placeholder="说点什么…"
-                  class="flex-1 h-10 px-4 rounded-full border border-hairline bg-card text-sm outline-none focus:border-pine"
-                  @keyup.enter="addComment(post)"
-                />
-                <button
-                  type="button"
-                  :disabled="commenting === post.id || !commentInputs[post.id]?.trim()"
-                  class="h-10 px-5 rounded-full bg-pine text-card text-sm font-medium disabled:opacity-50 pressable"
-                  @click="addComment(post)"
-                >
-                  评论
-                </button>
+                <button type="button" class="h-9 px-4 rounded-full border border-hairline bg-card text-sm text-red-800 pressable" @click.stop="removePost(post.id)">删除</button>
               </div>
             </div>
           </article>
