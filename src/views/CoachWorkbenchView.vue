@@ -11,6 +11,7 @@ import {
   PhSparkle as Sparkle,
   PhUsers as UsersIcon,
   PhChatCircleText as ChatIcon,
+  PhDownloadSimple as Download,
 } from '@phosphor-icons/vue'
 import { ApiError, del, get, patch, post, put, uploadFile } from '@/api/client'
 import type {
@@ -298,12 +299,11 @@ async function loadCases() {
   }
 }
 
-async function exportCases() {
+async function exportCases(ids?: number[]) {
   const token = localStorage.getItem('mb_access_token')
   try {
-    const query = selectedCaseIds.value.length
-      ? `?ids=${selectedCaseIds.value.join(',')}`
-      : ''
+    const target = ids ?? (selectedCaseIds.value.length ? selectedCaseIds.value : null)
+    const query = target && target.length ? `?ids=${target.join(',')}` : ''
     const resp = await fetch(`/api/v1/coach/cases/export${query}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
@@ -320,10 +320,14 @@ async function exportCases() {
     link.click()
     link.remove()
     URL.revokeObjectURL(url)
-    selectedCaseIds.value = []
+    if (!ids) selectedCaseIds.value = []
   } catch {
     error.value = '导出失败，请重试'
   }
+}
+
+function exportOneCase(record: CaseRecord) {
+  exportCases([record.id])
 }
 
 function toggleCaseSelect(id: number, checked: boolean) {
@@ -893,7 +897,7 @@ const auditText = computed(() =>
           <button
             type="button"
             class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
-            @click="exportCases"
+            @click="exportCases()"
           >
             {{ selectedCaseIds.length ? `导出所选 (${selectedCaseIds.length})` : '导出全部 Markdown' }}
           </button>
@@ -934,7 +938,25 @@ const auditText = computed(() =>
               <p v-if="record.content" class="mt-1 text-sm text-ink-soft line-clamp-2 whitespace-pre-line">{{ record.content }}</p>
               <p class="catalog-tab mt-2">{{ record.durationMin }} 分钟 · {{ new Date(record.createdAt).toLocaleDateString('zh-CN') }}</p>
             </div>
-            <button type="button" class="self-start p-2 text-ink-faint hover:text-red-800 pressable" @click.stop="removeCase(record.id)"><Trash :size="17" /></button>
+            <div class="flex gap-1 self-start">
+              <button
+                type="button"
+                class="p-2 text-ink-faint hover:text-pine pressable"
+                title="导出本条"
+                :aria-label="`导出个案 ${record.id}`"
+                @click.stop="exportOneCase(record)"
+              >
+                <Download :size="17" />
+              </button>
+              <button
+                type="button"
+                class="p-2 text-ink-faint hover:text-red-800 pressable"
+                :aria-label="`删除个案 ${record.id}`"
+                @click.stop="removeCase(record.id)"
+              >
+                <Trash :size="17" />
+              </button>
+            </div>
           </div>
         </div>
         <EmptyState v-else class="mt-4" title="还没有个案记录" hint="服务完成后在这里沉淀你的专业积累。" />
