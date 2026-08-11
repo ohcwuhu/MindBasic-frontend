@@ -42,12 +42,15 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    const [info, list] = await Promise.all([
-      get<CommunityDetail>(`/communities/${communityId}`),
-      get<{ items: CommunityPost[] }>(`/communities/${communityId}/posts?page=1&pageSize=50`),
-    ])
+    const info = await get<CommunityDetail>(`/communities/${communityId}`)
     detail.value = info
-    posts.value = list.items
+    posts.value = []
+    if (info.joined) {
+      const list = await get<{ items: CommunityPost[] }>(
+        `/communities/${communityId}/posts?page=1&pageSize=50`,
+      )
+      posts.value = list.items
+    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : '加载失败'
   } finally {
