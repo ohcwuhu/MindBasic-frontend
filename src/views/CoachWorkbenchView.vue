@@ -264,12 +264,23 @@ async function completeAppointment(id: number) {
 // 个案
 const cases = ref<CaseRecord[]>([])
 const caseStats = ref<CaseStats | null>(null)
+const CASE_TEMPLATE = [
+  '## 对话核心要点',
+  '（记录对话中的关键信息、教练的关注点…）',
+  '',
+  '## 用户收获',
+  '（写下用户获得的启发、改变与资源…）',
+  '',
+  '## 后续跟进建议',
+  '（给用户接下来 1-2 周的小行动建议…）',
+  '',
+  '## 备注',
+  '（其他补充…）',
+].join('\n')
 const caseForm = reactive({
   appointmentId: '',
   clientNickname: '',
-  keyPoints: '',
-  userGains: '',
-  followupAdvice: '',
+  content: CASE_TEMPLATE,
   durationMin: '60',
 })
 
@@ -315,17 +326,13 @@ async function createCase() {
     await post('/coach/cases', {
       appointmentId: caseForm.appointmentId ? Number(caseForm.appointmentId) : null,
       clientNickname: caseForm.clientNickname || null,
-      keyPoints: caseForm.keyPoints || null,
-      userGains: caseForm.userGains || null,
-      followupAdvice: caseForm.followupAdvice || null,
+      content: caseForm.content.trim(),
       durationMin: Number(caseForm.durationMin) || 0,
     })
     Object.assign(caseForm, {
       appointmentId: '',
       clientNickname: '',
-      keyPoints: '',
-      userGains: '',
-      followupAdvice: '',
+      content: CASE_TEMPLATE,
       durationMin: 60,
     })
     await loadCases()
@@ -348,9 +355,7 @@ const viewingCase = ref<CaseRecord | null>(null)
 const editingCase = ref(false)
 const caseEditForm = reactive({
   clientNickname: '',
-  keyPoints: '',
-  userGains: '',
-  followupAdvice: '',
+  content: CASE_TEMPLATE,
   durationMin: '60',
 })
 
@@ -359,9 +364,7 @@ function openCase(record: CaseRecord) {
   editingCase.value = false
   Object.assign(caseEditForm, {
     clientNickname: record.clientNickname ?? '',
-    keyPoints: record.keyPoints ?? '',
-    userGains: record.userGains ?? '',
-    followupAdvice: record.followupAdvice ?? '',
+    content: record.content ?? CASE_TEMPLATE,
     durationMin: String(record.durationMin),
   })
 }
@@ -377,9 +380,7 @@ async function saveCaseEdit() {
   try {
     const updated = await patch<CaseRecord>(`/coach/cases/${id}`, {
       clientNickname: caseEditForm.clientNickname || null,
-      keyPoints: caseEditForm.keyPoints || null,
-      userGains: caseEditForm.userGains || null,
-      followupAdvice: caseEditForm.followupAdvice || null,
+      content: caseEditForm.content.trim(),
       durationMin: Number(caseEditForm.durationMin) || 0,
     })
     viewingCase.value = updated
@@ -894,14 +895,16 @@ const auditText = computed(() =>
             <FieldInput v-model="caseForm.appointmentId" label="关联预约 ID（可选）" type="number" />
           </div>
           <div class="mt-4 space-y-4">
-            <label class="block"><span class="text-sm font-medium text-ink">对话核心要点</span>
-              <textarea v-model="caseForm.keyPoints" rows="2" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea></label>
-            <label class="block"><span class="text-sm font-medium text-ink">用户收获</span>
-              <textarea v-model="caseForm.userGains" rows="2" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea></label>
-            <label class="block"><span class="text-sm font-medium text-ink">后续跟进建议</span>
-              <textarea v-model="caseForm.followupAdvice" rows="2" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea></label>
+            <label class="block">
+              <span class="text-sm font-medium text-ink">个案记录（Markdown 模板，按需修改）</span>
+              <textarea
+                v-model="caseForm.content"
+                rows="14"
+                class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] leading-relaxed font-mono outline-none focus:border-pine resize-y"
+              ></textarea>
+            </label>
           </div>
-          <p class="catalog-tab mt-2">三个内容字段均支持 Markdown（标题、列表、加粗、代码块等）。</p>
+          <p class="catalog-tab mt-2">内容支持 Markdown（标题、列表、加粗、代码块等）。</p>
           <button type="button" class="mt-5 h-10 px-5 rounded-full bg-pine text-card text-sm pressable" @click="createCase">保存个案</button>
         </div>
 
@@ -909,7 +912,7 @@ const auditText = computed(() =>
           <div v-for="record in cases" :key="record.id" class="py-4 flex gap-4 cursor-pointer group" @click="openCase(record)">
             <div class="flex-1 min-w-0">
               <p class="font-medium group-hover:text-pine transition-colors">{{ record.clientNickname || '未命名客户' }}</p>
-              <p v-if="record.keyPoints" class="mt-1 text-sm text-ink-soft line-clamp-2 whitespace-pre-line">{{ record.keyPoints }}</p>
+              <p v-if="record.content" class="mt-1 text-sm text-ink-soft line-clamp-2 whitespace-pre-line">{{ record.content }}</p>
               <p class="catalog-tab mt-2">{{ record.durationMin }} 分钟 · {{ new Date(record.createdAt).toLocaleDateString('zh-CN') }}</p>
             </div>
             <button type="button" class="self-start p-2 text-ink-faint hover:text-red-800 pressable" @click.stop="removeCase(record.id)"><Trash :size="17" /></button>
@@ -1194,34 +1197,19 @@ const auditText = computed(() =>
           </button>
         </div>
 
-        <div v-if="!editingCase" class="mt-5 space-y-5">
-          <section>
-            <p class="catalog-tab">对话核心要点</p>
-            <div class="md-body mt-2" v-html="renderMarkdown(viewingCase.keyPoints ?? '')"></div>
-          </section>
-          <section>
-            <p class="catalog-tab">用户收获</p>
-            <div class="md-body mt-2" v-html="renderMarkdown(viewingCase.userGains ?? '')"></div>
-          </section>
-          <section>
-            <p class="catalog-tab">后续跟进建议</p>
-            <div class="md-body mt-2" v-html="renderMarkdown(viewingCase.followupAdvice ?? '')"></div>
-          </section>
+        <div v-if="!editingCase" class="mt-5">
+          <div class="md-body" v-html="renderMarkdown(viewingCase.content ?? '')"></div>
         </div>
 
         <form v-else id="case-edit-form" class="mt-5 space-y-4" @submit.prevent="saveCaseEdit">
           <FieldInput v-model="caseEditForm.clientNickname" label="客户称呼" />
           <label class="block">
-            <span class="text-sm font-medium text-ink">对话核心要点（支持 Markdown）</span>
-            <textarea v-model="caseEditForm.keyPoints" rows="4" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea>
-          </label>
-          <label class="block">
-            <span class="text-sm font-medium text-ink">用户收获（支持 Markdown）</span>
-            <textarea v-model="caseEditForm.userGains" rows="3" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea>
-          </label>
-          <label class="block">
-            <span class="text-sm font-medium text-ink">后续跟进建议（支持 Markdown）</span>
-            <textarea v-model="caseEditForm.followupAdvice" rows="3" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea>
+            <span class="text-sm font-medium text-ink">个案记录（Markdown）</span>
+            <textarea
+              v-model="caseEditForm.content"
+              rows="14"
+              class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] leading-relaxed font-mono outline-none focus:border-pine resize-y"
+            ></textarea>
           </label>
           <FieldInput v-model="caseEditForm.durationMin" label="时长(分钟)" type="number" />
         </form>

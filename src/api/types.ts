@@ -209,9 +209,7 @@ export interface CaseRecord {
   id: number
   appointmentId: number | null
   clientNickname: string | null
-  keyPoints: string | null
-  userGains: string | null
-  followupAdvice: string | null
+  content: string | null
   durationMin: number
   createdAt: string
   updatedAt: string
