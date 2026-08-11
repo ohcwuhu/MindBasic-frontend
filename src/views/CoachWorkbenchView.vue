@@ -264,6 +264,7 @@ async function completeAppointment(id: number) {
 // 个案
 const cases = ref<CaseRecord[]>([])
 const caseStats = ref<CaseStats | null>(null)
+const selectedCaseIds = ref<number[]>([])
 const CASE_TEMPLATE = [
   '## 对话核心要点',
   '（记录对话中的关键信息、教练的关注点…）',
@@ -300,7 +301,10 @@ async function loadCases() {
 async function exportCases() {
   const token = localStorage.getItem('mb_access_token')
   try {
-    const resp = await fetch('/api/v1/coach/cases/export', {
+    const query = selectedCaseIds.value.length
+      ? `?ids=${selectedCaseIds.value.join(',')}`
+      : ''
+    const resp = await fetch(`/api/v1/coach/cases/export${query}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
     if (!resp.ok) {
@@ -316,9 +320,16 @@ async function exportCases() {
     link.click()
     link.remove()
     URL.revokeObjectURL(url)
+    selectedCaseIds.value = []
   } catch {
     error.value = '导出失败，请重试'
   }
+}
+
+function toggleCaseSelect(id: number, checked: boolean) {
+  selectedCaseIds.value = checked
+    ? [...selectedCaseIds.value, id]
+    : selectedCaseIds.value.filter((item) => item !== id)
 }
 
 async function createCase() {
@@ -884,7 +895,7 @@ const auditText = computed(() =>
             class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
             @click="exportCases"
           >
-            导出 Markdown
+            {{ selectedCaseIds.length ? `导出所选 (${selectedCaseIds.length})` : '导出全部 Markdown' }}
           </button>
         </div>
 
@@ -910,6 +921,14 @@ const auditText = computed(() =>
 
         <div v-if="cases.length" class="mt-6 divide-y divide-hairline border-y border-hairline">
           <div v-for="record in cases" :key="record.id" class="py-4 flex gap-4 cursor-pointer group" @click="openCase(record)">
+            <input
+              type="checkbox"
+              class="accent-[#1f6b52] w-4 h-4 self-start mt-1 pressable"
+              :checked="selectedCaseIds.includes(record.id)"
+              :aria-label="`选择个案 ${record.id}`"
+              @click.stop
+              @change="toggleCaseSelect(record.id, ($event.target as HTMLInputElement).checked)"
+            />
             <div class="flex-1 min-w-0">
               <p class="font-medium group-hover:text-pine transition-colors">{{ record.clientNickname || '未命名客户' }}</p>
               <p v-if="record.content" class="mt-1 text-sm text-ink-soft line-clamp-2 whitespace-pre-line">{{ record.content }}</p>
