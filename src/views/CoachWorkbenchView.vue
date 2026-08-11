@@ -28,6 +28,7 @@ import type {
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import FieldInput from '@/components/FieldInput.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import { renderMarkdown } from '@/utils/markdown'
 
 type WorkTab = 'appointments' | 'cases' | 'services' | 'slots' | 'clients' | 'phrases' | 'profile'
 
@@ -339,6 +340,53 @@ async function removeCase(id: number) {
     await loadCases()
   } catch (e) {
     error.value = e instanceof Error ? e.message : '删除失败'
+  }
+}
+
+// 个案详情 / 编辑（Markdown）
+const viewingCase = ref<CaseRecord | null>(null)
+const editingCase = ref(false)
+const caseEditForm = reactive({
+  clientNickname: '',
+  keyPoints: '',
+  userGains: '',
+  followupAdvice: '',
+  durationMin: '60',
+})
+
+function openCase(record: CaseRecord) {
+  viewingCase.value = record
+  editingCase.value = false
+  Object.assign(caseEditForm, {
+    clientNickname: record.clientNickname ?? '',
+    keyPoints: record.keyPoints ?? '',
+    userGains: record.userGains ?? '',
+    followupAdvice: record.followupAdvice ?? '',
+    durationMin: String(record.durationMin),
+  })
+}
+
+function closeCase() {
+  viewingCase.value = null
+  editingCase.value = false
+}
+
+async function saveCaseEdit() {
+  if (!viewingCase.value) return
+  const id = viewingCase.value.id
+  try {
+    const updated = await patch<CaseRecord>(`/coach/cases/${id}`, {
+      clientNickname: caseEditForm.clientNickname || null,
+      keyPoints: caseEditForm.keyPoints || null,
+      userGains: caseEditForm.userGains || null,
+      followupAdvice: caseEditForm.followupAdvice || null,
+      durationMin: Number(caseEditForm.durationMin) || 0,
+    })
+    viewingCase.value = updated
+    editingCase.value = false
+    await loadCases()
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '保存失败'
   }
 }
 
@@ -853,17 +901,18 @@ const auditText = computed(() =>
             <label class="block"><span class="text-sm font-medium text-ink">后续跟进建议</span>
               <textarea v-model="caseForm.followupAdvice" rows="2" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea></label>
           </div>
+          <p class="catalog-tab mt-2">三个内容字段均支持 Markdown（标题、列表、加粗、代码块等）。</p>
           <button type="button" class="mt-5 h-10 px-5 rounded-full bg-pine text-card text-sm pressable" @click="createCase">保存个案</button>
         </div>
 
         <div v-if="cases.length" class="mt-6 divide-y divide-hairline border-y border-hairline">
-          <div v-for="record in cases" :key="record.id" class="py-4 flex gap-4">
+          <div v-for="record in cases" :key="record.id" class="py-4 flex gap-4 cursor-pointer group" @click="openCase(record)">
             <div class="flex-1 min-w-0">
-              <p class="font-medium">{{ record.clientNickname || '未命名客户' }}</p>
-              <p v-if="record.keyPoints" class="mt-1 text-sm text-ink-soft line-clamp-2">{{ record.keyPoints }}</p>
+              <p class="font-medium group-hover:text-pine transition-colors">{{ record.clientNickname || '未命名客户' }}</p>
+              <p v-if="record.keyPoints" class="mt-1 text-sm text-ink-soft line-clamp-2 whitespace-pre-line">{{ record.keyPoints }}</p>
               <p class="catalog-tab mt-2">{{ record.durationMin }} 分钟 · {{ new Date(record.createdAt).toLocaleDateString('zh-CN') }}</p>
             </div>
-            <button type="button" class="self-start p-2 text-ink-faint hover:text-red-800 pressable" @click="removeCase(record.id)"><Trash :size="17" /></button>
+            <button type="button" class="self-start p-2 text-ink-faint hover:text-red-800 pressable" @click.stop="removeCase(record.id)"><Trash :size="17" /></button>
           </div>
         </div>
         <EmptyState v-else class="mt-4" title="还没有个案记录" hint="服务完成后在这里沉淀你的专业积累。" />
@@ -1121,4 +1170,134 @@ const auditText = computed(() =>
       </section>
     </template>
   </div>
+
+  <Teleport to="body">
+    <div
+      v-if="viewingCase"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="个案详情"
+    >
+      <div class="absolute inset-0 bg-ink/40" @click="closeCase"></div>
+      <div class="relative w-full max-w-[560px] max-h-[85vh] overflow-y-auto bg-card rounded-[14px] border border-hairline p-6">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-semibold tracking-tight">{{ viewingCase.clientNickname || '未命名客户' }}</h2>
+            <p class="catalog-tab mt-1">
+              {{ viewingCase.durationMin }} 分钟 · {{ new Date(viewingCase.createdAt).toLocaleString('zh-CN', { hour12: false }) }}
+              <span v-if="viewingCase.appointmentId"> · 关联预约 #{{ viewingCase.appointmentId }}</span>
+            </p>
+          </div>
+          <button type="button" class="w-9 h-9 rounded-full border border-hairline flex items-center justify-center text-ink-faint pressable" @click="closeCase">
+            <X :size="16" />
+          </button>
+        </div>
+
+        <div v-if="!editingCase" class="mt-5 space-y-5">
+          <section>
+            <p class="catalog-tab">对话核心要点</p>
+            <div class="md-body mt-2" v-html="renderMarkdown(viewingCase.keyPoints ?? '')"></div>
+          </section>
+          <section>
+            <p class="catalog-tab">用户收获</p>
+            <div class="md-body mt-2" v-html="renderMarkdown(viewingCase.userGains ?? '')"></div>
+          </section>
+          <section>
+            <p class="catalog-tab">后续跟进建议</p>
+            <div class="md-body mt-2" v-html="renderMarkdown(viewingCase.followupAdvice ?? '')"></div>
+          </section>
+        </div>
+
+        <form v-else id="case-edit-form" class="mt-5 space-y-4" @submit.prevent="saveCaseEdit">
+          <FieldInput v-model="caseEditForm.clientNickname" label="客户称呼" />
+          <label class="block">
+            <span class="text-sm font-medium text-ink">对话核心要点（支持 Markdown）</span>
+            <textarea v-model="caseEditForm.keyPoints" rows="4" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea>
+          </label>
+          <label class="block">
+            <span class="text-sm font-medium text-ink">用户收获（支持 Markdown）</span>
+            <textarea v-model="caseEditForm.userGains" rows="3" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea>
+          </label>
+          <label class="block">
+            <span class="text-sm font-medium text-ink">后续跟进建议（支持 Markdown）</span>
+            <textarea v-model="caseEditForm.followupAdvice" rows="3" class="mt-2 w-full rounded-[10px] border border-hairline bg-paper/60 px-4 py-3 text-[15px] outline-none focus:border-pine"></textarea>
+          </label>
+          <FieldInput v-model="caseEditForm.durationMin" label="时长(分钟)" type="number" />
+        </form>
+
+        <div class="mt-6 flex flex-wrap justify-end gap-2">
+          <template v-if="!editingCase">
+            <button type="button" class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable" @click="editingCase = true">
+              编辑
+            </button>
+            <button
+              type="button"
+              class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-red-800 pressable"
+              @click="removeCase(viewingCase.id); closeCase()"
+            >
+              删除
+            </button>
+          </template>
+          <template v-else>
+            <button type="button" class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable" @click="editingCase = false">
+              取消
+            </button>
+            <button type="submit" form="case-edit-form" class="h-10 px-6 rounded-full bg-pine text-card text-sm font-medium pressable">
+              保存
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
+
+<style>
+.md-body {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #3f4a45;
+}
+.md-body h1,
+.md-body h2,
+.md-body h3,
+.md-body h4 {
+  font-weight: 600;
+  margin: 0.75rem 0 0.4rem;
+  color: #1a2b24;
+}
+.md-body h1 { font-size: 1.25rem; }
+.md-body h2 { font-size: 1.125rem; }
+.md-body h3 { font-size: 1rem; }
+.md-body h4 { font-size: 0.925rem; }
+.md-body p { margin: 0.4rem 0; }
+.md-body ul,
+.md-body ol { margin: 0.4rem 0; padding-left: 1.25rem; }
+.md-body ul { list-style: disc; }
+.md-body ol { list-style: decimal; }
+.md-body li { margin: 0.2rem 0; }
+.md-body pre {
+  margin: 0.5rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #f2f0ea;
+  overflow-x: auto;
+  font-size: 13px;
+}
+.md-body code {
+  background: #f2f0ea;
+  border-radius: 5px;
+  padding: 0.1em 0.35em;
+  font-size: 0.92em;
+}
+.md-body pre code { background: transparent; padding: 0; }
+.md-body blockquote {
+  margin: 0.5rem 0;
+  padding: 0.25rem 0.9rem;
+  border-left: 3px solid #2f7d63;
+  color: #5a6a63;
+}
+.md-body a { color: #1f6b52; text-decoration: underline; }
+.md-body del { color: #8a958f; }
+</style>
