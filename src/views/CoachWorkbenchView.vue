@@ -311,7 +311,7 @@ async function exportCases() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `个案记录_${new Date().toISOString().slice(0, 10)}.csv`
+    link.download = `个案记录_${new Date().toISOString().slice(0, 10)}.md`
     document.body.appendChild(link)
     link.click()
     link.remove()
@@ -884,7 +884,7 @@ const auditText = computed(() =>
             class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
             @click="exportCases"
           >
-            导出 CSV
+            导出 Markdown
           </button>
         </div>
 
