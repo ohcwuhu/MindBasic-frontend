@@ -26,6 +26,7 @@ const navLinks = [
   { to: '/coaches', label: '找教练' },
   { to: '/articles', label: '科普' },
   { to: '/communities', label: '社群' },
+  { to: 'http://localhost:5174', label: 'AI 实验', external: true },
 ]
 
 const tabItems = [
@@ -97,15 +98,25 @@ const pageTitle = computed(() => {
           <span class="catalog-tab hidden lg:inline">成长服务目录</span>
         </RouterLink>
         <nav class="flex items-center gap-6" aria-label="主导航">
-          <RouterLink
-            v-for="item in navLinks"
-            :key="item.to"
-            :to="item.to"
-            class="text-sm transition-colors"
-            :class="isActive(item.to) ? 'text-pine font-medium' : 'text-ink-soft hover:text-ink'"
-          >
-            {{ item.label }}
-          </RouterLink>
+          <template v-for="item in navLinks" :key="item.to">
+            <a
+              v-if="item.external"
+              :href="item.to"
+              target="_blank"
+              rel="noopener"
+              class="text-sm transition-colors text-ink-soft hover:text-ink"
+            >
+              {{ item.label }}
+            </a>
+            <RouterLink
+              v-else
+              :to="item.to"
+              class="text-sm transition-colors"
+              :class="isActive(item.to) ? 'text-pine font-medium' : 'text-ink-soft hover:text-ink'"
+            >
+              {{ item.label }}
+            </RouterLink>
+          </template>
         </nav>
         <div class="flex items-center gap-3">
           <template v-if="auth.isLoggedIn">
