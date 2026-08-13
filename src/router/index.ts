@@ -25,6 +25,7 @@ export const router = createRouter({
     { path: '/communities/:id', name: 'community-detail', component: () => import('@/views/CommunityDetailView.vue') },
     { path: '/communities/:communityId/posts/:postId', name: 'community-post-detail', component: () => import('@/views/CommunityPostDetailView.vue'), meta: { auth: true } },
     { path: '/coach', name: 'coach-workbench', component: () => import('@/views/CoachWorkbenchView.vue'), meta: { auth: true } },
+    { path: '/ai-lab', name: 'ai-lab', component: () => import('@/views/AiLabView.vue') },
     { path: '/admin', name: 'admin', component: () => import('@/views/admin/AdminConsoleView.vue'), meta: { auth: true, admin: true } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],

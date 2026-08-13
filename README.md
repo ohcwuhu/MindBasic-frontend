@@ -32,6 +32,14 @@ npm run build      # vue-tsc 类型检查 + vite 构建 → dist/
 npm run preview    # 本地预览构建产物
 ```
 
+## AI 实验（情绪识别实验室）
+
+AI 实验室已并入主项目，入口为顶部导航「AI 实验」（`/ai-lab`）：
+
+- 页面组件：`src/components/ai-lab/`（实时情绪识别 + 语音转文字 + AI 心理教练对话）；
+- 后端同源接入：`/api/*` 与 `/socket.io`（WebSocket）已由 Vite 代理到 `127.0.0.1:8000`；
+- 使用前请确认后端已通过 `app.main:socket_app` 启动（见 `backend/README.md`）。
+
 ## 目录结构
 
 ```
