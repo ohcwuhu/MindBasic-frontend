@@ -509,13 +509,18 @@ onUnmounted(() => {
 <style scoped>
 /* 设计规范：纸白底 / 墨色文字 / 松绿强调 / 圆角 14-12 两级 */
 .ai-chat-page {
-  min-height: calc(100dvh - 64px);
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 64px;
+  bottom: 0;
   background: var(--color-paper);
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 16px 16px 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* ===== 常驻表情面板 ===== */
@@ -891,7 +896,8 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .ai-chat-page {
-    min-height: calc(100dvh - 56px);
+    top: 56px;
+    bottom: 64px;
     padding: 10px 10px 0;
   }
   .camera-card {
