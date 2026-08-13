@@ -53,7 +53,6 @@ interface AnalysisResult {
   transcription?: { text?: string; language?: string; duration_seconds?: number }
   text_emotion?: { emotion?: string; emotion_cn?: string; confidence?: number }
   voice_emotion?: { emotion?: string; emotion_cn?: string; confidence?: number }
-  facial_emotion?: { dominant_emotion?: string; dominant_emotion_cn?: string }
   fusion?: { final_emotion?: string; final_emotion_cn?: string; overall_confidence?: number }
 }
 
@@ -64,7 +63,7 @@ const messages = ref<ChatItem[]>([
   {
     role: 'assistant',
     content:
-      '你好，我是你的 AI 心理教练 🤗 可以打开摄像头和麦克风，让我感知你的状态；也可以直接打字聊聊。',
+      '你好，我是你的 AI 心理教练 🤗 摄像头会一直帮我观察你的表情状态；可以用麦克风说话转成文字，也可以直接打字。',
   },
 ])
 const chatInput = ref('')
@@ -72,30 +71,33 @@ const sending = ref(false)
 const chatError = ref('')
 const chatScrollRef = ref<HTMLElement | null>(null)
 
-// 摄像头 / 录音
+// 摄像头（常驻表情分析）
 const videoRef = ref<HTMLVideoElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const isCameraOn = ref(false)
 const cameraError = ref('')
-const isRecording = ref(false)
-const isAnalyzing = ref(false)
-const analyzingHint = ref('')
-
-// 识别结果
 const liveEmotion = ref<LiveEmotion | null>(null)
+
+// 语音输入
+const isRecording = ref(false)
+const isTranscribing = ref(false)
+const recordSeconds = ref(0)
+const voiceHint = ref('')
+
+// 最近一次录音的分析结果（语调/文本情绪，随发送带上）
 const analysisResult = ref<AnalysisResult | null>(null)
 
 let mediaStream: MediaStream | null = null
 let mediaRecorder: MediaRecorder | null = null
 let socket: Socket | null = null
 let frameTimer: number | null = null
+let recordTimer: number | null = null
 let recordStartTs = 0
-let recordEndTs = 0
 let audioChunks: Blob[] = []
 let isPageVisible = true
 
 // ================================================================
-//  识别上下文（发送给 AI）
+//  表情识别（实时，常驻）
 // ================================================================
 const liveDominantEmotion = computed<string | null>(() => {
   const emo = liveEmotion.value?.emotions
@@ -105,29 +107,24 @@ const liveDominantEmotion = computed<string | null>(() => {
   return DEEPFACE_TO_UNIFIED[top[0]] ?? null
 })
 
+// 发送时附带的情感识别上下文：常驻表情 + 最近一次录音的语调
 const analysisContext = computed<Record<string, any> | null>(() => {
-  const a = analysisResult.value
   const ctx: Record<string, any> = {}
-  if (a?.transcription?.text) ctx.transcription = a.transcription.text
-  if (a?.text_emotion?.emotion) {
-    ctx.text_emotion = a.text_emotion.emotion_cn || a.text_emotion.emotion
-    if (typeof a.text_emotion.confidence === 'number') ctx.text_emotion_confidence = a.text_emotion.confidence
+  if (liveDominantEmotion.value) ctx.facial_emotion = liveDominantEmotion.value
+  if (liveEmotion.value && typeof liveEmotion.value.score === 'number') {
+    ctx.live_score = liveEmotion.value.score
+    ctx.live_level = liveEmotion.value.level
   }
+  const a = analysisResult.value
   if (a?.voice_emotion?.emotion) {
     ctx.voice_emotion = a.voice_emotion.emotion_cn || a.voice_emotion.emotion
     if (typeof a.voice_emotion.confidence === 'number') ctx.voice_emotion_confidence = a.voice_emotion.confidence
   }
-  const facial = a?.facial_emotion?.dominant_emotion_cn
-    || a?.facial_emotion?.dominant_emotion
-    || liveDominantEmotion.value
-  if (facial) ctx.facial_emotion = facial
+  if (a?.text_emotion?.emotion) {
+    ctx.text_emotion = a.text_emotion.emotion_cn || a.text_emotion.emotion
+  }
   if (a?.fusion?.final_emotion) {
     ctx.fusion_emotion = a.fusion.final_emotion_cn || a.fusion.final_emotion
-    if (typeof a.fusion.overall_confidence === 'number') ctx.fusion_confidence = a.fusion.overall_confidence
-  }
-  if (liveEmotion.value && typeof liveEmotion.value.score === 'number') {
-    ctx.live_score = liveEmotion.value.score
-    ctx.live_level = liveEmotion.value.level
   }
   return Object.keys(ctx).length > 0 ? ctx : null
 })
@@ -136,21 +133,13 @@ const contextSummary = computed(() => {
   const ctx = analysisContext.value
   if (!ctx) return ''
   const parts: string[] = []
-  const facial = ctx.facial_emotion || ctx.fusion_emotion
-  if (facial) parts.push(`表情 ${facial}`)
+  if (ctx.facial_emotion) parts.push(`表情 ${ctx.facial_emotion}`)
   if (ctx.voice_emotion) parts.push(`语调 ${ctx.voice_emotion}`)
-  if (ctx.text_emotion && ctx.text_emotion !== facial) parts.push(`文本 ${ctx.text_emotion}`)
-  if (ctx.transcription) {
-    const t = String(ctx.transcription)
-    parts.push(`转写「${t.length > 16 ? t.slice(0, 16) + '…' : t}」`)
-  }
+  if (ctx.fusion_emotion && ctx.fusion_emotion !== ctx.facial_emotion) parts.push(`融合 ${ctx.fusion_emotion}`)
   if (ctx.live_score !== undefined) parts.push(`投入 ${ctx.live_score} 分`)
   return parts.join(' · ')
 })
 
-// ================================================================
-//  SocketIO：实时表情识别
-// ================================================================
 function connectSocket() {
   if (socket && socket.connected) return
   socket = io(API_BASE_URL, { transports: ['websocket', 'polling'] })
@@ -188,7 +177,7 @@ function captureFrame() {
 }
 
 // ================================================================
-//  摄像头
+//  摄像头：进入页面即开启，常驻表情分析
 // ================================================================
 async function startCamera() {
   cameraError.value = ''
@@ -216,32 +205,25 @@ function stopCamera() {
     clearInterval(frameTimer)
     frameTimer = null
   }
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.stop()
-  }
-  mediaRecorder = null
+  stopRecordingInternal()
   mediaStream?.getTracks().forEach((t) => t.stop())
   mediaStream = null
   if (videoRef.value) videoRef.value.srcObject = null
   isCameraOn.value = false
-  isRecording.value = false
   liveEmotion.value = null
   disconnectSocket()
 }
 
 // ================================================================
-//  录音 → 多模态分析
+//  语音输入：录音 → 转文字放入输入框（由用户决定是否发送）
 // ================================================================
-function startRecording() {
-  if (!mediaStream) {
-    cameraError.value = '请先开启摄像头'
+function startVoiceInput() {
+  if (isRecording.value) return
+  if (!mediaStream || mediaStream.getAudioTracks().length === 0) {
+    voiceHint.value = '请先允许麦克风权限'
     return
   }
   const audioTracks = mediaStream.getAudioTracks()
-  if (audioTracks.length === 0) {
-    cameraError.value = '没有可用的麦克风'
-    return
-  }
   const audioOnly = new MediaStream(audioTracks)
   const mimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', '']
   let recorder: MediaRecorder | null = null
@@ -254,54 +236,83 @@ function startRecording() {
     }
   }
   if (!recorder) {
-    cameraError.value = '浏览器不支持录音'
+    voiceHint.value = '浏览器不支持录音'
     return
   }
   audioChunks = []
   recordStartTs = Date.now()
-  analysisResult.value = null
+  recordSeconds.value = 0
+  voiceHint.value = ''
   recorder.ondataavailable = (e) => {
     if (e.data && e.data.size > 0) audioChunks.push(e.data)
   }
   recorder.onstop = () => {
-    recordEndTs = Date.now()
     isRecording.value = false
-    void uploadAndAnalyze()
+    if (recordTimer !== null) {
+      clearInterval(recordTimer)
+      recordTimer = null
+    }
+    void transcribeAudio()
   }
   recorder.start(800)
   mediaRecorder = recorder
   isRecording.value = true
+  recordTimer = window.setInterval(() => {
+    recordSeconds.value += 1
+  }, 1000)
 }
 
-function stopRecording() {
+function stopVoiceInput() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop()
 }
 
-async function uploadAndAnalyze() {
+function stopRecordingInternal() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop()
+  mediaRecorder = null
+  isRecording.value = false
+  if (recordTimer !== null) {
+    clearInterval(recordTimer)
+    recordTimer = null
+  }
+}
+
+async function transcribeAudio() {
   if (audioChunks.length === 0) return
   const firstMime = audioChunks[0]?.type || 'audio/webm;codecs=opus'
   const blob = new Blob(audioChunks, { type: firstMime })
   const ext = firstMime.includes('webm') ? 'webm' : firstMime.includes('wav') ? 'wav' : 'webm'
   const form = new FormData()
-  form.append('file', blob, `audio_${Date.now()}.${ext}`)
+  form.append('file', blob, `voice_${Date.now()}.${ext}`)
   form.append('sid', socket?.id || '')
   form.append('record_start_ts', String(recordStartTs))
-  form.append('record_end_ts', String(recordEndTs))
+  form.append('record_end_ts', String(Date.now()))
 
-  isAnalyzing.value = true
-  analyzingHint.value = '正在分析你的语音和表情…'
+  isTranscribing.value = true
+  voiceHint.value = '正在转写语音…'
   try {
     const resp = await fetch(`${API_BASE_URL}/api/analyze_audio`, { method: 'POST', body: form })
     const data = await resp.json()
-    if (!resp.ok) throw new Error(data?.detail || `分析失败（${resp.status}）`)
+    if (!resp.ok) throw new Error(data?.detail || `转写失败（${resp.status}）`)
     analysisResult.value = data
-    analyzingHint.value = ''
+    const text = data?.transcription?.text?.trim()
+    if (text) {
+      chatInput.value = text
+      voiceHint.value = '语音已转成文字，可编辑后发送'
+    } else {
+      voiceHint.value = '没有识别到有效语音，请重试'
+    }
   } catch (err: any) {
-    cameraError.value = `分析失败：${err?.message || '请重试'}`
+    voiceHint.value = `转写失败：${err?.message || '请重试'}`
   } finally {
-    isAnalyzing.value = false
+    isTranscribing.value = false
   }
 }
+
+const recordLabel = computed(() => {
+  const m = Math.floor(recordSeconds.value / 60)
+  const s = String(recordSeconds.value % 60).padStart(2, '0')
+  return `${m}:${s}`
+})
 
 // ================================================================
 //  对话
@@ -319,11 +330,12 @@ function pushMessage(item: ChatItem) {
   scrollToBottom()
 }
 
-async function send(contentOverride?: string) {
-  const text = (contentOverride ?? chatInput.value).trim()
+async function send() {
+  const text = chatInput.value.trim()
   if (!text || sending.value) return
   chatInput.value = ''
   chatError.value = ''
+  voiceHint.value = ''
   pushMessage({ role: 'user', content: text })
   sending.value = true
   scrollToBottom()
@@ -348,13 +360,6 @@ async function send(contentOverride?: string) {
   }
 }
 
-function sendWithContext() {
-  const ctx = analysisContext.value
-  if (!ctx) return
-  const t = ctx.transcription ? `（我刚说：${ctx.transcription}）` : ''
-  void send(`基于我现在的状态（${contextSummary.value}）${t}，陪我聊聊吧`)
-}
-
 function onInputKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
@@ -369,6 +374,7 @@ function handleVisibility() {
 onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibility)
   scrollToBottom()
+  void startCamera()
 })
 
 onUnmounted(() => {
@@ -379,7 +385,7 @@ onUnmounted(() => {
 
 <template>
   <div class="ai-chat-page">
-    <!-- ===== 摄像头面板 ===== -->
+    <!-- ===== 常驻表情分析面板 ===== -->
     <div class="camera-card" :class="{ active: isCameraOn }">
       <div class="camera-video-wrap">
         <video ref="videoRef" class="camera-video" autoplay playsinline muted></video>
@@ -387,7 +393,7 @@ onUnmounted(() => {
 
         <div v-if="!isCameraOn && !cameraError" class="camera-placeholder">
           <span class="cam-icon">📷</span>
-          <span>开启摄像头，让我看到你的状态</span>
+          <span>正在请求摄像头…</span>
         </div>
 
         <div v-if="liveEmotion" class="camera-emotion">
@@ -397,25 +403,23 @@ onUnmounted(() => {
             · {{ LEVEL_CN[liveEmotion.level] || liveEmotion.level }} {{ liveEmotion.score }} 分
           </span>
         </div>
-
-        <div v-if="isRecording" class="recording-badge">● 录音中</div>
-        <div v-if="isAnalyzing" class="analyzing-badge">{{ analyzingHint }}</div>
+        <div v-else-if="isCameraOn" class="camera-emotion">
+          <span class="emotion-label">表情分析中…</span>
+        </div>
       </div>
 
-      <div class="camera-controls">
-        <button v-if="!isCameraOn" class="cam-btn primary" @click="startCamera">
-          {{ cameraError ? '重试开启' : '开启摄像头' }}
-        </button>
-        <template v-else>
-          <button class="cam-btn" :class="{ recording: isRecording }" :disabled="isAnalyzing" @click="isRecording ? stopRecording() : startRecording()">
-            {{ isRecording ? '停止并分析' : '开始录音' }}
-          </button>
-          <button class="cam-btn ghost" @click="stopCamera">关闭</button>
-        </template>
+      <div class="camera-info">
+        <div class="camera-title">
+          <span class="status-dot" :class="{ on: isCameraOn }"></span>
+          表情识别
+          <span class="camera-sub">{{ isCameraOn ? '持续运行中' : '未开启' }}</span>
+        </div>
+        <p class="camera-desc">摄像头保持开启，实时分析你的表情，对话时会自动附上结果</p>
+        <button v-if="!isCameraOn" class="cam-btn primary" @click="startCamera">开启摄像头</button>
+        <button v-else class="cam-btn ghost" @click="stopCamera">关闭摄像头</button>
       </div>
 
       <p v-if="cameraError" class="camera-error">{{ cameraError }}</p>
-      <p v-if="contextSummary" class="context-chips" :title="contextSummary">🧠 {{ contextSummary }}</p>
     </div>
 
     <!-- ===== 对话区（豆包式排版） ===== -->
@@ -441,24 +445,34 @@ onUnmounted(() => {
       </div>
 
       <div class="chat-input-bar">
-        <div class="chat-quick">
-          <button class="quick-btn" :disabled="!analysisContext || sending" @click="sendWithContext">
-            ✨ 基于识别结果引导我
-          </button>
-          <span v-if="!analysisContext" class="quick-hint">打开摄像头或录音后，识别结果会自动带上</span>
-        </div>
+        <div v-if="contextSummary" class="context-line">🧠 本次发送将附带：{{ contextSummary }}</div>
         <div class="input-row">
+          <button
+            class="mic-btn"
+            :class="{ recording: isRecording }"
+            :disabled="isTranscribing"
+            :title="isRecording ? '点击结束录音' : '语音输入'"
+            @click="isRecording ? stopVoiceInput() : startVoiceInput()"
+          >
+            {{ isRecording ? '■' : '🎤' }}
+          </button>
           <textarea
             v-model="chatInput"
             class="chat-textarea"
             rows="1"
-            placeholder="说点什么，或按 Enter 发送…"
-            :disabled="sending"
+            :placeholder="isRecording ? `录音中 ${recordLabel}…` : '说点什么，或按 Enter 发送…'"
+            :disabled="sending || isRecording || isTranscribing"
             @keydown="onInputKeydown"
           ></textarea>
-          <button class="send-btn" :disabled="sending || !chatInput.trim()" @click="send()">
+          <button class="send-btn" :disabled="sending || !chatInput.trim()" @click="send">
             {{ sending ? '思考中' : '发送' }}
           </button>
+        </div>
+        <div class="input-hints">
+          <span v-if="isRecording" class="recording-hint">● 录音中 {{ recordLabel }}，再次点击麦克风结束</span>
+          <span v-else-if="isTranscribing" class="transcribing-hint">⏳ {{ voiceHint || '正在转写…' }}</span>
+          <span v-else-if="voiceHint" class="voice-hint">✓ {{ voiceHint }}</span>
+          <span v-else class="default-hint">文字会连同表情识别结果一起发送给 AI</span>
         </div>
         <p class="disclaimer">
           AI 教练为成长辅助工具，不提供诊断或治疗；如有自伤/危机信号，请立即拨打心理援助热线
@@ -480,7 +494,7 @@ onUnmounted(() => {
   box-sizing: border-box;
 }
 
-/* ===== 摄像头卡片 ===== */
+/* ===== 常驻表情面板 ===== */
 .camera-card {
   width: min(760px, 100%);
   background: #fff;
@@ -489,7 +503,7 @@ onUnmounted(() => {
   padding: 10px 12px;
   box-sizing: border-box;
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
   flex-wrap: wrap;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
@@ -499,8 +513,8 @@ onUnmounted(() => {
 }
 .camera-video-wrap {
   position: relative;
-  width: 150px;
-  height: 100px;
+  width: 170px;
+  height: 112px;
   border-radius: 10px;
   overflow: hidden;
   background: #0f1220;
@@ -557,42 +571,46 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.recording-badge {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  background: #f56c6c;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 8px;
-  animation: pulse 1.2s infinite;
+.camera-info {
+  flex: 1;
+  min-width: 200px;
 }
-.analyzing-badge {
-  position: absolute;
-  inset: 0;
+.camera-title {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(15, 18, 32, 0.75);
-  color: #fff;
-  font-size: 12px;
-  padding: 8px;
-  text-align: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #272b35;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c7cdd8;
+}
+.status-dot.on {
+  background: #3ecf8e;
+  box-shadow: 0 0 6px rgba(62, 207, 142, 0.6);
+  animation: pulse 1.4s infinite;
 }
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }
 }
-.camera-controls {
-  display: flex;
-  gap: 8px;
-  flex: 1;
-  min-width: 200px;
+.camera-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: #a5acb8;
+}
+.camera-desc {
+  margin: 5px 0 8px;
+  font-size: 12px;
+  color: #8b93a5;
+  line-height: 1.5;
 }
 .cam-btn {
-  padding: 9px 16px;
+  padding: 7px 16px;
   border-radius: 10px;
   border: 1px solid #e3e5ea;
   background: #fff;
@@ -607,38 +625,17 @@ onUnmounted(() => {
   border-color: #6d5ae0;
   color: #fff;
 }
-.cam-btn.recording {
-  background: #f56c6c;
-  border-color: #f56c6c;
-  color: #fff;
-}
 .cam-btn.ghost {
   color: #9aa1ae;
 }
-.cam-btn:hover:not(:disabled) {
+.cam-btn:hover {
   filter: brightness(0.96);
-}
-.cam-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 .camera-error {
   width: 100%;
   margin: 0;
   color: #f56c6c;
   font-size: 12px;
-}
-.context-chips {
-  width: 100%;
-  margin: 0;
-  font-size: 12px;
-  color: #6d5ae0;
-  background: #f5f2ff;
-  border-radius: 8px;
-  padding: 5px 10px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* ===== 对话区 ===== */
@@ -742,38 +739,43 @@ onUnmounted(() => {
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
   margin-bottom: 14px;
 }
-.chat-quick {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-.quick-btn {
-  border: none;
-  background: #f5f2ff;
-  color: #6d5ae0;
-  font-size: 12.5px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 20px;
-  cursor: pointer;
-}
-.quick-btn:hover:not(:disabled) {
-  background: #ece5ff;
-}
-.quick-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.quick-hint {
+.context-line {
   font-size: 12px;
-  color: #a5acb8;
+  color: #6d5ae0;
+  background: #f5f2ff;
+  border-radius: 8px;
+  padding: 5px 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .input-row {
   display: flex;
   gap: 10px;
   align-items: flex-end;
+}
+.mic-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #e3e5ea;
+  background: #f7f8fa;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  color: #4b5563;
+}
+.mic-btn.recording {
+  background: #f56c6c;
+  border-color: #f56c6c;
+  color: #fff;
+  animation: pulse 1.2s infinite;
+}
+.mic-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .chat-textarea {
   flex: 1;
@@ -783,13 +785,16 @@ onUnmounted(() => {
   font-size: 15px;
   line-height: 1.6;
   font-family: inherit;
-  padding: 8px 4px;
+  padding: 9px 4px;
   max-height: 120px;
   background: transparent;
   color: #272b35;
 }
 .chat-textarea::placeholder {
   color: #b3bac6;
+}
+.chat-textarea:disabled {
+  background: transparent;
 }
 .send-btn {
   border: none;
@@ -801,6 +806,7 @@ onUnmounted(() => {
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 .send-btn:hover:not(:disabled) {
   background: #5f4ad0;
@@ -809,8 +815,26 @@ onUnmounted(() => {
   opacity: 0.5;
   cursor: not-allowed;
 }
+.input-hints {
+  min-height: 18px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.recording-hint {
+  color: #f56c6c;
+  font-weight: 600;
+}
+.transcribing-hint {
+  color: #6d5ae0;
+}
+.voice-hint {
+  color: #3ecf8e;
+}
+.default-hint {
+  color: #a5acb8;
+}
 .disclaimer {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   font-size: 11px;
   color: #a5acb8;
   line-height: 1.6;
@@ -825,8 +849,8 @@ onUnmounted(() => {
     padding: 8px;
   }
   .camera-video-wrap {
-    width: 120px;
-    height: 84px;
+    width: 130px;
+    height: 90px;
   }
 }
 </style>
