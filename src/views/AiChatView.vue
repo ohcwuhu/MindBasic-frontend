@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { io, type Socket } from 'socket.io-client'
+import {
+  PhRobot,
+  PhVideoCamera,
+  PhVideoCameraSlash,
+  PhMicrophone,
+  PhStop,
+} from '@phosphor-icons/vue'
 
 // ================================================================
 //  常量与映射
@@ -14,16 +21,16 @@ const EMOTION_CN: Record<string, string> = {
   surprised: '惊讶',
   fearful: '恐惧',
   disgusted: '厌恶',
-  neutral: '中性',
+  neutral: '平静',
 }
-const EMOTION_EMOJI: Record<string, string> = {
-  happy: '😊',
-  sad: '😢',
-  angry: '😠',
-  surprised: '😲',
-  fearful: '😨',
-  disgusted: '🤢',
-  neutral: '😐',
+const EMOTION_COLOR: Record<string, string> = {
+  happy: '#2e9e6b',
+  sad: '#4a7fd4',
+  angry: '#d64545',
+  surprised: '#d9a13b',
+  fearful: '#8a63d2',
+  disgusted: '#2c8f8f',
+  neutral: '#9aa1ae',
 }
 const DEEPFACE_TO_UNIFIED: Record<string, string> = {
   happy: 'happy',
@@ -63,7 +70,7 @@ const messages = ref<ChatItem[]>([
   {
     role: 'assistant',
     content:
-      '你好，我是你的 AI 心理教练 🤗 摄像头会一直帮我观察你的表情状态；可以用麦克风说话转成文字，也可以直接打字。',
+      '你好，我是你的 AI 心理教练。摄像头会一直帮我观察你的表情状态；可以用麦克风说话转成文字，也可以直接打字。',
   },
 ])
 const chatInput = ref('')
@@ -106,6 +113,8 @@ const liveDominantEmotion = computed<string | null>(() => {
   if (!top) return null
   return DEEPFACE_TO_UNIFIED[top[0]] ?? null
 })
+
+const liveEmotionColor = computed(() => EMOTION_COLOR[liveDominantEmotion.value || 'neutral'])
 
 // 发送时附带的情感识别上下文：常驻表情 + 最近一次录音的语调
 const analysisContext = computed<Record<string, any> | null>(() => {
@@ -196,7 +205,7 @@ async function startCamera() {
     connectSocket()
     frameTimer = window.setInterval(captureFrame, 400)
   } catch (err: any) {
-    cameraError.value = `无法开启摄像头：${err?.message || '请检查权限'}`
+    cameraError.value = `无法开启摄像头：${err?.message || '请检查浏览器权限设置'}`
   }
 }
 
@@ -236,7 +245,7 @@ function startVoiceInput() {
     }
   }
   if (!recorder) {
-    voiceHint.value = '浏览器不支持录音'
+    voiceHint.value = '当前浏览器不支持录音'
     return
   }
   audioChunks = []
@@ -288,7 +297,7 @@ async function transcribeAudio() {
   form.append('record_end_ts', String(Date.now()))
 
   isTranscribing.value = true
-  voiceHint.value = '正在转写语音…'
+  voiceHint.value = '正在转写语音，请稍候'
   try {
     const resp = await fetch(`${API_BASE_URL}/api/analyze_audio`, { method: 'POST', body: form })
     const data = await resp.json()
@@ -351,9 +360,9 @@ async function send() {
     })
     const data = await resp.json()
     if (!resp.ok) throw new Error(data?.detail || `请求失败（${resp.status}）`)
-    pushMessage({ role: 'assistant', content: data.reply || '（AI 没有返回内容，请重试）' })
+    pushMessage({ role: 'assistant', content: data.reply || 'AI 暂时没有回复，请再试一次' })
   } catch (err: any) {
-    chatError.value = `AI 暂时无法回复：${err?.message || '网络错误'}`
+    chatError.value = `AI 暂时无法回复：${err?.message || '网络异常，请重试'}`
   } finally {
     sending.value = false
     scrollToBottom()
@@ -386,41 +395,48 @@ onUnmounted(() => {
 <template>
   <div class="ai-chat-page">
     <!-- ===== 常驻表情分析面板 ===== -->
-    <div class="camera-card" :class="{ active: isCameraOn }">
+    <section class="camera-card" :class="{ active: isCameraOn }">
       <div class="camera-video-wrap">
         <video ref="videoRef" class="camera-video" autoplay playsinline muted></video>
         <canvas ref="canvasRef" class="camera-canvas"></canvas>
 
         <div v-if="!isCameraOn && !cameraError" class="camera-placeholder">
-          <span class="cam-icon">📷</span>
+          <PhVideoCamera :size="28" weight="thin" />
           <span>正在请求摄像头…</span>
         </div>
 
         <div v-if="liveEmotion" class="camera-emotion">
-          <span class="emotion-emoji">{{ EMOTION_EMOJI[liveDominantEmotion || 'neutral'] || '😐' }}</span>
+          <span class="emotion-dot" :style="{ backgroundColor: liveEmotionColor }"></span>
           <span class="emotion-label">
             {{ EMOTION_CN[liveDominantEmotion || 'neutral'] || '识别中' }}
             · {{ LEVEL_CN[liveEmotion.level] || liveEmotion.level }} {{ liveEmotion.score }} 分
           </span>
         </div>
         <div v-else-if="isCameraOn" class="camera-emotion">
-          <span class="emotion-label">表情分析中…</span>
+          <span class="emotion-dot neutral"></span>
+          <span class="emotion-label">表情分析中</span>
         </div>
       </div>
 
       <div class="camera-info">
         <div class="camera-title">
-          <span class="status-dot" :class="{ on: isCameraOn }"></span>
-          表情识别
+          <span class="status-dot" :class="{ on: isCameraOn }" aria-hidden="true"></span>
+          <span>表情识别</span>
           <span class="camera-sub">{{ isCameraOn ? '持续运行中' : '未开启' }}</span>
         </div>
         <p class="camera-desc">摄像头保持开启，实时分析你的表情，对话时会自动附上结果</p>
-        <button v-if="!isCameraOn" class="cam-btn primary" @click="startCamera">开启摄像头</button>
-        <button v-else class="cam-btn ghost" @click="stopCamera">关闭摄像头</button>
+        <button v-if="!isCameraOn" class="cam-btn primary" @click="startCamera">
+          <PhVideoCamera :size="16" weight="bold" />
+          {{ cameraError ? '重新开启' : '开启摄像头' }}
+        </button>
+        <button v-else class="cam-btn ghost" @click="stopCamera">
+          <PhVideoCameraSlash :size="16" weight="bold" />
+          关闭摄像头
+        </button>
       </div>
 
-      <p v-if="cameraError" class="camera-error">{{ cameraError }}</p>
-    </div>
+      <p v-if="cameraError" class="camera-error" role="alert">{{ cameraError }}</p>
+    </section>
 
     <!-- ===== 对话区（豆包式排版） ===== -->
     <div class="chat-wrap">
@@ -431,36 +447,43 @@ onUnmounted(() => {
           class="msg-row"
           :class="m.role === 'user' ? 'user' : 'assistant'"
         >
-          <div v-if="m.role === 'assistant'" class="avatar">🤖</div>
+          <div v-if="m.role === 'assistant'" class="avatar" aria-hidden="true">
+            <PhRobot :size="20" weight="duotone" />
+          </div>
           <div class="bubble">{{ m.content }}</div>
         </div>
 
         <div v-if="sending" class="msg-row assistant">
-          <div class="avatar">🤖</div>
-          <div class="bubble typing">
+          <div class="avatar" aria-hidden="true">
+            <PhRobot :size="20" weight="duotone" />
+          </div>
+          <div class="bubble typing" aria-label="AI 正在思考">
             <span></span><span></span><span></span>
           </div>
         </div>
-        <p v-if="chatError" class="chat-error">{{ chatError }}</p>
+        <p v-if="chatError" class="chat-error" role="alert">{{ chatError }}</p>
       </div>
 
       <div class="chat-input-bar">
-        <div v-if="contextSummary" class="context-line">🧠 本次发送将附带：{{ contextSummary }}</div>
+        <div v-if="contextSummary" class="context-line" aria-live="polite">
+          本次发送将附带：{{ contextSummary }}
+        </div>
         <div class="input-row">
           <button
             class="mic-btn"
             :class="{ recording: isRecording }"
             :disabled="isTranscribing"
-            :title="isRecording ? '点击结束录音' : '语音输入'"
+            :aria-label="isRecording ? '结束录音' : '语音输入'"
             @click="isRecording ? stopVoiceInput() : startVoiceInput()"
           >
-            {{ isRecording ? '■' : '🎤' }}
+            <PhMicrophone v-if="!isRecording" :size="20" weight="bold" />
+            <PhStop v-else :size="20" weight="fill" />
           </button>
           <textarea
             v-model="chatInput"
             class="chat-textarea"
             rows="1"
-            :placeholder="isRecording ? `录音中 ${recordLabel}…` : '说点什么，或按 Enter 发送…'"
+            :placeholder="isRecording ? `录音中 ${recordLabel}` : '说点什么，或按 Enter 发送'"
             :disabled="sending || isRecording || isTranscribing"
             @keydown="onInputKeydown"
           ></textarea>
@@ -468,15 +491,15 @@ onUnmounted(() => {
             {{ sending ? '思考中' : '发送' }}
           </button>
         </div>
-        <div class="input-hints">
-          <span v-if="isRecording" class="recording-hint">● 录音中 {{ recordLabel }}，再次点击麦克风结束</span>
-          <span v-else-if="isTranscribing" class="transcribing-hint">⏳ {{ voiceHint || '正在转写…' }}</span>
-          <span v-else-if="voiceHint" class="voice-hint">✓ {{ voiceHint }}</span>
+        <div class="input-hints" aria-live="polite">
+          <span v-if="isRecording" class="recording-hint">录音中 {{ recordLabel }}，再次点击麦克风结束</span>
+          <span v-else-if="isTranscribing" class="transcribing-hint">{{ voiceHint || '正在转写语音' }}</span>
+          <span v-else-if="voiceHint" class="voice-hint">{{ voiceHint }}</span>
           <span v-else class="default-hint">文字会连同表情识别结果一起发送给 AI</span>
         </div>
         <p class="disclaimer">
-          AI 教练为成长辅助工具，不提供诊断或治疗；如有自伤/危机信号，请立即拨打心理援助热线
-          <b>12356</b> 或尽快寻求线下专业帮助。
+          AI 教练为成长辅助工具，不提供诊断或治疗；如有自伤或危机信号，请立即拨打心理援助热线
+          <b>12356</b>，或尽快寻求线下专业帮助。
         </p>
       </div>
     </div>
@@ -484,9 +507,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* 设计规范：纸白底 / 墨色文字 / 松绿强调 / 圆角 14-12 两级 */
 .ai-chat-page {
-  min-height: calc(100vh - 64px);
-  background: #f7f8fa;
+  min-height: calc(100dvh - 64px);
+  background: var(--color-paper);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -497,27 +521,26 @@ onUnmounted(() => {
 /* ===== 常驻表情面板 ===== */
 .camera-card {
   width: min(760px, 100%);
-  background: #fff;
-  border: 1px solid #eceef2;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
   border-radius: 14px;
-  padding: 10px 12px;
+  padding: 12px;
   box-sizing: border-box;
   display: flex;
   gap: 14px;
   align-items: center;
   flex-wrap: wrap;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 .camera-card.active {
-  border-color: #c7b8f5;
+  border-color: color-mix(in srgb, var(--color-pine) 35%, var(--color-hairline));
 }
 .camera-video-wrap {
   position: relative;
-  width: 170px;
-  height: 112px;
-  border-radius: 10px;
+  width: 172px;
+  height: 114px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #0f1220;
+  background: var(--color-ink);
   flex-shrink: 0;
 }
 .camera-video {
@@ -536,16 +559,11 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  color: #8b93a5;
+  gap: 8px;
+  color: #b9beb4;
   font-size: 12px;
-  text-align: center;
-  padding: 8px;
-  background: linear-gradient(160deg, #151a2e, #1c2340);
+  background: var(--color-ink);
   box-sizing: border-box;
-}
-.cam-icon {
-  font-size: 26px;
 }
 .camera-emotion {
   position: absolute;
@@ -554,16 +572,21 @@ onUnmounted(() => {
   bottom: 6px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 8px;
-  padding: 4px 8px;
+  gap: 6px;
+  background: rgba(28, 28, 26, 0.68);
+  border-radius: 10px;
+  padding: 5px 9px;
   color: #fff;
   font-size: 12px;
-  backdrop-filter: blur(4px);
 }
-.emotion-emoji {
-  font-size: 16px;
+.emotion-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.emotion-dot.neutral {
+  background: #9aa1ae;
 }
 .emotion-label {
   font-weight: 600;
@@ -573,7 +596,7 @@ onUnmounted(() => {
 }
 .camera-info {
   flex: 1;
-  min-width: 200px;
+  min-width: 210px;
 }
 .camera-title {
   display: flex;
@@ -581,61 +604,71 @@ onUnmounted(() => {
   gap: 7px;
   font-size: 14px;
   font-weight: 700;
-  color: #272b35;
+  color: var(--color-ink);
 }
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #c7cdd8;
+  background: #c8cac2;
 }
 .status-dot.on {
-  background: #3ecf8e;
-  box-shadow: 0 0 6px rgba(62, 207, 142, 0.6);
-  animation: pulse 1.4s infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  background: var(--color-pine);
 }
 .camera-sub {
   font-size: 12px;
   font-weight: 500;
-  color: #a5acb8;
+  color: var(--color-ink-soft);
 }
 .camera-desc {
-  margin: 5px 0 8px;
-  font-size: 12px;
-  color: #8b93a5;
-  line-height: 1.5;
+  margin: 6px 0 10px;
+  font-size: 12.5px;
+  color: var(--color-ink-soft);
+  line-height: 1.55;
 }
 .cam-btn {
-  padding: 7px 16px;
-  border-radius: 10px;
-  border: 1px solid #e3e5ea;
-  background: #fff;
-  color: #4b5563;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--color-card);
+  color: var(--color-ink-soft);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease;
 }
 .cam-btn.primary {
-  background: #6d5ae0;
-  border-color: #6d5ae0;
+  background: var(--color-pine);
+  border-color: var(--color-pine);
   color: #fff;
 }
-.cam-btn.ghost {
-  color: #9aa1ae;
+.cam-btn.primary:hover {
+  background: var(--color-pine-deep);
 }
-.cam-btn:hover {
-  filter: brightness(0.96);
+.cam-btn.ghost {
+  border-color: var(--color-hairline);
+}
+.cam-btn.ghost:hover {
+  background: var(--color-paper);
+}
+.cam-btn:active {
+  transform: scale(0.98);
+}
+.cam-btn:focus-visible,
+.mic-btn:focus-visible,
+.send-btn:focus-visible,
+.chat-textarea:focus-visible {
+  outline: 2px solid var(--color-pine);
+  outline-offset: 2px;
 }
 .camera-error {
   width: 100%;
   margin: 0;
-  color: #f56c6c;
-  font-size: 12px;
+  color: #c2402f;
+  font-size: 12.5px;
 }
 
 /* ===== 对话区 ===== */
@@ -660,7 +693,7 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  max-width: 88%;
+  max-width: 86%;
 }
 .msg-row.user {
   align-self: flex-end;
@@ -673,31 +706,29 @@ onUnmounted(() => {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #8b7cf0, #6d5ae0);
+  background: var(--color-pine-deep);
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(109, 90, 224, 0.25);
 }
 .bubble {
   padding: 11px 15px;
   border-radius: 14px;
-  font-size: 14.5px;
+  font-size: 15px;
   line-height: 1.75;
   white-space: pre-wrap;
   word-break: break-word;
 }
 .msg-row.assistant .bubble {
-  background: #fff;
-  border: 1px solid #eceef2;
-  color: #272b35;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-ink);
   border-top-left-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
 }
 .msg-row.user .bubble {
-  background: linear-gradient(135deg, #7c6cf0, #5f4ad0);
+  background: var(--color-pine);
   color: #fff;
   border-top-right-radius: 4px;
 }
@@ -705,47 +736,57 @@ onUnmounted(() => {
   display: flex;
   gap: 5px;
   align-items: center;
-  padding: 14px 16px;
+  padding: 15px 16px;
 }
 .typing span {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #b8b0e8;
+  background: var(--color-pine);
+  opacity: 0.35;
   animation: blink 1.2s infinite ease-in-out;
 }
-.typing span:nth-child(2) { animation-delay: 0.2s; }
-.typing span:nth-child(3) { animation-delay: 0.4s; }
+.typing span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing span:nth-child(3) {
+  animation-delay: 0.4s;
+}
 @keyframes blink {
-  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
-  40% { opacity: 1; transform: translateY(-3px); }
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
 }
 .chat-error {
   align-self: center;
   margin: 0;
-  color: #f56c6c;
+  color: #c2402f;
   font-size: 13px;
-  background: #fef0f0;
+  background: #fbeae6;
   padding: 8px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 /* ===== 输入区 ===== */
 .chat-input-bar {
-  background: #fff;
-  border: 1px solid #eceef2;
-  border-radius: 16px;
-  padding: 10px 12px 8px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
-  margin-bottom: 14px;
+  background: var(--color-card);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 24px rgba(28, 28, 26, 0.08);
 }
 .context-line {
-  font-size: 12px;
-  color: #6d5ae0;
-  background: #f5f2ff;
-  border-radius: 8px;
-  padding: 5px 10px;
-  margin-bottom: 8px;
+  font-size: 12.5px;
+  color: var(--color-pine);
+  background: var(--color-pine-soft);
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -756,22 +797,30 @@ onUnmounted(() => {
   align-items: flex-end;
 }
 .mic-btn {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  border: 1px solid #e3e5ea;
-  background: #f7f8fa;
-  font-size: 18px;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-paper);
+  color: var(--color-ink-soft);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease;
   flex-shrink: 0;
-  color: #4b5563;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mic-btn:hover:not(:disabled) {
+  border-color: var(--color-pine);
+  color: var(--color-pine);
 }
 .mic-btn.recording {
-  background: #f56c6c;
-  border-color: #f56c6c;
+  background: #c2402f;
+  border-color: #c2402f;
   color: #fff;
-  animation: pulse 1.2s infinite;
+}
+.mic-btn:active {
+  transform: scale(0.96);
 }
 .mic-btn:disabled {
   opacity: 0.5;
@@ -785,31 +834,31 @@ onUnmounted(() => {
   font-size: 15px;
   line-height: 1.6;
   font-family: inherit;
-  padding: 9px 4px;
+  padding: 10px 4px;
   max-height: 120px;
   background: transparent;
-  color: #272b35;
+  color: var(--color-ink);
 }
 .chat-textarea::placeholder {
-  color: #b3bac6;
-}
-.chat-textarea:disabled {
-  background: transparent;
+  color: var(--color-ink-soft);
 }
 .send-btn {
   border: none;
-  background: #6d5ae0;
+  background: var(--color-pine);
   color: #fff;
   font-size: 14px;
   font-weight: 700;
-  padding: 9px 22px;
+  padding: 10px 22px;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.1s ease, background 0.2s ease;
   flex-shrink: 0;
 }
 .send-btn:hover:not(:disabled) {
-  background: #5f4ad0;
+  background: var(--color-pine-deep);
+}
+.send-btn:active {
+  transform: scale(0.98);
 }
 .send-btn:disabled {
   opacity: 0.5;
@@ -817,40 +866,43 @@ onUnmounted(() => {
 }
 .input-hints {
   min-height: 18px;
-  margin-top: 6px;
-  font-size: 12px;
+  margin-top: 8px;
+  font-size: 12.5px;
 }
 .recording-hint {
-  color: #f56c6c;
+  color: #c2402f;
   font-weight: 600;
 }
 .transcribing-hint {
-  color: #6d5ae0;
+  color: var(--color-pine);
 }
 .voice-hint {
-  color: #3ecf8e;
+  color: var(--color-pine);
 }
 .default-hint {
-  color: #a5acb8;
+  color: var(--color-ink-soft);
 }
 .disclaimer {
   margin: 6px 0 0;
-  font-size: 11px;
-  color: #a5acb8;
+  font-size: 11.5px;
+  color: var(--color-ink-soft);
   line-height: 1.6;
 }
 
 @media (max-width: 640px) {
   .ai-chat-page {
-    min-height: calc(100vh - 56px);
+    min-height: calc(100dvh - 56px);
     padding: 10px 10px 0;
   }
   .camera-card {
-    padding: 8px;
+    padding: 10px;
   }
   .camera-video-wrap {
-    width: 130px;
-    height: 90px;
+    width: 132px;
+    height: 92px;
+  }
+  .camera-info {
+    min-width: 0;
   }
 }
 </style>
