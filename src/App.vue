@@ -26,7 +26,6 @@ const navLinks = [
   { to: '/coaches', label: '找教练' },
   { to: '/articles', label: '科普' },
   { to: '/communities', label: '社群' },
-  { to: '/ai-lab', label: 'AI 实验' },
 ]
 
 const tabItems = [

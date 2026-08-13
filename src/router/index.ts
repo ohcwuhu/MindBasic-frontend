@@ -21,7 +21,6 @@ export const router = createRouter({
     { path: '/profile', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { auth: true } },
     { path: '/notifications', name: 'notifications', component: () => import('@/views/NotificationsView.vue'), meta: { auth: true } },
     { path: '/growth-assessment', name: 'growth-assessment', component: () => import('@/views/GrowthAssessmentView.vue'), meta: { auth: true } },
-    { path: '/ai-lab', name: 'ai-lab', component: () => import('@/views/AiLabView.vue'), meta: { auth: true } },
     { path: '/communities', name: 'communities', component: () => import('@/views/CommunitiesView.vue') },
     { path: '/communities/:id', name: 'community-detail', component: () => import('@/views/CommunityDetailView.vue') },
     { path: '/communities/:communityId/posts/:postId', name: 'community-post-detail', component: () => import('@/views/CommunityPostDetailView.vue'), meta: { auth: true } },
