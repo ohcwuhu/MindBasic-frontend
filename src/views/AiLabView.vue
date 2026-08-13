@@ -282,7 +282,7 @@ onUnmounted(() => {
                 <span class="w-12 text-right text-ink-faint">{{ Math.round(bar.value * 100) }}%</span>
               </div>
             </div>
-            <div v-if="audioResult.voice_features?.key_metrics?.length" class="mt-5 grid grid-cols-3 gap-3">
+            <div v-if="audioResult.voice_features.key_metrics.length" class="mt-5 grid grid-cols-3 gap-3">
               <div v-for="metric in audioResult.voice_features.key_metrics" :key="metric.key" class="rounded-[10px] bg-card border border-hairline p-3">
                 <p class="text-lg font-semibold">{{ metric.value }}<span class="ml-1 text-xs text-ink-faint">{{ metric.unit }}</span></p>
                 <p class="catalog-tab mt-1">{{ metric.label }}</p>
