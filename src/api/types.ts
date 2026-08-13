@@ -425,6 +425,30 @@ export interface CoachReview {
   createdAt: string
 }
 
+export interface AiLabFrameResult {
+  timestamp: string
+  score: number
+  students: number
+  alert: boolean
+  level: 'ENGAGED' | 'NEUTRAL' | 'BORING'
+  emotions: Record<string, number>
+  source: 'mock' | 'model'
+  processing_time_ms: number
+}
+
+export interface AiAudioAnalysis {
+  status: 'ok' | 'partial_success' | 'failed' | 'mock'
+  transcription: { text: string; segments: unknown[] | null } | null
+  voice_features: {
+    primary_emotion: string
+    primary_emotion_cn: string
+    primary_emotion_emoji: string
+    primary_emotion_desc: string | null
+    emotion_scores: Record<string, number>
+    key_metrics: { key: string; label: string; value: number; unit: string }[]
+  } | null
+}
+
 export interface AssessmentOption {
   value: number
   label: string
