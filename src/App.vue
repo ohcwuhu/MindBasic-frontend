@@ -26,6 +26,7 @@ const navLinks = [
   { to: '/coaches', label: '找教练' },
   { to: '/articles', label: '科普' },
   { to: '/communities', label: '社群' },
+  { to: '/ai-chat', label: 'AI 对话' },
   { to: '/ai-lab', label: 'AI 实验' },
 ]
 
@@ -79,6 +80,7 @@ const pageTitle = computed(() => {
     booking: '预约教练',
     articles: '科普中心',
     'article-detail': '文章',
+    'ai-chat': 'AI 对话',
     'ai-lab': 'AI 实验',
     my: '我的成长',
     profile: '个人资料',
