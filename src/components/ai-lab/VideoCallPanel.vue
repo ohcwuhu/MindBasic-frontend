@@ -1099,13 +1099,10 @@ const displayMessages = computed(() => {
     <!-- ===== 主区：通话舞台 + 对话侧栏 ===== -->
     <div class="vc-main">
       <section class="vc-stage" :class="{ active: isDeviceActive }">
+        <!-- 摄像头画面为主画面（大屏显示自己） -->
+        <video ref="videoRef" class="stage-video" autoplay playsinline muted></video>
         <canvas ref="canvasRef" class="stage-canvas"></canvas>
-
-        <!-- 自拍画中画（视频常驻 DOM，避免启动期 videoRef 为空导致 canplay 不触发） -->
-        <div class="pip" :class="{ show: isDeviceActive }">
-          <video ref="videoRef" class="pip-video" autoplay playsinline muted></video>
-          <span v-if="isDeviceActive" class="pip-label">我</span>
-        </div>
+        <span v-if="isDeviceActive" class="self-tag">我</span>
 
         <div v-if="isLoading" class="stage-loading">
           <span class="loader"></span>
@@ -1125,14 +1122,14 @@ const displayMessages = computed(() => {
           </button>
         </div>
 
-        <!-- 通话中：AI 头像 + 状态动效 -->
+        <!-- 通话中：AI 头像浮层（右下角）+ 状态动效 -->
         <template v-if="isDeviceActive && !isLoading">
-          <div class="call-center">
+          <div class="call-overlay">
             <div class="ai-orb-wrap">
               <span class="ring" :class="callState" aria-hidden="true"></span>
               <span class="ring ring-late" :class="callState" aria-hidden="true"></span>
               <div class="ai-orb">
-                <PhRobot :size="44" weight="duotone" />
+                <PhRobot :size="32" weight="duotone" />
               </div>
             </div>
             <p class="ai-name">AI 心理教练</p>
@@ -1327,52 +1324,38 @@ const displayMessages = computed(() => {
   min-width: 0;
   position: relative;
   border-radius: 20px;
-  background:
-    radial-gradient(120% 120% at 20% 0%, #2a2f42 0%, #171a26 55%, #10131c 100%);
+  background: #10131c;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 300px;
 }
-.stage-canvas { display: none; }
-
-.pip {
-  display: none;
+.stage-video {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  width: 164px;
-  height: 116px;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: #000;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  z-index: 2;
-}
-.pip.show {
-  display: block;
-}
-.pip-video {
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   transform: scaleX(-1);
 }
-.pip-label {
+.stage-canvas { display: none; }
+.self-tag {
   position: absolute;
-  left: 8px;
-  bottom: 8px;
+  top: 14px;
+  left: 14px;
   font-size: 11px;
   font-weight: 600;
   color: #fff;
   background: rgba(0, 0, 0, 0.5);
   padding: 2px 8px;
   border-radius: 8px;
+  z-index: 3;
 }
 
 .stage-loading {
+  position: relative;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1391,6 +1374,8 @@ const displayMessages = computed(() => {
 @keyframes vc-spin { to { transform: rotate(360deg); } }
 
 .stage-idle {
+  position: relative;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1445,17 +1430,26 @@ const displayMessages = computed(() => {
   outline-offset: 2px;
 }
 
-.call-center {
+.call-overlay {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 24px;
+  gap: 6px;
+  padding: 14px 18px;
+  background: rgba(16, 19, 28, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  min-width: 148px;
+  z-index: 2;
 }
 .ai-orb-wrap {
   position: relative;
-  width: 128px;
-  height: 128px;
+  width: 92px;
+  height: 92px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1485,8 +1479,8 @@ const displayMessages = computed(() => {
   100% { transform: scale(1.22); opacity: 0; }
 }
 .ai-orb {
-  width: 96px;
-  height: 96px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   background: linear-gradient(150deg, #2a8262, #17533f);
   color: #eaf6f0;
@@ -1496,14 +1490,14 @@ const displayMessages = computed(() => {
   box-shadow: 0 12px 40px rgba(23, 83, 63, 0.45);
 }
 .ai-name {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   color: #fff;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
 }
 .ai-state {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: #aeb4c4;
 }
 .ai-state.listening { color: #7fd8b2; }
@@ -1514,7 +1508,7 @@ const displayMessages = computed(() => {
   display: flex;
   align-items: flex-end;
   gap: 4px;
-  height: 20px;
+  height: 16px;
   margin-top: 4px;
 }
 .equalizer span {
@@ -1536,7 +1530,7 @@ const displayMessages = computed(() => {
 .vlm-caption {
   position: absolute;
   left: 50%;
-  bottom: 18px;
+  top: 16px;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -1776,11 +1770,11 @@ const displayMessages = computed(() => {
     flex: 1;
     min-height: 220px;
   }
-  .pip {
-    width: 132px;
-    height: 94px;
-    top: 12px;
-    left: 12px;
+  .call-overlay {
+    right: 12px;
+    bottom: 12px;
+    padding: 10px 14px;
+    min-width: 128px;
   }
   .vc-controls {
     justify-content: center;
