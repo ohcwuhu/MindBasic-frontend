@@ -28,6 +28,7 @@ const navLinks = [
   { to: '/communities', label: '社群' },
   { to: '/ai-chat', label: 'AI 对话' },
   { to: '/ai-lab', label: 'AI 实验' },
+  { to: '/video-call', label: '视频通话' },
 ]
 
 const tabItems = [
@@ -82,6 +83,7 @@ const pageTitle = computed(() => {
     'article-detail': '文章',
     'ai-chat': 'AI 对话',
     'ai-lab': 'AI 实验',
+    'video-call': 'AI 视频通话',
     my: '我的成长',
     profile: '个人资料',
   }

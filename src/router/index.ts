@@ -27,6 +27,7 @@ export const router = createRouter({
     { path: '/coach', name: 'coach-workbench', component: () => import('@/views/CoachWorkbenchView.vue'), meta: { auth: true } },
     { path: '/ai-chat', name: 'ai-chat', component: () => import('@/views/AiChatView.vue') },
     { path: '/ai-lab', name: 'ai-lab', component: () => import('@/views/AiLabView.vue') },
+    { path: '/video-call', name: 'video-call', component: () => import('@/views/VideoCallView.vue') },
     { path: '/admin', name: 'admin', component: () => import('@/views/admin/AdminConsoleView.vue'), meta: { auth: true, admin: true } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
