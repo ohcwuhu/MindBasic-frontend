@@ -56,8 +56,7 @@ frontend/
 │   ├── components/
 │   │   ├── admin/         # 管理后台组件（ConfirmDialog、PaginationBar、StatusBadge…）
 │   │   ├── ai-lab/        # AI 实验室组件
-│   │   │   ├── AudioVideoCapture.vue   # 原实验面板（/ai-lab 使用）
-│   │   │   └── AiCoachPanel.vue        # AI 教练对话面板
+│   │   │   └── VideoCallPanel.vue      # 视频通话面板
 │   │   └── …              # 通用组件（ErrorBanner、FieldInput、EmptyState、Reveal…）
 │   ├── stores/auth.ts     # Pinia：token / user / 登录、注册、邮箱登录、登出
 │   ├── router/index.ts    # 路由表 + 鉴权守卫
@@ -67,7 +66,7 @@ frontend/
 │   │   └── useCountdown.ts# 验证码倒计时组合式函数
 │   └── views/
 │       ├── AiChatView.vue     # AI 对话页（/ai-chat，豆包式）
-│       ├── AiLabView.vue      # AI 实验面板页（/ai-lab，原版保留）
+│       ├── VideoCallView.vue  # AI 视频通话页（/video-call）
 │       └── …                  # 业务页面（含 admin/ 管理后台）
 ├── vite.config.ts         # 别名 @、/api 与 /socket.io 代理
 └── package.json
@@ -88,7 +87,7 @@ frontend/
 | `/communities` `/communities/:id` `/communities/:id/posts/:postId` | 社群广场 / 详情 / 帖子详情 | 广场公开，其余登录 |
 | `/coach` | 教练工作台 | 登录（教练） |
 | `/ai-chat` | AI 对话（豆包式聊天 + 常驻表情识别） | 公开 |
-| `/ai-lab` | AI 实验面板（原 RelMind 页面） | 公开 |
+| `/video-call` | AI 视频通话（语音回复 + 视觉理解） | 公开 |
 | `/admin` | 管理后台 | 登录 + ADMIN |
 
 路由守卫：`meta.auth` 未登录跳登录页（带回跳地址）；`meta.admin` 非管理员回首页。
@@ -130,15 +129,15 @@ await post('/appointments', { ... })
 - **`/ai-chat`（AI 对话）**：豆包式排版，输入框固定屏幕底部；进入页面自动开启摄像头，
   常驻实时表情识别；输入框左侧麦克风按钮可录音，结束录音后语音自动转成文字放入输入框，
   用户编辑确认后发送；发送时自动附带表情/语调/投入度等识别上下文。
-- **`/ai-lab`（AI 实验面板）**：保留原 RelMind 完整面板（视频实时识别 + 录音多模态分析 + AI 教练对话）。
+- **`/video-call`（AI 视频通话）**：实时视频通话 + 语音输入，AI 以语音回复
+  （edge-tts，免费）；配置 VLM Key 后 AI 还能理解摄像头画面。
 
 ### 组件与数据流
 
 | 组件 | 职责 |
 | --- | --- |
-| `components/ai-lab/AudioVideoCapture.vue` | 摄像头抽帧 → SocketIO `upload_frame`；录音 → `POST /api/analyze_audio` |
-| `components/ai-lab/AiCoachPanel.vue` | 对话 UI，`POST /api/ai_coach/chat` |
 | `views/AiChatView.vue` | 豆包式对话页（常驻表情 + 语音输入入框） |
+| `components/ai-lab/VideoCallPanel.vue` | 视频通话面板（TTS 播放、打断、音量可视化） |
 
 AI 实验室接口（与业务接口不同，返回自有 JSON 结构）：
 
@@ -166,7 +165,7 @@ SocketIO 事件：前端 `upload_frame`（约 2.5fps 抽帧）→ 后端返回 `
 - **教练端**（`/coach` 工作台）：预约、个案（Markdown + 导出）、服务/时段、
   客户（含待跟进）、收到的评价、话术库、社群管理、资料
 - **管理后台**（`/admin`）：概览、用户、教练审核、文章、内容（分类/轮播/标签/话术库）、社群、平台配置
-- **AI 实验室**：`/ai-chat` 豆包式对话 + 常驻表情识别；`/ai-lab` 原实验面板
+- **AI 实验室**：`/ai-chat` 豆包式对话 + 常驻表情识别；`/video-call` 视频通话
 - **账号**：密码/邮箱验证码双模式登录、找回密码、绑定邮箱、修改密码、注销
 
 ## 构建与质量
