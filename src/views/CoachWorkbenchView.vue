@@ -900,6 +900,12 @@ const auditText = computed(() =>
           @click="switchTab(tab.key)">
           <component :is="tab.icon" :size="16" weight="duotone" /> {{ tab.label }}
         </button>
+        <RouterLink
+          to="/coach/messages"
+          class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-hairline bg-card text-ink-soft text-sm pressable hover:border-pine hover:text-pine"
+        >
+          在线消息
+        </RouterLink>
       </div>
 
       <!-- 预约 -->

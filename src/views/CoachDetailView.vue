@@ -139,9 +139,15 @@ function priceText(cents: number): string {
 
       <div class="mt-10">
         <RouterLink
+          :to="{ path: '/messages', query: { coachId: coach.id } }"
+          class="inline-flex items-center gap-2 h-12 px-6 rounded-full border border-hairline bg-card text-pine font-medium hover:bg-pine-soft pressable"
+        >
+          在线咨询
+        </RouterLink>
+        <RouterLink
           v-if="coach.services.length && slots.length"
           :to="`/coaches/${coach.id}/book?serviceId=${coach.services[0].id}`"
-          class="inline-flex items-center gap-2 h-12 px-6 rounded-full bg-pine text-card font-medium hover:bg-pine-deep pressable"
+          class="ml-3 inline-flex items-center gap-2 h-12 px-6 rounded-full bg-pine text-card font-medium hover:bg-pine-deep pressable"
         >
           预约咨询 <ArrowRight :size="18" weight="bold" />
         </RouterLink>
