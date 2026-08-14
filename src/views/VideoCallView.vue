@@ -10,18 +10,20 @@ import VideoCallPanel from '@/components/ai-lab/VideoCallPanel.vue'
 
 <style scoped>
 .video-call-page {
-  min-height: calc(100dvh - 64px);
-  background-color: var(--color-paper);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 24px;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 64px;
+  bottom: 0;
+  background: var(--color-paper);
+  padding: 16px;
   box-sizing: border-box;
 }
 @media (max-width: 640px) {
   .video-call-page {
-    min-height: calc(100dvh - 56px);
-    padding: 14px;
+    top: 56px;
+    bottom: 64px;
+    padding: 10px;
   }
 }
 </style>
