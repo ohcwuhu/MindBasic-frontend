@@ -1101,10 +1101,10 @@ const displayMessages = computed(() => {
       <section class="vc-stage" :class="{ active: isDeviceActive }">
         <canvas ref="canvasRef" class="stage-canvas"></canvas>
 
-        <!-- 自拍画中画（复用 videoRef） -->
-        <div v-if="isDeviceActive" class="pip">
+        <!-- 自拍画中画（视频常驻 DOM，避免启动期 videoRef 为空导致 canplay 不触发） -->
+        <div class="pip" :class="{ show: isDeviceActive }">
           <video ref="videoRef" class="pip-video" autoplay playsinline muted></video>
-          <span class="pip-label">我</span>
+          <span v-if="isDeviceActive" class="pip-label">我</span>
         </div>
 
         <div v-if="isLoading" class="stage-loading">
@@ -1338,6 +1338,7 @@ const displayMessages = computed(() => {
 .stage-canvas { display: none; }
 
 .pip {
+  display: none;
   position: absolute;
   top: 16px;
   left: 16px;
@@ -1349,6 +1350,9 @@ const displayMessages = computed(() => {
   background: #000;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   z-index: 2;
+}
+.pip.show {
+  display: block;
 }
 .pip-video {
   width: 100%;
