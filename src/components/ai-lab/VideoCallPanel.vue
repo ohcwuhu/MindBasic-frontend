@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { ref, onUnmounted, onMounted, nextTick, computed } from 'vue'
 import { io, Socket } from 'socket.io-client'
+import {
+  PhVideoCamera,
+  PhPhoneDisconnect,
+  PhChatCircleDots,
+  PhTrashSimple,
+  PhCheck,
+  PhStop,
+  PhEye,
+  PhWarningCircle,
+  PhLightbulb,
+  PhChartBar,
+} from '@phosphor-icons/vue'
 
 // ================================================================
 //  常量 & 映射表
@@ -17,10 +29,10 @@ const STATE_TEXT: Record<string, string> = {
 }
 
 const STATE_COLOR: Record<string, string> = {
-  idle: '#909399',
-  listening: '#67C23A',
-  thinking: '#E6A23C',
-  speaking: '#8b5cf6'
+  idle: '#6b7280',
+  listening: '#1f6b52',
+  thinking: '#a06d12',
+  speaking: '#17533f'
 }
 
 // ================================================================
@@ -1002,16 +1014,20 @@ const scrollToBottom = () => {
   })
 }
 
-// 情感 emoji 映射
-const EMOJI_MAP: Record<string, string> = {
-  happy: '😊', sad: '😢', angry: '😠', surprised: '😮',
-  fearful: '😨', disgusted: '🤢', neutral: '😐',
-}
 const CN_MAP: Record<string, string> = {
   happy: '开心', sad: '悲伤', angry: '愤怒', surprised: '惊讶',
   fearful: '恐惧', disgusted: '厌恶', neutral: '中性',
 }
-const getEmotionEmoji = (emo: string) => EMOJI_MAP[emo?.toLowerCase()] || '❓'
+const EMOTION_DOT_COLOR: Record<string, string> = {
+  happy: '#2e9e6b',
+  sad: '#4a7fd4',
+  angry: '#d64545',
+  surprised: '#d9a13b',
+  fearful: '#8a63d2',
+  disgusted: '#2c8f8f',
+  neutral: '#9aa1ae',
+}
+const getEmotionColor = (emo: string) => EMOTION_DOT_COLOR[emo?.toLowerCase()] || '#9aa1ae'
 const getEmotionCn = (emo: string) => CN_MAP[emo?.toLowerCase()] || emo || '未知'
 
 const manualSend = () => {
@@ -1068,7 +1084,10 @@ const displayMessages = computed(() => {
 
 <template>
   <div class="vc-container">
-    <h2 class="vc-title">📹 AI 视频通话</h2>
+    <h2 class="vc-title">
+      <PhVideoCamera :size="20" weight="duotone" />
+      AI 视频通话
+    </h2>
 
     <!-- Socket 状态条 -->
     <div class="socket-bar" :class="socketStatus">
@@ -1099,7 +1118,7 @@ const displayMessages = computed(() => {
 
       <!-- VLM 视觉描述浮层 -->
       <div v-if="vlmDescription && isDeviceActive" class="vlm-overlay">
-        <span class="vlm-label">👁️ VLM</span>
+        <span class="vlm-label"><PhEye :size="13" weight="bold" /> VLM</span>
         <span class="vlm-text">{{ vlmDescription.slice(0, 80) }}{{ vlmDescription.length > 80 ? '…' : '' }}</span>
       </div>
     </div>
@@ -1107,16 +1126,21 @@ const displayMessages = computed(() => {
     <!-- 控制面板 -->
     <div class="controls">
       <button class="btn-call" :class="{ active: isDeviceActive }" @click="toggleCall">
-        {{ isDeviceActive ? '⏹ 结束通话' : '📹 开始视频通话' }}
+        <PhPhoneDisconnect v-if="isDeviceActive" :size="18" weight="fill" />
+        <PhVideoCamera v-else :size="18" weight="bold" />
+        {{ isDeviceActive ? '结束通话' : '开始视频通话' }}
       </button>
       <button v-if="isDeviceActive" class="btn-send" @click="manualSend">
-        ⏯ 说完了（手动发送）
+        <PhCheck :size="18" weight="bold" />
+        说完了（手动发送）
       </button>
       <button v-if="isDeviceActive" class="btn-interrupt" @click="triggerManualInterrupt">
-        ✋ 打断
+        <PhStop :size="18" weight="bold" />
+        打断
       </button>
       <button v-if="messages.length > 0" class="btn-clear" @click="clearHistory">
-        🗑 清空对话
+        <PhTrashSimple :size="18" weight="bold" />
+        清空对话
       </button>
     </div>
 
@@ -1135,13 +1159,17 @@ const displayMessages = computed(() => {
 
     <!-- 错误提示 -->
     <div v-if="errorMsg" class="error-banner">
-      ⚠ {{ errorMsg }}
+      <PhWarningCircle :size="16" weight="bold" />
+      {{ errorMsg }}
     </div>
 
     <!-- 对话记录 -->
     <div class="chat-panel">
       <div class="chat-header">
-        <span>💬 对话记录</span>
+        <span class="chat-title">
+          <PhChatCircleDots :size="16" weight="duotone" />
+          对话记录
+        </span>
         <span v-if="partialAssistantText" class="typing-hint">AI 正在回复…</span>
       </div>
       <div ref="chatBodyRef" class="chat-body">
@@ -1163,7 +1191,10 @@ const displayMessages = computed(() => {
     <!-- 多模态情感分析面板 -->
     <div v-if="emotionResult" class="emotion-panel">
       <div class="emotion-header">
-        <span>🎭 多模态情感分析</span>
+        <span class="emotion-title">
+          <PhChartBar :size="16" weight="duotone" />
+          多模态情感分析
+        </span>
         <span class="emotion-elapsed">{{ emotionResult.elapsed_seconds }}s</span>
       </div>
       <div class="emotion-grid">
@@ -1171,7 +1202,7 @@ const displayMessages = computed(() => {
         <div v-if="emotionResult.fusion" class="emotion-card emotion-fusion">
           <div class="emotion-card-title">融合结果</div>
           <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.fusion.final_emotion) }}</span>
+            <span class="emotion-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.fusion.final_emotion) }"></span>
             <span class="emotion-label">{{ emotionResult.fusion.final_emotion_cn }}</span>
             <span class="emotion-conf">{{ Math.round((emotionResult.fusion.overall_confidence || 0) * 100) }}%</span>
           </div>
@@ -1186,7 +1217,7 @@ const displayMessages = computed(() => {
         <div v-if="emotionResult.voice_emotion" class="emotion-card">
           <div class="emotion-card-title">语调情感</div>
           <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.voice_emotion.emotion) }}</span>
+            <span class="emotion-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.voice_emotion.emotion) }"></span>
             <span class="emotion-label">{{ emotionResult.voice_emotion.emotion_cn }}</span>
             <span class="emotion-conf">{{ Math.round((emotionResult.voice_emotion.confidence || 0) * 100) }}%</span>
           </div>
@@ -1196,7 +1227,7 @@ const displayMessages = computed(() => {
         <div v-if="emotionResult.text_emotion" class="emotion-card">
           <div class="emotion-card-title">文本情感</div>
           <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.text_emotion.emotion) }}</span>
+            <span class="emotion-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.text_emotion.emotion) }"></span>
             <span class="emotion-label">{{ emotionResult.text_emotion.emotion_cn }}</span>
             <span class="emotion-conf">{{ Math.round((emotionResult.text_emotion.confidence || 0) * 100) }}%</span>
           </div>
@@ -1206,7 +1237,7 @@ const displayMessages = computed(() => {
         <div v-if="emotionResult.facial_emotion && emotionResult.facial_emotion.frame_count > 0" class="emotion-card">
           <div class="emotion-card-title">面部情感</div>
           <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.facial_emotion.dominant_emotion) }}</span>
+            <span class="emotion-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.facial_emotion.dominant_emotion) }"></span>
             <span class="emotion-label">{{ emotionResult.facial_emotion.dominant_emotion_cn }}</span>
             <span class="emotion-conf">{{ Math.round((emotionResult.facial_emotion.confidence || 0) * 100) }}%</span>
           </div>
@@ -1217,7 +1248,7 @@ const displayMessages = computed(() => {
         <div class="emotion-card">
           <div class="emotion-card-title">ASR 情感</div>
           <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.asr_emo) }}</span>
+            <span class="emotion-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.asr_emo) }"></span>
             <span class="emotion-label">{{ getEmotionCn(emotionResult.asr_emo) }}</span>
           </div>
         </div>
@@ -1226,7 +1257,10 @@ const displayMessages = computed(() => {
 
     <!-- 说明 -->
     <div class="tips">
-      <p>💡 使用提示：</p>
+      <p class="tips-title">
+        <PhLightbulb :size="14" weight="bold" />
+        使用提示：
+      </p>
       <ul>
         <li>说话后停顿 1.5 秒，AI 会自动开始回复</li>
         <li>AI 回复时直接开口说话即可打断</li>
@@ -1240,41 +1274,53 @@ const displayMessages = computed(() => {
 </template>
 
 <style scoped>
+/* 设计规范：纸白底 / 墨色文字 / 松绿强调 / 圆角 16-12 两级 */
 .vc-container {
-  max-width: 800px;
+  max-width: 820px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 .vc-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #303133;
-  margin: 0;
-}
-.socket-bar {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0;
+}
+.vc-title svg {
+  color: var(--color-pine);
+}
+
+.socket-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  width: fit-content;
 }
 .socket-bar .dot {
-  width: 8px; height: 8px; border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
-.socket-bar.connected { background: #f0f9eb; color: #67C23A; }
-.socket-bar.connected .dot { background: #67C23A; }
-.socket-bar.connecting { background: #fdf6ec; color: #E6A23C; }
-.socket-bar.connecting .dot { background: #E6A23C; }
-.socket-bar.disconnected { background: #fef0f0; color: #F56C6C; }
-.socket-bar.disconnected .dot { background: #F56C6C; }
+.socket-bar.connected { background: var(--color-pine-soft); color: var(--color-pine); }
+.socket-bar.connected .dot { background: var(--color-pine); }
+.socket-bar.connecting { background: #f6efd9; color: #8a6d1f; }
+.socket-bar.connecting .dot { background: #d9a13b; }
+.socket-bar.disconnected { background: #fbeae6; color: #c2402f; }
+.socket-bar.disconnected .dot { background: #c2402f; }
 
 .video-wrapper {
   position: relative;
-  background: #000;
-  border-radius: 12px;
+  background: var(--color-ink);
+  border-radius: 16px;
   overflow: hidden;
   aspect-ratio: 16 / 9;
 }
@@ -1292,14 +1338,16 @@ const displayMessages = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.7);
+  background: rgba(28, 28, 26, 0.78);
   color: #fff;
   gap: 12px;
+  font-size: 13px;
 }
 .spinner {
-  width: 40px; height: 40px;
-  border: 3px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.28);
+  border-top-color: var(--color-pine);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -1310,7 +1358,7 @@ const displayMessages = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #909399;
+  color: var(--color-ink-soft);
   font-size: 14px;
 }
 .state-overlay {
@@ -1319,12 +1367,12 @@ const displayMessages = computed(() => {
   left: 12px;
 }
 .state-badge {
-  padding: 4px 14px;
+  padding: 5px 14px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
   color: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }
 .vlm-overlay {
   position: absolute;
@@ -1335,12 +1383,18 @@ const displayMessages = computed(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: rgba(0,0,0,0.7);
-  border-radius: 8px;
+  background: rgba(28, 28, 26, 0.72);
+  border-radius: 10px;
   color: #fff;
-  font-size: 12px;
+  font-size: 12.5px;
 }
-.vlm-label { font-weight: 600; flex-shrink: 0; }
+.vlm-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
 .vlm-text {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1349,66 +1403,74 @@ const displayMessages = computed(() => {
 
 .controls {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
+}
+.btn-call,
+.btn-send,
+.btn-interrupt,
+.btn-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.btn-call:active,
+.btn-send:active,
+.btn-interrupt:active,
+.btn-clear:active {
+  transform: scale(0.98);
+}
+.btn-call:focus-visible,
+.btn-send:focus-visible,
+.btn-interrupt:focus-visible,
+.btn-clear:focus-visible {
+  outline: 2px solid var(--color-pine);
+  outline-offset: 2px;
 }
 .btn-call {
   flex: 1;
   min-width: 180px;
-  padding: 12px 24px;
-  font-size: 15px;
-  font-weight: 600;
+  justify-content: center;
   color: #fff;
-  background: #8b5cf6;
+  background: var(--color-pine);
   border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
 }
-.btn-call:hover { background: #7c4de4; }
-.btn-call.active { background: #F56C6C; }
-.btn-call.active:hover { background: #e65656; }
+.btn-call:hover { background: var(--color-pine-deep); }
+.btn-call.active { background: #c2402f; }
+.btn-call.active:hover { background: #a83628; }
 .btn-send {
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #409EFF;
-  background: #ecf5ff;
-  border: 1px solid #b3d8ff;
-  border-radius: 10px;
-  cursor: pointer;
+  color: var(--color-pine);
+  background: var(--color-pine-soft);
+  border: 1px solid transparent;
 }
-.btn-send:hover { background: #d9ecff; }
+.btn-send:hover { background: #d3e7dc; }
 .btn-interrupt {
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #E6A23C;
-  background: #fdf6ec;
-  border: 1px solid #f5dab1;
-  border-radius: 10px;
-  cursor: pointer;
+  color: #8a6d1f;
+  background: #f6efd9;
+  border: 1px solid transparent;
 }
-.btn-interrupt:hover { background: #faecd8; }
+.btn-interrupt:hover { background: #efe3c2; }
 .btn-clear {
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #909399;
-  background: #f4f4f5;
-  border: 1px solid #dcdfe6;
-  border-radius: 10px;
-  cursor: pointer;
+  color: var(--color-ink-soft);
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline);
 }
-.btn-clear:hover { background: #e9e9eb; }
+.btn-clear:hover { border-color: #c8cac2; }
 
 .status-panel {
   display: flex;
   align-items: center;
   gap: 24px;
   padding: 12px 16px;
-  background: #f5f7fa;
-  border-radius: 8px;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: 12px;
 }
 .volume-item {
   display: flex;
@@ -1416,29 +1478,32 @@ const displayMessages = computed(() => {
   gap: 8px;
   flex: 1;
 }
-.vol-label { font-size: 13px; color: #606266; }
+.vol-label { font-size: 13px; color: var(--color-ink-soft); }
 .vol-canvas { background: transparent; }
-.vol-value { font-size: 13px; color: #909399; min-width: 36px; }
+.vol-value { font-size: 13px; color: var(--color-pine); min-width: 36px; font-weight: 600; }
 .stat-item {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.stat-label { font-size: 13px; color: #606266; }
-.stat-value { font-size: 16px; font-weight: 600; color: #8b5cf6; }
+.stat-label { font-size: 13px; color: var(--color-ink-soft); }
+.stat-value { font-size: 16px; font-weight: 600; color: var(--color-pine); }
 
 .error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 16px;
-  background: #fef0f0;
-  color: #F56C6C;
-  border-radius: 8px;
+  background: #fbeae6;
+  color: #c2402f;
+  border-radius: 12px;
   font-size: 13px;
 }
 
 .chat-panel {
-  background: #fff;
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: 14px;
   overflow: hidden;
 }
 .chat-header {
@@ -1446,16 +1511,21 @@ const displayMessages = computed(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #f5f3ff;
-  border-bottom: 1px solid #ebeef5;
+  background: var(--color-pine-soft);
+  border-bottom: 1px solid var(--color-hairline);
   font-size: 14px;
   font-weight: 600;
-  color: #303133;
+  color: var(--color-pine-deep);
+}
+.chat-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
 .typing-hint {
   font-size: 12px;
   font-weight: 400;
-  color: #8b5cf6;
+  color: var(--color-pine);
 }
 .chat-body {
   max-height: 320px;
@@ -1467,7 +1537,7 @@ const displayMessages = computed(() => {
 }
 .chat-empty {
   text-align: center;
-  color: #c0c4cc;
+  color: var(--color-ink-faint);
   font-size: 13px;
   padding: 24px 0;
 }
@@ -1487,101 +1557,115 @@ const displayMessages = computed(() => {
   word-break: break-word;
 }
 .chat-msg.user .msg-bubble {
-  background: #8b5cf6;
+  background: var(--color-pine);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 .chat-msg.assistant .msg-bubble {
-  background: #f5f7fa;
-  color: #303133;
-  border: 1px solid #e4e7ed;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline);
   border-bottom-left-radius: 4px;
 }
 .msg-time {
   font-size: 11px;
-  color: #c0c4cc;
+  color: var(--color-ink-faint);
 }
 
-.tips {
-  padding: 14px 16px;
-  background: #f5f7fa;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #909399;
-  line-height: 1.8;
-}
-.tips p { margin: 0 0 4px; font-weight: 600; }
-.tips ul { margin: 0; padding-left: 20px; }
-
-@media (max-width: 640px) {
-  .vc-container { padding: 0 8px; }
-  .btn-call { min-width: 140px; }
-  .status-panel { flex-direction: column; align-items: flex-start; gap: 8px; }
-}
-
-/* 多模态情感分析面板 */
 .emotion-panel {
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 12px;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: 14px;
+  overflow: hidden;
 }
 .emotion-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-pine-soft);
+  border-bottom: 1px solid var(--color-hairline);
+  font-size: 14px;
   font-weight: 600;
-  color: #6366f1;
-  margin-bottom: 10px;
+  color: var(--color-pine-deep);
+}
+.emotion-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
 .emotion-elapsed {
-  font-size: 11px;
-  color: #9ca3af;
+  font-size: 12px;
   font-weight: 400;
+  color: var(--color-ink-soft);
 }
 .emotion-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  padding: 14px;
 }
 .emotion-card {
-  background: white;
-  border-radius: 8px;
-  padding: 8px 10px;
-  border: 1px solid #e5e7eb;
-}
-.emotion-fusion {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.04);
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .emotion-card-title {
-  font-size: 11px;
-  color: #6b7280;
-  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-soft);
 }
 .emotion-main {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
-.emotion-emoji {
-  font-size: 18px;
+.emotion-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 .emotion-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink);
 }
 .emotion-conf {
-  font-size: 11px;
-  color: #6b7280;
-  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-pine);
 }
 .emotion-weights {
-  font-size: 10px;
-  color: #9ca3af;
-  margin-top: 4px;
+  font-size: 12px;
+  color: var(--color-ink-faint);
+}
+
+.tips {
+  color: var(--color-ink-soft);
+  font-size: 12.5px;
+  line-height: 1.8;
+}
+.tips-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 4px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.tips ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+@media (max-width: 640px) {
+  .controls .btn-call {
+    min-width: 100%;
+  }
 }
 </style>
