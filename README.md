@@ -147,8 +147,14 @@ AI 实验室接口（与业务接口不同，返回自有 JSON 结构）：
 | `GET /api/analyze_audio/config_check` | 查看四个模型加载状态 |
 | `POST /api/analyze_audio/warmup` | 手动触发模型预热 |
 | `POST /api/ai_coach/chat` | AI 心理教练对话（携带识别上下文） |
+| `POST /api/vc_audio_upload` | 视频通话音频上传（返回 `file_id` 交 `vc_audio_end` 处理） |
 
-SocketIO 事件：前端 `upload_frame`（约 2.5fps 抽帧）→ 后端返回 `emotion_result`。
+SocketIO 事件：
+
+- 情绪识别：前端 `upload_frame`（约 2.5fps 抽帧）→ 后端返回 `emotion_result`；
+- 视频通话：`vc_start` / `vc_stop` / `vc_audio_chunk` / `vc_audio_end` / `vc_interrupt` /
+  `vc_update_frame` / `vc_update_emotion` / `vc_clear_history` → 后端返回
+  `vc_state_change`、`vc_llm_token/done`、`vc_tts_start/chunk/done`、`vc_vlm_result` 等。
 
 ### 使用前提
 
