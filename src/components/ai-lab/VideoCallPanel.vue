@@ -1228,10 +1228,9 @@ const displayMessages = computed(() => {
           <PhStop :size="20" weight="duotone" />
           <span>打断</span>
         </button>
-        <button class="ctrl-btn end" :class="{ active: isDeviceActive }" @click="toggleCall">
-          <PhPhoneDisconnect v-if="isDeviceActive" :size="22" weight="fill" />
-          <PhVideoCamera v-else :size="22" weight="duotone" />
-          <span>{{ isDeviceActive ? '结束通话' : '开始通话' }}</span>
+        <button v-if="isDeviceActive" class="ctrl-btn end" @click="toggleCall">
+          <PhPhoneDisconnect :size="22" weight="fill" />
+          <span>结束通话</span>
         </button>
       </div>
     </div>
