@@ -1,6 +1,16 @@
 <script setup lang="ts">
 import { ref, onUnmounted, onMounted, nextTick, computed } from 'vue'
 import { io, Socket } from 'socket.io-client'
+import {
+  PhRobot,
+  PhVideoCamera,
+  PhPhoneDisconnect,
+  PhChatCircleDots,
+  PhTrashSimple,
+  PhCheck,
+  PhStop,
+  PhEye,
+} from '@phosphor-icons/vue'
 
 // ================================================================
 //  常量 & 映射表
@@ -1002,16 +1012,20 @@ const scrollToBottom = () => {
   })
 }
 
-// 情感 emoji 映射
-const EMOJI_MAP: Record<string, string> = {
-  happy: '😊', sad: '😢', angry: '😠', surprised: '😮',
-  fearful: '😨', disgusted: '🤢', neutral: '😐',
-}
 const CN_MAP: Record<string, string> = {
   happy: '开心', sad: '悲伤', angry: '愤怒', surprised: '惊讶',
   fearful: '恐惧', disgusted: '厌恶', neutral: '中性',
 }
-const getEmotionEmoji = (emo: string) => EMOJI_MAP[emo?.toLowerCase()] || '❓'
+const EMOTION_DOT_COLOR: Record<string, string> = {
+  happy: '#2e9e6b',
+  sad: '#4a7fd4',
+  angry: '#d64545',
+  surprised: '#d9a13b',
+  fearful: '#8a63d2',
+  disgusted: '#2c8f8f',
+  neutral: '#9aa1ae',
+}
+const getEmotionColor = (emo: string) => EMOTION_DOT_COLOR[emo?.toLowerCase()] || '#9aa1ae'
 const getEmotionCn = (emo: string) => CN_MAP[emo?.toLowerCase()] || emo || '未知'
 
 const manualSend = () => {
@@ -1065,523 +1079,735 @@ const displayMessages = computed(() => {
   return list
 })
 </script>
-
 <template>
-  <div class="vc-container">
-    <h2 class="vc-title">📹 AI 视频通话</h2>
-
-    <!-- Socket 状态条 -->
-    <div class="socket-bar" :class="socketStatus">
-      <span class="dot"></span>
-      <span>{{ socketStatus === 'connected' ? '后端已连接' : socketStatus === 'connecting' ? '连接中…' : '后端未连接' }}</span>
-    </div>
-
-    <!-- 视频预览 + 状态浮层 -->
-    <div class="video-wrapper">
-      <video ref="videoRef" class="video-player" autoplay playsinline muted></video>
-      <canvas ref="canvasRef" class="hidden-canvas"></canvas>
-
-      <div v-if="isLoading" class="loading-overlay">
-        <div class="spinner"></div>
-        <span>设备启动中…</span>
-      </div>
-
-      <div v-if="!isDeviceActive && !isLoading" class="placeholder">
-        <span>点击下方「开始视频通话」启动 AI 实时对话</span>
-      </div>
-
-      <!-- 状态浮层 -->
-      <div v-if="isDeviceActive" class="state-overlay">
-        <div class="state-badge" :style="{ backgroundColor: STATE_COLOR[callState] }">
+  <div class="vc-shell">
+    <!-- ===== 顶栏：连接状态 + 通话状态 + 统计 ===== -->
+    <div class="vc-topbar">
+      <div class="vc-topbar-left">
+        <span class="socket-chip" :class="socketStatus">
+          <span class="socket-dot" aria-hidden="true"></span>
+          {{
+            socketStatus === 'connected' ? '服务已连接'
+            : socketStatus === 'connecting' ? '正在连接服务'
+            : '服务未连接'
+          }}
+        </span>
+        <span v-if="isDeviceActive" class="state-chip" :class="callState">
           {{ STATE_TEXT[callState] }}
+        </span>
+      </div>
+      <div v-if="isDeviceActive" class="vc-stats">
+        <span>轮次 {{ stats.totalTurns }}</span>
+        <span v-if="stats.llmLatency">回复 {{ stats.llmLatency }}ms</span>
+      </div>
+    </div>
+
+    <!-- ===== 主区：通话舞台 + 对话侧栏 ===== -->
+    <div class="vc-main">
+      <!-- 通话舞台 -->
+      <section class="vc-stage" :class="{ active: isDeviceActive }">
+        <canvas ref="canvasRef" class="stage-canvas"></canvas>
+
+        <!-- 自拍画中画 -->
+        <div v-if="isDeviceActive" class="pip">
+          <video ref="videoRef" class="pip-video" autoplay playsinline muted></video>
+          <span class="pip-label">我</span>
         </div>
-      </div>
 
-      <!-- VLM 视觉描述浮层 -->
-      <div v-if="vlmDescription && isDeviceActive" class="vlm-overlay">
-        <span class="vlm-label">👁️ VLM</span>
-        <span class="vlm-text">{{ vlmDescription.slice(0, 80) }}{{ vlmDescription.length > 80 ? '…' : '' }}</span>
-      </div>
+        <div v-if="isLoading" class="stage-loading">
+          <span class="loader"></span>
+          <span>设备启动中…</span>
+        </div>
+
+        <!-- 未开始：开场 CTA -->
+        <div v-if="!isDeviceActive && !isLoading" class="stage-idle">
+          <div class="idle-orb">
+            <PhRobot :size="44" weight="duotone" />
+          </div>
+          <p class="idle-title">AI 心理教练视频通话</p>
+          <p class="idle-desc">开启摄像头和麦克风，像打电话一样和 AI 聊聊你的状态</p>
+          <button class="start-call-btn" @click="toggleCall">
+            <PhVideoCamera :size="18" weight="bold" />
+            开始视频通话
+          </button>
+        </div>
+
+        <!-- 通话中：AI 头像 + 状态动画 -->
+        <template v-if="isDeviceActive && !isLoading">
+          <div class="call-center">
+            <div class="ai-orb-wrap">
+              <span class="ring" :class="callState" aria-hidden="true"></span>
+              <span class="ring ring-late" :class="callState" aria-hidden="true"></span>
+              <div class="ai-orb">
+                <PhRobot :size="46" weight="duotone" />
+              </div>
+            </div>
+            <p class="ai-name">AI 心理教练</p>
+            <p class="ai-state" :class="callState">{{ STATE_TEXT[callState] }}</p>
+            <div v-if="callState === 'speaking'" class="equalizer" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+
+          <!-- VLM 视觉描述 -->
+          <div v-if="vlmDescription" class="vlm-caption">
+            <PhEye :size="14" weight="bold" />
+            <span>{{ vlmDescription.slice(0, 70) }}{{ vlmDescription.length > 70 ? '…' : '' }}</span>
+          </div>
+        </template>
+
+        <!-- 错误提示 -->
+        <p v-if="errorMsg" class="stage-error" role="alert">{{ errorMsg }}</p>
+      </section>
+
+      <!-- 对话侧栏 -->
+      <aside class="vc-sidebar">
+        <div class="sidebar-header">
+          <span class="sidebar-title">
+            <PhChatCircleDots :size="16" weight="duotone" />
+            对话
+          </span>
+          <span v-if="partialAssistantText" class="typing-hint">AI 正在回复…</span>
+        </div>
+
+        <!-- 情绪分析（紧凑芯片） -->
+        <div v-if="emotionResult" class="emotion-strip">
+          <div v-if="emotionResult.fusion" class="emo-chip">
+            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.fusion.final_emotion) }"></span>
+            <span class="emo-name">融合</span>
+            <span class="emo-val">{{ emotionResult.fusion.final_emotion_cn }}</span>
+          </div>
+          <div v-if="emotionResult.voice_emotion" class="emo-chip">
+            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.voice_emotion.emotion) }"></span>
+            <span class="emo-name">语调</span>
+            <span class="emo-val">{{ emotionResult.voice_emotion.emotion_cn }}</span>
+          </div>
+          <div v-if="emotionResult.text_emotion" class="emo-chip">
+            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.text_emotion.emotion) }"></span>
+            <span class="emo-name">文本</span>
+            <span class="emo-val">{{ emotionResult.text_emotion.emotion_cn }}</span>
+          </div>
+          <div v-if="emotionResult.facial_emotion && emotionResult.facial_emotion.frame_count > 0" class="emo-chip">
+            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.facial_emotion.dominant_emotion) }"></span>
+            <span class="emo-name">面部</span>
+            <span class="emo-val">{{ emotionResult.facial_emotion.dominant_emotion_cn }}</span>
+          </div>
+          <div class="emo-chip">
+            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.asr_emo) }"></span>
+            <span class="emo-name">ASR</span>
+            <span class="emo-val">{{ getEmotionCn(emotionResult.asr_emo) }}</span>
+          </div>
+        </div>
+
+        <div ref="chatBodyRef" class="chat-body">
+          <div v-if="displayMessages.length === 0" class="chat-empty">
+            开始视频通话后，对话内容会显示在这里
+          </div>
+          <div
+            v-for="(m, i) in displayMessages"
+            :key="i"
+            class="chat-msg"
+            :class="m.role"
+          >
+            <div class="msg-bubble">{{ m.content }}</div>
+            <div class="msg-time">{{ m.timestamp }}</div>
+          </div>
+        </div>
+      </aside>
     </div>
 
-    <!-- 控制面板 -->
-    <div class="controls">
-      <button class="btn-call" :class="{ active: isDeviceActive }" @click="toggleCall">
-        {{ isDeviceActive ? '⏹ 结束通话' : '📹 开始视频通话' }}
-      </button>
-      <button v-if="isDeviceActive" class="btn-send" @click="manualSend">
-        ⏯ 说完了（手动发送）
-      </button>
-      <button v-if="isDeviceActive" class="btn-interrupt" @click="triggerManualInterrupt">
-        ✋ 打断
-      </button>
-      <button v-if="messages.length > 0" class="btn-clear" @click="clearHistory">
-        🗑 清空对话
-      </button>
-    </div>
-
-    <!-- 音量条 + 统计 -->
-    <div v-if="isDeviceActive" class="status-panel">
-      <div class="volume-item">
+    <!-- ===== 底部控制条 ===== -->
+    <div class="vc-controls">
+      <div v-if="isDeviceActive" class="volume-meter">
         <span class="vol-label">音量</span>
-        <canvas ref="volumeCanvasRef" class="vol-canvas" width="200" height="32"></canvas>
+        <canvas ref="volumeCanvasRef" class="vol-canvas" width="160" height="24"></canvas>
         <span class="vol-value">{{ volumeLevel }}%</span>
       </div>
-      <div class="stat-item">
-        <span class="stat-label">对话轮数</span>
-        <span class="stat-value">{{ stats.totalTurns }}</span>
+
+      <div class="ctrl-actions">
+        <button v-if="messages.length > 0" class="ctrl-btn" title="清空对话" @click="clearHistory">
+          <PhTrashSimple :size="20" weight="duotone" />
+          <span>清空</span>
+        </button>
+        <button v-if="isDeviceActive" class="ctrl-btn" title="说完了（手动发送）" @click="manualSend">
+          <PhCheck :size="20" weight="duotone" />
+          <span>说完了</span>
+        </button>
+        <button v-if="isDeviceActive && callState !== 'idle'" class="ctrl-btn" title="打断 AI 回复" @click="triggerManualInterrupt">
+          <PhStop :size="20" weight="duotone" />
+          <span>打断</span>
+        </button>
+        <button class="ctrl-btn end" :class="{ active: isDeviceActive }" @click="toggleCall">
+          <PhPhoneDisconnect v-if="isDeviceActive" :size="22" weight="fill" />
+          <PhVideoCamera v-else :size="22" weight="duotone" />
+          <span>{{ isDeviceActive ? '结束通话' : '开始通话' }}</span>
+        </button>
       </div>
     </div>
 
-    <!-- 错误提示 -->
-    <div v-if="errorMsg" class="error-banner">
-      ⚠ {{ errorMsg }}
-    </div>
-
-    <!-- 对话记录 -->
-    <div class="chat-panel">
-      <div class="chat-header">
-        <span>💬 对话记录</span>
-        <span v-if="partialAssistantText" class="typing-hint">AI 正在回复…</span>
-      </div>
-      <div ref="chatBodyRef" class="chat-body">
-        <div v-if="displayMessages.length === 0" class="chat-empty">
-          开始视频通话后，对话内容将显示在这里
-        </div>
-        <div
-          v-for="(m, i) in displayMessages"
-          :key="i"
-          class="chat-msg"
-          :class="m.role"
-        >
-          <div class="msg-bubble">{{ m.content }}</div>
-          <div class="msg-time">{{ m.timestamp }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 多模态情感分析面板 -->
-    <div v-if="emotionResult" class="emotion-panel">
-      <div class="emotion-header">
-        <span>🎭 多模态情感分析</span>
-        <span class="emotion-elapsed">{{ emotionResult.elapsed_seconds }}s</span>
-      </div>
-      <div class="emotion-grid">
-        <!-- 融合结果 -->
-        <div v-if="emotionResult.fusion" class="emotion-card emotion-fusion">
-          <div class="emotion-card-title">融合结果</div>
-          <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.fusion.final_emotion) }}</span>
-            <span class="emotion-label">{{ emotionResult.fusion.final_emotion_cn }}</span>
-            <span class="emotion-conf">{{ Math.round((emotionResult.fusion.overall_confidence || 0) * 100) }}%</span>
-          </div>
-          <div v-if="emotionResult.fusion.weights_used" class="emotion-weights">
-            文本{{ Math.round((emotionResult.fusion.weights_used.text || 0) * 100) }}% ·
-            语调{{ Math.round((emotionResult.fusion.weights_used.voice || 0) * 100) }}% ·
-            面部{{ Math.round((emotionResult.fusion.weights_used.facial || 0) * 100) }}%
-          </div>
-        </div>
-
-        <!-- 语调情感 -->
-        <div v-if="emotionResult.voice_emotion" class="emotion-card">
-          <div class="emotion-card-title">语调情感</div>
-          <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.voice_emotion.emotion) }}</span>
-            <span class="emotion-label">{{ emotionResult.voice_emotion.emotion_cn }}</span>
-            <span class="emotion-conf">{{ Math.round((emotionResult.voice_emotion.confidence || 0) * 100) }}%</span>
-          </div>
-        </div>
-
-        <!-- 文本情感 -->
-        <div v-if="emotionResult.text_emotion" class="emotion-card">
-          <div class="emotion-card-title">文本情感</div>
-          <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.text_emotion.emotion) }}</span>
-            <span class="emotion-label">{{ emotionResult.text_emotion.emotion_cn }}</span>
-            <span class="emotion-conf">{{ Math.round((emotionResult.text_emotion.confidence || 0) * 100) }}%</span>
-          </div>
-        </div>
-
-        <!-- 面部情感 -->
-        <div v-if="emotionResult.facial_emotion && emotionResult.facial_emotion.frame_count > 0" class="emotion-card">
-          <div class="emotion-card-title">面部情感</div>
-          <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.facial_emotion.dominant_emotion) }}</span>
-            <span class="emotion-label">{{ emotionResult.facial_emotion.dominant_emotion_cn }}</span>
-            <span class="emotion-conf">{{ Math.round((emotionResult.facial_emotion.confidence || 0) * 100) }}%</span>
-          </div>
-          <div class="emotion-weights">{{ emotionResult.facial_emotion.frame_count }}帧 · 稳定性{{ Math.round((emotionResult.facial_emotion.stability || 0) * 100) }}%</div>
-        </div>
-
-        <!-- ASR 情感 -->
-        <div class="emotion-card">
-          <div class="emotion-card-title">ASR 情感</div>
-          <div class="emotion-main">
-            <span class="emotion-emoji">{{ getEmotionEmoji(emotionResult.asr_emo) }}</span>
-            <span class="emotion-label">{{ getEmotionCn(emotionResult.asr_emo) }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 说明 -->
-    <div class="tips">
-      <p>💡 使用提示：</p>
-      <ul>
-        <li>说话后停顿 1.5 秒，AI 会自动开始回复</li>
-        <li>AI 回复时直接开口说话即可打断</li>
-        <li>问"这是什么？"等视觉问题，AI 会通过摄像头观察画面</li>
-        <li>每轮对话会自动进行多模态情感分析（语调+文本+面部融合）</li>
-        <li>需要配置 DEEPSEEK_API_KEY 才能使用 AI 对话功能</li>
-        <li>配置 VLM_API_KEY 后可启用视觉理解能力</li>
-      </ul>
-    </div>
+    <p class="vc-tips">说话后停顿 1.5 秒 AI 自动回复 · AI 说话时直接开口可打断 · 问「这是什么」可让 AI 观察画面</p>
   </div>
 </template>
-
 <style scoped>
-.vc-container {
-  max-width: 800px;
-  margin: 0 auto;
+/* 通话页设计规范：纸白底 / 墨色文字 / 松绿强调 / 通话舞台深色 */
+.vc-shell {
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  box-sizing: border-box;
 }
-.vc-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: #303133;
-  margin: 0;
+
+/* ===== 顶栏 ===== */
+.vc-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-.socket-bar {
+.vc-topbar-left {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
 }
-.socket-bar .dot {
-  width: 8px; height: 8px; border-radius: 50%;
+.socket-chip,
+.state-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-ink-soft);
 }
-.socket-bar.connected { background: #f0f9eb; color: #67C23A; }
-.socket-bar.connected .dot { background: #67C23A; }
-.socket-bar.connecting { background: #fdf6ec; color: #E6A23C; }
-.socket-bar.connecting .dot { background: #E6A23C; }
-.socket-bar.disconnected { background: #fef0f0; color: #F56C6C; }
-.socket-bar.disconnected .dot { background: #F56C6C; }
+.socket-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c8cac2;
+}
+.socket-chip.connected .socket-dot {
+  background: var(--color-pine);
+}
+.socket-chip.connecting .socket-dot {
+  background: #d9a13b;
+}
+.state-chip.listening {
+  color: #1f6b52;
+  background: var(--color-pine-soft);
+  border-color: transparent;
+}
+.state-chip.thinking {
+  color: #8a6d1f;
+  background: #f6efd9;
+  border-color: transparent;
+}
+.state-chip.speaking {
+  color: #17533f;
+  background: #dcebe2;
+  border-color: transparent;
+}
+.vc-stats {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
 
-.video-wrapper {
-  position: relative;
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
-  aspect-ratio: 16 / 9;
+/* ===== 主区 ===== */
+.vc-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
 }
-.video-player {
+
+/* ===== 通话舞台 ===== */
+.vc-stage {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 120% at 20% 0%, #2a2f42 0%, #171a26 55%, #10131c 100%);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+.stage-canvas {
+  display: none;
+}
+
+/* 自拍画中画 */
+.pip {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 164px;
+  height: 116px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+.pip-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transform: scaleX(-1);
 }
-.hidden-canvas { display: none; }
-.loading-overlay {
+.pip-label {
   position: absolute;
-  inset: 0;
+  left: 8px;
+  bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+/* 加载态 */
+.stage-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.7);
-  color: #fff;
   gap: 12px;
+  color: #c9cede;
+  font-size: 13px;
 }
-.spinner {
-  width: 40px; height: 40px;
-  border: 3px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
+.loader {
+  width: 26px;
+  height: 26px;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--color-pine);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: vc-spin 0.8s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-.placeholder {
+@keyframes vc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 未开始 CTA */
+.stage-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 24px;
+  max-width: 340px;
+}
+.idle-orb {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: rgba(31, 107, 82, 0.35);
+  color: #a9d8c4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+.idle-title {
+  margin: 0;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+}
+.idle-desc {
+  margin: 0;
+  color: #aeb4c4;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.start-call-btn {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-pine);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.2s ease;
+}
+.start-call-btn:hover {
+  background: #2a8262;
+}
+.start-call-btn:active {
+  transform: scale(0.98);
+}
+.start-call-btn:focus-visible,
+.ctrl-btn:focus-visible {
+  outline: 2px solid #9fd4bd;
+  outline-offset: 2px;
+}
+
+/* 通话中：AI 头像 + 状态环 */
+.call-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+}
+.ai-orb-wrap {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ring {
   position: absolute;
   inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+.ring.listening {
+  border-color: rgba(62, 207, 142, 0.55);
+  animation: vc-pulse 2.4s ease-out infinite;
+}
+.ring-late.listening {
+  animation-delay: 1.2s;
+}
+.ring.thinking {
+  border: 2px dashed rgba(217, 161, 59, 0.7);
+  animation: vc-spin 8s linear infinite;
+}
+.ring.speaking {
+  border-color: rgba(255, 255, 255, 0.35);
+  animation: vc-pulse 1.2s ease-out infinite;
+}
+.ring-late.speaking {
+  animation-delay: 0.6s;
+}
+@keyframes vc-pulse {
+  0% { transform: scale(0.86); opacity: 0.9; }
+  100% { transform: scale(1.22); opacity: 0; }
+}
+.ai-orb {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(150deg, #2a8262, #17533f);
+  color: #eaf6f0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #909399;
-  font-size: 14px;
+  box-shadow: 0 12px 40px rgba(23, 83, 63, 0.45);
 }
-.state-overlay {
+.ai-name {
+  margin: 8px 0 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+.ai-state {
+  margin: 0;
+  font-size: 13px;
+  color: #aeb4c4;
+}
+.ai-state.listening { color: #7fd8b2; }
+.ai-state.thinking { color: #e5c06f; }
+.ai-state.speaking { color: #b7e3cf; }
+
+/* 语音均衡器 */
+.equalizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 20px;
+  margin-top: 4px;
+}
+.equalizer span {
+  width: 4px;
+  border-radius: 2px;
+  background: #7fd8b2;
+  animation: vc-eq 0.9s ease-in-out infinite;
+}
+.equalizer span:nth-child(1) { height: 8px; }
+.equalizer span:nth-child(2) { height: 16px; animation-delay: 0.12s; }
+.equalizer span:nth-child(3) { height: 12px; animation-delay: 0.24s; }
+.equalizer span:nth-child(4) { height: 18px; animation-delay: 0.36s; }
+.equalizer span:nth-child(5) { height: 10px; animation-delay: 0.48s; }
+@keyframes vc-eq {
+  0%, 100% { transform: scaleY(0.6); }
+  50% { transform: scaleY(1.25); }
+}
+
+/* VLM 描述 */
+.vlm-caption {
   position: absolute;
-  top: 12px;
-  left: 12px;
-}
-.state-badge {
-  padding: 4px 14px;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 70%;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e6e9f0;
+  font-size: 12.5px;
+  padding: 7px 14px;
   border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-.vlm-overlay {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(0,0,0,0.7);
-  border-radius: 8px;
-  color: #fff;
-  font-size: 12px;
-}
-.vlm-label { font-weight: 600; flex-shrink: 0; }
-.vlm-text {
+  backdrop-filter: blur(6px);
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.controls {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.btn-call {
-  flex: 1;
-  min-width: 180px;
-  padding: 12px 24px;
-  font-size: 15px;
-  font-weight: 600;
+/* 错误提示 */
+.stage-error {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  margin: 0;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: rgba(214, 69, 69, 0.92);
   color: #fff;
-  background: #8b5cf6;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-call:hover { background: #7c4de4; }
-.btn-call.active { background: #F56C6C; }
-.btn-call.active:hover { background: #e65656; }
-.btn-send {
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #409EFF;
-  background: #ecf5ff;
-  border: 1px solid #b3d8ff;
-  border-radius: 10px;
-  cursor: pointer;
-}
-.btn-send:hover { background: #d9ecff; }
-.btn-interrupt {
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #E6A23C;
-  background: #fdf6ec;
-  border: 1px solid #f5dab1;
-  border-radius: 10px;
-  cursor: pointer;
-}
-.btn-interrupt:hover { background: #faecd8; }
-.btn-clear {
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #909399;
-  background: #f4f4f5;
-  border: 1px solid #dcdfe6;
-  border-radius: 10px;
-  cursor: pointer;
-}
-.btn-clear:hover { background: #e9e9eb; }
-
-.status-panel {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  padding: 12px 16px;
-  background: #f5f7fa;
-  border-radius: 8px;
-}
-.volume-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-.vol-label { font-size: 13px; color: #606266; }
-.vol-canvas { background: transparent; }
-.vol-value { font-size: 13px; color: #909399; min-width: 36px; }
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.stat-label { font-size: 13px; color: #606266; }
-.stat-value { font-size: 16px; font-weight: 600; color: #8b5cf6; }
-
-.error-banner {
-  padding: 10px 16px;
-  background: #fef0f0;
-  color: #F56C6C;
-  border-radius: 8px;
-  font-size: 13px;
+  font-size: 12.5px;
+  z-index: 3;
 }
 
-.chat-panel {
-  background: #fff;
-  border: 1px solid #e4e7ed;
-  border-radius: 12px;
+/* ===== 对话侧栏 ===== */
+.vc-sidebar {
+  width: 372px;
+  flex-shrink: 0;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   overflow: hidden;
 }
-.chat-header {
+.sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #f5f3ff;
-  border-bottom: 1px solid #ebeef5;
+  border-bottom: 1px solid var(--color-hairline);
+}
+.sidebar-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: 14px;
-  font-weight: 600;
-  color: #303133;
+  font-weight: 700;
+  color: var(--color-ink);
 }
 .typing-hint {
   font-size: 12px;
-  font-weight: 400;
-  color: #8b5cf6;
+  color: var(--color-pine);
 }
+
+/* 情绪芯片条 */
+.emotion-strip {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-hairline);
+  flex-wrap: wrap;
+}
+.emo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+.emo-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.emo-name {
+  font-weight: 600;
+  color: var(--color-ink-faint);
+}
+.emo-val {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* 消息列表 */
 .chat-body {
-  max-height: 320px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 .chat-empty {
-  text-align: center;
-  color: #c0c4cc;
+  margin: auto;
+  color: var(--color-ink-faint);
   font-size: 13px;
-  padding: 24px 0;
+  text-align: center;
 }
 .chat-msg {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  max-width: 88%;
 }
-.chat-msg.user { align-items: flex-end; }
-.chat-msg.assistant { align-items: flex-start; }
+.chat-msg.user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
 .msg-bubble {
-  max-width: 80%;
-  padding: 10px 14px;
+  padding: 9px 13px;
   border-radius: 12px;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
+  white-space: pre-wrap;
   word-break: break-word;
 }
-.chat-msg.user .msg-bubble {
-  background: #8b5cf6;
-  color: #fff;
-  border-bottom-right-radius: 4px;
-}
 .chat-msg.assistant .msg-bubble {
-  background: #f5f7fa;
-  color: #303133;
-  border: 1px solid #e4e7ed;
-  border-bottom-left-radius: 4px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-ink);
+  border-top-left-radius: 4px;
+}
+.chat-msg.user .msg-bubble {
+  background: var(--color-pine);
+  color: #fff;
+  border-top-right-radius: 4px;
 }
 .msg-time {
   font-size: 11px;
-  color: #c0c4cc;
+  color: var(--color-ink-faint);
 }
 
-.tips {
-  padding: 14px 16px;
-  background: #f5f7fa;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #909399;
-  line-height: 1.8;
-}
-.tips p { margin: 0 0 4px; font-weight: 600; }
-.tips ul { margin: 0; padding-left: 20px; }
-
-@media (max-width: 640px) {
-  .vc-container { padding: 0 8px; }
-  .btn-call { min-width: 140px; }
-  .status-panel { flex-direction: column; align-items: flex-start; gap: 8px; }
-}
-
-/* 多模态情感分析面板 */
-.emotion-panel {
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-.emotion-header {
+/* ===== 底部控制条 ===== */
+.vc-controls {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: #6366f1;
-  margin-bottom: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-.emotion-elapsed {
-  font-size: 11px;
-  color: #9ca3af;
-  font-weight: 400;
-}
-.emotion-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 8px;
-}
-.emotion-card {
-  background: white;
-  border-radius: 8px;
-  padding: 8px 10px;
-  border: 1px solid #e5e7eb;
-}
-.emotion-fusion {
-  border-color: #6366f1;
-  background: rgba(99, 102, 241, 0.04);
-}
-.emotion-card-title {
-  font-size: 11px;
-  color: #6b7280;
-  margin-bottom: 4px;
-}
-.emotion-main {
+.volume-meter {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  padding: 6px 14px;
 }
-.emotion-emoji {
-  font-size: 18px;
+.vol-label {
+  font-size: 12px;
+  color: var(--color-ink-soft);
 }
-.emotion-label {
+.vol-canvas {
+  display: block;
+}
+.vol-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-pine);
+  min-width: 34px;
+  text-align: right;
+}
+.ctrl-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-card);
+  color: var(--color-ink-soft);
+  border-radius: 999px;
+  padding: 9px 18px;
   font-size: 13px;
   font-weight: 600;
-  color: #1f2937;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease;
 }
-.emotion-conf {
-  font-size: 11px;
-  color: #6b7280;
-  margin-left: auto;
+.ctrl-btn:hover {
+  border-color: var(--color-pine);
+  color: var(--color-pine);
 }
-.emotion-weights {
-  font-size: 10px;
-  color: #9ca3af;
-  margin-top: 4px;
+.ctrl-btn:active {
+  transform: scale(0.97);
+}
+.ctrl-btn.end {
+  background: var(--color-pine);
+  border-color: var(--color-pine);
+  color: #fff;
+}
+.ctrl-btn.end:hover {
+  background: var(--color-pine-deep);
+  color: #fff;
+}
+.ctrl-btn.end.active {
+  background: #c2402f;
+  border-color: #c2402f;
+}
+.ctrl-btn.end.active:hover {
+  background: #a83628;
+}
+
+/* 使用提示 */
+.vc-tips {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-ink-soft);
+}
+
+/* ===== 响应式：窄屏上下布局 ===== */
+@media (max-width: 900px) {
+  .vc-main {
+    flex-direction: column;
+  }
+  .vc-stage {
+    min-height: 260px;
+  }
+  .vc-sidebar {
+    width: 100%;
+    flex: 1;
+    min-height: 220px;
+  }
+  .pip {
+    width: 132px;
+    height: 94px;
+    top: 12px;
+    left: 12px;
+  }
+  .vc-controls {
+    justify-content: center;
+  }
 }
 </style>
