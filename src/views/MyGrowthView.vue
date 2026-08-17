@@ -56,6 +56,8 @@ const statusLabel: Record<string, string> = {
   CONFIRMED: '已确认',
   COMPLETED: '已完成',
   CANCELLED: '已取消',
+  NO_SHOW: '未赴约',
+  RESCHEDULED: '已改期',
 }
 
 const moodEmoji: Record<string, string> = {
@@ -256,6 +258,10 @@ function switchTab(tab: Tab) {
                     ? 'bg-pine-soft text-pine-deep'
                     : item.status === 'CANCELLED'
                       ? 'bg-paper text-ink-faint border border-hairline'
+                      : item.status === 'NO_SHOW'
+                        ? 'bg-red-100 text-red-700'
+                        : item.status === 'RESCHEDULED'
+                          ? 'bg-paper text-ink-faint border border-hairline'
                       : item.status === 'CONFIRMED'
                         ? 'bg-amber-100 text-amber-900'
                         : 'bg-amber-100 text-amber-900'
