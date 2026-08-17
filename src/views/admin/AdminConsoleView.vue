@@ -11,6 +11,7 @@ import {
   PhUsersThree as UsersThree,
   PhArrowLeft as ArrowLeft,
   PhReceipt as Receipt,
+  PhShieldCheck as ShieldCheck,
 } from '@phosphor-icons/vue'
 import { useAuthStore } from '@/stores/auth'
 import AdminOverview from './AdminOverview.vue'
@@ -21,8 +22,9 @@ import AdminContent from './AdminContent.vue'
 import AdminConfig from './AdminConfig.vue'
 import AdminCommunities from './AdminCommunities.vue'
 import AdminOrders from './AdminOrders.vue'
+import AdminAuditLogs from './AdminAuditLogs.vue'
 
-type AdminTab = 'overview' | 'users' | 'audits' | 'articles' | 'content' | 'communities' | 'orders' | 'config'
+type AdminTab = 'overview' | 'users' | 'audits' | 'articles' | 'content' | 'communities' | 'orders' | 'auditlogs' | 'config'
 const activeTab = ref<AdminTab>('overview')
 const auth = useAuthStore()
 const router = useRouter()
@@ -35,6 +37,7 @@ const navItems = [
   { key: 'content', label: '内容管理', icon: GridFour },
   { key: 'communities', label: '社群管理', icon: UsersThree },
   { key: 'orders', label: '订单管理', icon: Receipt },
+  { key: 'auditlogs', label: '审计日志', icon: ShieldCheck },
   { key: 'config', label: '平台配置', icon: GearSix },
 ] as const
 
@@ -46,6 +49,7 @@ const titles: Record<AdminTab, string> = {
   content: '内容管理',
   communities: '社群管理',
   orders: '订单管理',
+  auditlogs: '审计日志',
   config: '平台配置',
 }
 </script>
@@ -108,6 +112,7 @@ const titles: Record<AdminTab, string> = {
           <AdminContent v-else-if="activeTab === 'content'" />
           <AdminCommunities v-else-if="activeTab === 'communities'" />
           <AdminOrders v-else-if="activeTab === 'orders'" />
+          <AdminAuditLogs v-else-if="activeTab === 'auditlogs'" />
           <AdminConfig v-else />
         </div>
       </div>
