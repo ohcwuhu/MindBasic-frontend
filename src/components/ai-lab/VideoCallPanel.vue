@@ -174,7 +174,8 @@ const connectSocket = () => {
     transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionAttempts: 5,
-    reconnectionDelay: 2000
+    reconnectionDelay: 2000,
+    auth: { token: localStorage.getItem('mb_access_token') ?? undefined },
   })
 
   socket.value.on('connect', () => {
