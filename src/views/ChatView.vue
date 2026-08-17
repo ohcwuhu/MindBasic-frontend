@@ -19,6 +19,10 @@ interface Conversation {
   lastMessagePreview: string
   lastMessageAt: string | null
   unreadCount: number
+  freeLimit: number
+  coachReplyCount: number
+  unlocked: boolean
+  limitReached: boolean
 }
 
 interface ChatMsg {
@@ -48,6 +52,19 @@ const chatBodyRef = ref<HTMLElement | null>(null)
 let socket: Socket | null = null
 
 const activeConv = computed(() => conversations.value.find((c) => c.id === activeId.value) ?? null)
+
+const activeLimitReached = computed(() => {
+  const c = activeConv.value
+  return !!c && !c.unlocked && c.coachReplyCount >= c.freeLimit
+})
+
+const activeLimitText = computed(() => {
+  const c = activeConv.value
+  if (!c) return ''
+  if (c.unlocked) return '已预约正式服务，沟通无限制'
+  const left = Math.max(0, c.freeLimit - c.coachReplyCount)
+  return left > 0 ? `免费沟通剩余 ${left} 条，深入了解可预约正式服务` : '免费沟通已用完，请预约正式服务后继续'
+})
 
 function fmtTime(iso: string | null): string {
   if (!iso) return ''
@@ -120,7 +137,7 @@ async function markRead(id: number) {
 
 async function send() {
   const content = input.value.trim()
-  if (!content || !activeId.value || sending.value) return
+  if (!content || !activeId.value || sending.value || activeLimitReached.value) return
   input.value = ''
   sending.value = true
   try {
@@ -170,6 +187,14 @@ function connectSocket() {
         ? { ...m, readAt: new Date().toISOString() }
         : m,
     )
+  })
+  socket.on('chat:limit_reached', (data: { conversationId: number; message?: string }) => {
+    const conv = conversations.value.find((c) => c.id === data.conversationId)
+    if (conv) {
+      conv.coachReplyCount = conv.freeLimit
+      conv.limitReached = true
+    }
+    errorMsg.value = data?.message || '免费沟通额度已用完'
   })
 }
 
@@ -273,16 +298,26 @@ onUnmounted(() => {
           </div>
         </div>
 
+        <div v-if="activeLimitReached" class="limit-banner">
+          <p class="limit-text">
+            {{ isCoach ? '免费沟通已用完，请引导用户预约正式服务' : '免费沟通已用完，预约后和教练深入沟通' }}
+          </p>
+          <RouterLink v-if="!isCoach" :to="`/coaches/${activeConv?.coachId}`" class="limit-book-btn">
+            预约正式服务
+          </RouterLink>
+        </div>
+        <p v-else class="limit-hint">{{ activeLimitText }}</p>
+
         <div class="thread-input">
           <textarea
             v-model="input"
             class="input-box"
             rows="1"
             placeholder="输入消息，Enter 发送"
-            :disabled="sending"
+            :disabled="sending || activeLimitReached"
             @keydown="onKeydown"
           ></textarea>
-          <button class="send-btn" :disabled="sending || !input.trim()" @click="send">
+          <button class="send-btn" :disabled="sending || activeLimitReached || !input.trim()" @click="send">
             <PhPaperPlaneRight :size="18" weight="bold" />
           </button>
         </div>
@@ -532,6 +567,36 @@ onUnmounted(() => {
 }
 .msg-time {
   font-size: 11px;
+  color: var(--color-ink-faint);
+}
+.limit-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  margin: 0 12px;
+  background: var(--color-pine-soft);
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+.limit-text {
+  flex: 1;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-pine-deep);
+}
+.limit-book-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--color-pine);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.limit-hint {
+  margin: 8px 12px 0;
+  font-size: 12px;
   color: var(--color-ink-faint);
 }
 .thread-input {
