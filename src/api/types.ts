@@ -580,4 +580,5 @@ export interface PublicPlatformConfig {
   hotline: string
   emergencyHint: string
   disclaimer: string
+  aiDisclaimer: string
 }

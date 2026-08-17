@@ -1224,7 +1224,10 @@ const displayMessages = computed(() => {
             :class="m.role"
           >
             <div class="msg-bubble">{{ m.content }}</div>
-            <div class="msg-time">{{ m.timestamp }}</div>
+            <div class="msg-meta">
+              <span v-if="m.role === 'assistant'" class="ai-tag">AI 生成</span>
+              <span class="msg-time">{{ m.timestamp }}</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -1669,6 +1672,19 @@ const displayMessages = computed(() => {
   background: var(--color-pine);
   color: #fff;
   border-top-right-radius: 4px;
+}
+.msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ai-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-pine-deep);
+  background: var(--color-pine-soft);
+  border-radius: 999px;
+  padding: 1px 6px;
 }
 .msg-time {
   font-size: 11px;
