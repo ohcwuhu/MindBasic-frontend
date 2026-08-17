@@ -10,10 +10,8 @@ import {
   PhTrophy as Trophy,
   PhStar as Star,
   PhSmiley as Smiley,
-  PhWallet as Wallet,
   PhChartLineUp as ChartLineUp,
-  PhUsersThree as UsersThree,
-  PhChatCircleText as ChatIcon,
+  PhArrowRight as ArrowRight,
 } from '@phosphor-icons/vue'
 import { get, post } from '@/api/client'
 import type {
@@ -246,56 +244,24 @@ function switchTab(tab: Tab) {
   <div class="max-w-[820px] mx-auto px-4 md:px-6 py-10 md:py-16">
     <p class="catalog-tab">ME 我的成长</p>
     <h1 class="mt-3 text-2xl md:text-3xl font-semibold tracking-tight">你走过的每一步</h1>
-    <div class="mt-6 grid grid-cols-2 gap-3">
-      <RouterLink
-        to="/growth-assessment"
-        class="group rounded-[14px] bg-pine text-card p-4 flex items-start gap-3 pressable transition-transform active:scale-[0.98]"
-      >
-        <span class="w-10 h-10 rounded-full bg-card/20 flex items-center justify-center shrink-0">
-          <ChartLineUp :size="20" weight="duotone" />
+    <RouterLink
+      to="/growth-assessment"
+      class="mt-6 group block rounded-[14px] bg-pine text-card p-5 md:p-6 pressable transition-transform active:scale-[0.99]"
+    >
+      <div class="flex items-center gap-4">
+        <span class="w-12 h-12 rounded-full bg-card/20 flex items-center justify-center shrink-0">
+          <ChartLineUp :size="24" weight="duotone" />
         </span>
-        <span class="min-w-0">
-          <span class="block text-sm font-semibold">成长测评</span>
-          <span class="block mt-0.5 text-xs text-card/85">看见自己的五个成长方向</span>
+        <span class="flex-1 min-w-0">
+          <span class="block font-semibold">成长测评</span>
+          <span class="block mt-0.5 text-sm text-card/85">约 10 分钟，看见自己的五个成长方向</span>
         </span>
-      </RouterLink>
-      <RouterLink
-        to="/communities"
-        class="group rounded-[14px] border border-hairline bg-card p-4 flex items-start gap-3 pressable transition-colors hover:border-pine/40 hover:bg-pine-soft/40 active:scale-[0.98]"
-      >
-        <span class="w-10 h-10 rounded-full bg-pine-soft text-pine flex items-center justify-center shrink-0">
-          <UsersThree :size="20" weight="duotone" />
+        <span class="shrink-0 inline-flex items-center gap-1 text-sm font-medium">
+          开始测评
+          <ArrowRight :size="16" weight="bold" class="transition-transform group-hover:translate-x-0.5" />
         </span>
-        <span class="min-w-0">
-          <span class="block text-sm font-semibold">我的社群</span>
-          <span class="block mt-0.5 text-xs text-ink-soft">找到同路的伙伴</span>
-        </span>
-      </RouterLink>
-      <RouterLink
-        to="/messages"
-        class="group rounded-[14px] border border-hairline bg-card p-4 flex items-start gap-3 pressable transition-colors hover:border-pine/40 hover:bg-pine-soft/40 active:scale-[0.98]"
-      >
-        <span class="w-10 h-10 rounded-full bg-pine-soft text-pine flex items-center justify-center shrink-0">
-          <ChatIcon :size="20" weight="duotone" />
-        </span>
-        <span class="min-w-0">
-          <span class="block text-sm font-semibold">我的消息</span>
-          <span class="block mt-0.5 text-xs text-ink-soft">与教练在线沟通</span>
-        </span>
-      </RouterLink>
-      <RouterLink
-        to="/wallet"
-        class="group rounded-[14px] border border-hairline bg-card p-4 flex items-start gap-3 pressable transition-colors hover:border-pine/40 hover:bg-pine-soft/40 active:scale-[0.98]"
-      >
-        <span class="w-10 h-10 rounded-full bg-pine-soft text-pine flex items-center justify-center shrink-0">
-          <Wallet :size="20" weight="duotone" />
-        </span>
-        <span class="min-w-0">
-          <span class="block text-sm font-semibold">我的钱包</span>
-          <span class="block mt-0.5 text-xs text-ink-soft">余额与充值</span>
-        </span>
-      </RouterLink>
-    </div>
+      </div>
+    </RouterLink>
 
     <div class="mt-8 flex gap-2" role="tablist" aria-label="成长记录分类">
       <button

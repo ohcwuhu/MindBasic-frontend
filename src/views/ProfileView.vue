@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { PhCaretDown as CaretDown, PhCamera as Camera } from '@phosphor-icons/vue'
+import {
+  PhCaretDown as CaretDown,
+  PhCaretRight as CaretRight,
+  PhCamera as Camera,
+} from '@phosphor-icons/vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCompanion } from '@/composables/useCompanion'
 import { ApiError, get, post, uploadFile } from '@/api/client'
-import type { CoachProfile } from '@/api/types'
+import type { CoachProfile, WalletInfo } from '@/api/types'
 import { useCountdown } from '@/utils/useCountdown'
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
@@ -32,6 +36,7 @@ const bindCode = ref('')
 const savingEmail = ref(false)
 const sendingEmailCode = ref(false)
 const coachStatus = ref<'none' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'loading'>('loading')
+const walletBalance = ref<number | null>(null)
 const { remaining, start: startCountdown } = useCountdown()
 
 // 性别选择
@@ -96,6 +101,12 @@ onMounted(async () => {
     coachStatus.value = profile.auditStatus
   } catch (e) {
     coachStatus.value = e instanceof ApiError && e.status === 404 ? 'none' : 'none'
+  }
+  try {
+    const wallet = await get<WalletInfo>('/wallet')
+    walletBalance.value = wallet.balanceInCents
+  } catch {
+    walletBalance.value = null
   }
 })
 
@@ -307,6 +318,18 @@ async function logout() {
         <span class="text-sm text-ink-soft">角色</span>
         <span class="text-sm font-medium">{{ roleLabel[auth.user?.role ?? 'USER'] }}</span>
       </div>
+
+      <!-- 我的钱包 -->
+      <RouterLink to="/wallet" class="px-6 py-5 flex items-center justify-between gap-4 pressable hover:bg-paper/60">
+        <span class="text-sm text-ink-soft">我的钱包</span>
+        <span class="flex items-center gap-2">
+          <span v-if="walletBalance !== null" class="text-sm font-medium text-pine">
+            ¥{{ (walletBalance / 100).toFixed(2) }}
+          </span>
+          <span v-else class="text-sm text-ink-faint">余额与充值</span>
+          <CaretRight :size="16" class="text-ink-faint" />
+        </span>
+      </RouterLink>
 
       <!-- 陪伴角色性别 -->
       <div class="px-6 py-5 flex items-center justify-between gap-4">
