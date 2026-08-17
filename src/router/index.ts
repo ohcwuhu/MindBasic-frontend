@@ -19,6 +19,7 @@ export const router = createRouter({
     { path: '/my', name: 'my', component: () => import('@/views/MyGrowthView.vue'), meta: { auth: true } },
     { path: '/profile', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { auth: true } },
     { path: '/notifications', name: 'notifications', component: () => import('@/views/NotificationsView.vue'), meta: { auth: true } },
+    { path: '/wallet', name: 'wallet', component: () => import('@/views/WalletView.vue'), meta: { auth: true } },
     { path: '/messages', name: 'messages', component: () => import('@/views/ChatView.vue'), meta: { auth: true } },
     { path: '/coach/messages', name: 'coach-messages', component: () => import('@/views/ChatView.vue'), meta: { auth: true } },
     { path: '/growth-assessment', name: 'growth-assessment', component: () => import('@/views/GrowthAssessmentView.vue'), meta: { auth: true } },
