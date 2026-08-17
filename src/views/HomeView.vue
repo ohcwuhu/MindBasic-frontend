@@ -19,7 +19,7 @@ const loading = ref(true)
 const error = ref('')
 
 const entries = [
-  { key: 'self_coaching', title: '自我教练', desc: '四步梳理，生成你的成长行动卡', to: '/self-coaching', icon: Sparkle },
+      { key: 'self_coaching', title: '自我教练', desc: '和 AI 教练视频对话，边聊边梳理', to: '/self-coaching', icon: Sparkle },
   { key: 'emotion_journal', title: '情绪日记', desc: '写一句话，收到一句资源导向的回应', to: '/emotion-journal', icon: NotePencil },
   { key: 'coaches', title: '找教练', desc: '找到经审核、可信任的教练', to: '/coaches', icon: CardsThree },
   { key: 'science', title: '科普中心', desc: '成长技巧、教练故事、常见困惑', to: '/articles', icon: BookOpenText },

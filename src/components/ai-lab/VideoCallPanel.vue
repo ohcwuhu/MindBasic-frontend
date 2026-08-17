@@ -1050,7 +1050,7 @@ const getEmotionCn = (emo: string) => CN_MAP[emo?.toLowerCase()] || emo || '未�
 
 const manualSend = () => {
   if (!isDeviceActive.value) {
-    errorMsg.value = '请先点击「开始视频通话」启动设备'
+    errorMsg.value = '请先点击「开始自我教练」启动设备'
     return
   }
   triggerAudioEnd(true)
@@ -1140,11 +1140,11 @@ const displayMessages = computed(() => {
           <div class="idle-orb">
           <CompanionSprite :gender="gender" state="idle" />
           </div>
-          <p class="idle-title">AI 心理教练视频通话</p>
+          <p class="idle-title">自我教练</p>
           <p class="idle-desc">开启摄像头和麦克风，像打电话一样聊聊你的状态</p>
           <button class="start-call-btn" @click="toggleCall">
             <PhVideoCamera :size="18" weight="bold" />
-            开始视频通话
+            开始自我教练
           </button>
         </div>
 
@@ -1215,7 +1215,7 @@ const displayMessages = computed(() => {
 
         <div ref="chatBodyRef" class="chat-body">
           <div v-if="displayMessages.length === 0" class="chat-empty">
-            开始视频通话后，对话内容会显示在这里
+            开始自我教练后，对话内容会显示在这里
           </div>
           <div
             v-for="(m, i) in displayMessages"

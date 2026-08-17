@@ -27,8 +27,6 @@ const navLinks = [
   { to: '/coaches', label: '找教练' },
   { to: '/articles', label: '科普' },
   { to: '/communities', label: '社群' },
-  { to: '/ai-chat', label: 'AI 对话' },
-  { to: '/video-call', label: '视频通话' },
 ]
 
 const tabItems = [
@@ -73,16 +71,13 @@ const pageTitle = computed(() => {
     login: '登录',
     register: '注册',
     'forgot-password': '找回密码',
-    templates: '自我教练',
-    'coach-flow': '自我教练',
+    'self-coaching': '自我教练',
     'emotion-journal': '情绪日记',
     coaches: '找教练',
     'coach-detail': '教练详情',
     booking: '预约教练',
     articles: '科普中心',
     'article-detail': '文章',
-    'ai-chat': 'AI 对话',
-    'video-call': 'AI 视频通话',
     my: '我的成长',
     profile: '个人资料',
   }
@@ -91,7 +86,7 @@ const pageTitle = computed(() => {
 
 /* 全屏沉浸式页面：不显示 Footer 和底部导航 */
 const isFullScreenPage = computed(() => {
-  return ['/ai-chat', '/video-call'].some(p => route.path.startsWith(p)) ||
+  return ['/self-coaching'].some(p => route.path.startsWith(p)) ||
          route.path.startsWith('/chat/')
 })
 

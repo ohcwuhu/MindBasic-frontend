@@ -99,7 +99,7 @@ function stepQuestion(stepKey: string): string {
 
       <div v-if="record.status === 'DRAFT'" class="mt-8">
         <RouterLink
-          :to="`/self-coaching/${record.templateId}`"
+        to="/self-coaching"
           class="inline-flex items-center gap-1.5 h-12 px-6 rounded-full bg-pine text-card font-medium pressable"
         >
           <NotePencil :size="17" weight="bold" /> 继续完成
