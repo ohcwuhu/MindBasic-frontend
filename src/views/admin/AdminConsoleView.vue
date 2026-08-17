@@ -10,6 +10,7 @@ import {
   PhGearSix as GearSix,
   PhUsersThree as UsersThree,
   PhArrowLeft as ArrowLeft,
+  PhReceipt as Receipt,
 } from '@phosphor-icons/vue'
 import { useAuthStore } from '@/stores/auth'
 import AdminOverview from './AdminOverview.vue'
@@ -19,8 +20,9 @@ import AdminArticles from './AdminArticles.vue'
 import AdminContent from './AdminContent.vue'
 import AdminConfig from './AdminConfig.vue'
 import AdminCommunities from './AdminCommunities.vue'
+import AdminOrders from './AdminOrders.vue'
 
-type AdminTab = 'overview' | 'users' | 'audits' | 'articles' | 'content' | 'communities' | 'config'
+type AdminTab = 'overview' | 'users' | 'audits' | 'articles' | 'content' | 'communities' | 'orders' | 'config'
 const activeTab = ref<AdminTab>('overview')
 const auth = useAuthStore()
 const router = useRouter()
@@ -32,6 +34,7 @@ const navItems = [
   { key: 'articles', label: '文章管理', icon: Article },
   { key: 'content', label: '内容管理', icon: GridFour },
   { key: 'communities', label: '社群管理', icon: UsersThree },
+  { key: 'orders', label: '订单管理', icon: Receipt },
   { key: 'config', label: '平台配置', icon: GearSix },
 ] as const
 
@@ -42,6 +45,7 @@ const titles: Record<AdminTab, string> = {
   articles: '文章管理',
   content: '内容管理',
   communities: '社群管理',
+  orders: '订单管理',
   config: '平台配置',
 }
 </script>
@@ -103,6 +107,7 @@ const titles: Record<AdminTab, string> = {
           <AdminArticles v-else-if="activeTab === 'articles'" />
           <AdminContent v-else-if="activeTab === 'content'" />
           <AdminCommunities v-else-if="activeTab === 'communities'" />
+          <AdminOrders v-else-if="activeTab === 'orders'" />
           <AdminConfig v-else />
         </div>
       </div>
