@@ -884,29 +884,38 @@ const auditText = computed(() =>
 
     <!-- 工作台 -->
     <template v-else>
-      <div class="mt-8 flex flex-wrap gap-2">
-        <button v-for="tab in [
-          { key: 'appointments', label: '预约管理', icon: CalendarCheck },
-          { key: 'cases', label: '个案记录', icon: CardsThree },
-          { key: 'services', label: '服务项目', icon: Plus },
-          { key: 'slots', label: '时段设置', icon: Clock },
-          { key: 'clients', label: '客户管理', icon: UsersIcon },
-          { key: 'reviews', label: '收到的评价', icon: Star },
-          { key: 'communities', label: '社群管理', icon: UsersIcon },
-          { key: 'phrases', label: '话术库', icon: ChatIcon },
-          { key: 'profile', label: '资料设置', icon: Sparkle },
-        ] as const" :key="tab.key" type="button" class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm pressable"
-          :class="activeTab === tab.key ? 'bg-pine border-pine text-card' : 'border-hairline bg-card text-ink-soft'"
-          @click="switchTab(tab.key)">
-          <component :is="tab.icon" :size="16" weight="duotone" /> {{ tab.label }}
-        </button>
-        <RouterLink
-          to="/coach/messages"
-          class="inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-hairline bg-card text-ink-soft text-sm pressable hover:border-pine hover:text-pine"
-        >
-          在线消息
-        </RouterLink>
-      </div>
+      <div class="mt-8 grid md:grid-cols-[210px_1fr] gap-6 items-start">
+        <!-- 左侧导航 -->
+        <aside class="workbench-nav">
+          <button
+            v-for="tab in [
+              { key: 'appointments', label: '预约管理', icon: CalendarCheck },
+              { key: 'cases', label: '个案记录', icon: CardsThree },
+              { key: 'services', label: '服务项目', icon: Plus },
+              { key: 'slots', label: '时段设置', icon: Clock },
+              { key: 'clients', label: '客户管理', icon: UsersIcon },
+              { key: 'reviews', label: '收到的评价', icon: Star },
+              { key: 'communities', label: '社群管理', icon: UsersIcon },
+              { key: 'phrases', label: '话术库', icon: ChatIcon },
+              { key: 'profile', label: '资料设置', icon: Sparkle },
+            ] as const"
+            :key="tab.key"
+            type="button"
+            class="workbench-nav-item"
+            :class="{ active: activeTab === tab.key }"
+            @click="switchTab(tab.key)"
+          >
+            <component :is="tab.icon" :size="18" weight="duotone" />
+            <span>{{ tab.label }}</span>
+          </button>
+          <RouterLink to="/coach/messages" class="workbench-nav-item">
+            <ChatIcon :size="18" weight="duotone" />
+            <span>在线消息</span>
+          </RouterLink>
+        </aside>
+
+        <!-- 内容区 -->
+        <div class="min-w-0">
 
       <!-- 预约 -->
       <section v-if="activeTab === 'appointments'" class="mt-8">
@@ -1376,6 +1385,8 @@ const auditText = computed(() =>
           </button>
         </form>
       </section>
+        </div>
+      </div>
     </template>
   </div>
 
@@ -1447,6 +1458,46 @@ const auditText = computed(() =>
 </template>
 
 <style>
+.workbench-nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.workbench-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--color-ink-soft);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.workbench-nav-item:hover {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+.workbench-nav-item.active {
+  background: var(--color-pine-soft);
+  color: var(--color-pine-deep);
+  font-weight: 600;
+}
+@media (min-width: 768px) {
+  .workbench-nav {
+    flex-direction: column;
+    background: var(--color-card);
+    border: 1px solid var(--color-hairline);
+    border-radius: 14px;
+    padding: 8px;
+    position: sticky;
+    top: 80px;
+  }
+}
 .md-body {
   font-size: 14px;
   line-height: 1.7;
@@ -1488,7 +1539,7 @@ const auditText = computed(() =>
 .md-body blockquote {
   margin: 0.5rem 0;
   padding: 0.25rem 0.9rem;
-  border-left: 3px solid #2f7d63;
+  border-left: 1px solid #2f7d63;
   color: #5a6a63;
 }
 .md-body a { color: #1f6b52; text-decoration: underline; }
