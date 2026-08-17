@@ -65,8 +65,9 @@ frontend/
 │   │   ├── markdown.ts    # 轻量 XSS 安全 Markdown 渲染
 │   │   └── useCountdown.ts# 验证码倒计时组合式函数
 │   └── views/
-│       ├── AiChatView.vue     # AI 对话页（/ai-chat，豆包式）
-│       ├── VideoCallView.vue  # AI 视频通话页（/video-call）
+│       ├── VideoCallView.vue  # 自我教练页（/self-coaching，AI 视频通话 + 常驻 AI 标识）
+│       ├── TermsView.vue      # 服务协议与免责声明（/terms）
+│       ├── WalletView.vue     # 我的钱包（/wallet）
 │       └── …                  # 业务页面（含 admin/ 管理后台）
 ├── vite.config.ts         # 别名 @、/api 与 /socket.io 代理
 └── package.json
@@ -78,16 +79,16 @@ frontend/
 | --- | --- | --- |
 | `/` | 首页（轮播、四宫格、推荐） | 公开 |
 | `/login` / `/register` / `/forgot-password` | 登录 / 注册 / 找回密码 | 公开 |
-| `/self-coaching` `/self-coaching/:id` `/self-coaching/records/:id` | 自我教练模板 / 四步流程 / 记录详情 | 登录 |
+| `/self-coaching` `/self-coaching/records/:id` | 自我教练（AI 视频通话）/ 记录详情 | 登录 |
 | `/emotion-journal` | 情绪日记（表情选择 + 月度心情日历） | 登录 |
 | `/coaches` `/coaches/:id` `/coaches/:id/book` | 找教练 / 详情 / 预约 | 列表详情公开，预约登录 |
 | `/articles` `/articles/:id` | 科普中心 / 文章详情 | 公开 |
-| `/my` `/profile` `/notifications` | 我的成长 / 个人资料 / 站内通知 | 登录 |
+| `/my` `/profile` `/notifications` `/wallet` | 我的成长 / 个人资料 / 通知 / 我的钱包 | 登录 |
+| `/terms` | 服务协议与免责声明 | 公开 |
 | `/growth-assessment` | 成长测评 | 登录 |
 | `/communities` `/communities/:id` `/communities/:id/posts/:postId` | 社群广场 / 详情 / 帖子详情 | 广场公开，其余登录 |
 | `/coach` | 教练工作台 | 登录（教练） |
-| `/ai-chat` | AI 对话（豆包式聊天 + 常驻表情识别） | 公开 |
-| `/video-call` | AI 视频通话（语音回复 + 视觉理解） | 公开 |
+| `/video-call` | 跳转 `/self-coaching` | - |
 | `/admin` | 管理后台 | 登录 + ADMIN |
 
 路由守卫：`meta.auth` 未登录跳登录页（带回跳地址）；`meta.admin` 非管理员回首页。
@@ -126,17 +127,14 @@ await post('/appointments', { ... })
 
 ### 页面
 
-- **`/ai-chat`（AI 对话）**：豆包式排版，输入框固定屏幕底部；进入页面自动开启摄像头，
-  常驻实时表情识别；输入框左侧麦克风按钮可录音，结束录音后语音自动转成文字放入输入框，
-  用户编辑确认后发送；发送时自动附带表情/语调/投入度等识别上下文。
-- **`/video-call`（AI 视频通话）**：实时视频通话 + 语音输入，AI 以语音回复
+- **`/self-coaching`（自我教练，AI 视频通话）**：实时视频通话 + 语音输入，AI 以语音回复
   （edge-tts，免费）；配置 VLM Key 后 AI 还能理解摄像头画面。
+  页面常驻「AI 生成」标识，首次进入弹免责确认，每条 AI 回复带“AI 生成”角标。
 
 ### 组件与数据流
 
 | 组件 | 职责 |
 | --- | --- |
-| `views/AiChatView.vue` | 豆包式对话页（常驻表情 + 语音输入入框） |
 | `components/ai-lab/VideoCallPanel.vue` | 视频通话面板（TTS 播放、打断、音量可视化） |
 
 AI 实验室接口（与业务接口不同，返回自有 JSON 结构）：
@@ -166,13 +164,15 @@ SocketIO 事件：
 ## 页面功能
 
 - **用户端**：首页、自我教练（含行动卡分享/导出图片）、情绪日记（趋势 + 月历）、
-  找教练/预约/评价、科普（收藏/分享）、我的成长（预约/记录/打卡/收藏/日记）、
-  成长测评、社群广场与帖子
+  找教练/预约（付费锁定：余额/模拟支付 + 倒计时）/评价、科普（收藏/分享）、
+  我的成长（预约/记录/打卡/收藏/日记）、成长测评、社群广场与帖子、我的钱包（余额/充值/流水）
 - **教练端**（`/coach` 工作台）：预约、个案（Markdown + 导出）、服务/时段、
-  客户（含待跟进）、收到的评价、话术库、社群管理、资料
-- **管理后台**（`/admin`）：概览、用户、教练审核、文章、内容（分类/轮播/标签/话术库）、社群、平台配置
-- **AI 实验室**：`/ai-chat` 豆包式对话 + 常驻表情识别；`/video-call` 视频通话
-- **账号**：密码/邮箱验证码双模式登录、找回密码、绑定邮箱、修改密码、注销
+  客户（含待跟进）、收到的评价、话术库、社群管理、资料（含支付状态标记）
+- **管理后台**（`/admin`）：概览、用户、教练审核、文章、内容（分类/轮播/标签/话术库）、社群、
+  订单管理（筛选/退款）、余额发放、**危机处理**（接管/跟进/结案/时间线）、**审计日志**、平台配置
+- **AI 实验室**：`/self-coaching` 视频通话（常驻 AI 标识 + 首启免责确认）
+- **账号与合规**：密码/邮箱验证码双模式登录、找回密码、绑定邮箱、修改密码、
+  服务协议确认（`/terms`）、数据导出（JSON 下载）、注销删除（密码确认）
 
 ## 构建与质量
 
@@ -201,3 +201,4 @@ npm run dev       # 开发热更新
 - **AI 对话页摄像头开不了**：检查浏览器权限；确认后端已 `socket_app` 启动且 `config_check` 正常；
 - **语音转文字无结果**：后端 SenseVoice 未加载（看 `config_check`），内存不足时先释放内存再调 warmup；
 - **AI 不回复**：后端 `.env` 未配置 `DEEPSEEK_API_KEY`，或 Key 失效。
+- **AI 回复报 `[llm] Insufficient Balance`**：DeepSeek 账号余额不足，充值或更换 Key 即可。
