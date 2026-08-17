@@ -2,7 +2,6 @@
 import { ref, onUnmounted, onMounted, nextTick, computed } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import {
-  PhRobot,
   PhVideoCamera,
   PhPhoneDisconnect,
   PhChatCircleDots,
@@ -12,6 +11,33 @@ import {
   PhEye,
   PhWarningCircle,
 } from '@phosphor-icons/vue'
+import CompanionSprite from './CompanionSprite.vue'
+import { useCompanion } from '@/composables/useCompanion'
+
+// 用户情绪是否处于"需要被安抚"的状态（airi 式情绪共感：角色据此切换为共情形态）
+const DISTRESS_KEYS = [
+  'sad', 'angry', 'anxious', 'fearful', 'depressed', 'stressed', 'upset',
+  'sadness', 'anger', 'anxiety', 'fear', '悲伤', '愤怒', '焦虑', '恐惧', '低落',
+]
+const isDistressed = computed(() => {
+  const e = emotionResult.value
+  if (!e) return false
+  const vals = [
+    e.fusion?.final_emotion,
+    e.fusion?.final_emotion_cn,
+    e.asr_emo,
+    e.voice_emotion?.emotion,
+    e.voice_emotion?.emotion_cn,
+    e.text_emotion?.emotion,
+    e.facial_emotion?.dominant_emotion,
+  ].map((v) => String(v ?? '').toLowerCase())
+  return vals.some((v) => DISTRESS_KEYS.some((d) => v.includes(d)))
+})
+
+// 角色形态由 CompanionSprite 按 callState + isDistressed 实时驱动（视频状态 + empathy 心形叠加）
+
+// 陪伴角色性别偏好（与全站共享、持久化）
+const { gender } = useCompanion()
 
 // ================================================================
 //  常量 & 映射表
@@ -1011,15 +1037,15 @@ const CN_MAP: Record<string, string> = {
   fearful: '恐惧', disgusted: '厌恶', neutral: '中性',
 }
 const EMOTION_DOT_COLOR: Record<string, string> = {
-  happy: '#2e9e6b',
-  sad: '#4a7fd4',
-  angry: '#d64545',
+  happy: '#cf9b4a',
+  sad: '#9c83ad',
+  angry: '#cf7a5b',
   surprised: '#d9a13b',
-  fearful: '#8a63d2',
-  disgusted: '#2c8f8f',
-  neutral: '#9aa1ae',
+  fearful: '#b58a9a',
+  disgusted: '#9cae8e',
+  neutral: '#b5a392',
 }
-const getEmotionColor = (emo: string) => EMOTION_DOT_COLOR[emo?.toLowerCase()] || '#9aa1ae'
+const getEmotionColor = (emo: string) => EMOTION_DOT_COLOR[emo?.toLowerCase()] || '#b5a392'
 const getEmotionCn = (emo: string) => CN_MAP[emo?.toLowerCase()] || emo || '未知'
 
 const manualSend = () => {
@@ -1112,7 +1138,7 @@ const displayMessages = computed(() => {
         <!-- 未开始：开场引导 -->
         <div v-if="!isDeviceActive && !isLoading" class="stage-idle">
           <div class="idle-orb">
-            <PhRobot :size="42" weight="duotone" />
+          <CompanionSprite :gender="gender" state="idle" />
           </div>
           <p class="idle-title">AI 心理教练视频通话</p>
           <p class="idle-desc">开启摄像头和麦克风，像打电话一样聊聊你的状态</p>
@@ -1122,20 +1148,17 @@ const displayMessages = computed(() => {
           </button>
         </div>
 
-        <!-- 通话中：AI 头像浮层（右下角）+ 状态动效 -->
+        <!-- 通话中：AI 教练卡通小人（右下角）随状态切换形态 -->
         <template v-if="isDeviceActive && !isLoading">
           <div class="call-overlay">
-            <div class="ai-orb-wrap">
-              <span class="ring" :class="callState" aria-hidden="true"></span>
-              <span class="ring ring-late" :class="callState" aria-hidden="true"></span>
-              <div class="ai-orb">
-                <PhRobot :size="32" weight="duotone" />
-              </div>
+            <div class="co-avatar">
+              <CompanionSprite :gender="gender" :state="callState" :empathy="isDistressed" />
             </div>
-            <p class="ai-name">AI 心理教练</p>
-            <p class="ai-state" :class="callState">{{ STATE_TEXT[callState] }}</p>
-            <div v-if="callState === 'speaking'" class="equalizer" aria-hidden="true">
-              <span></span><span></span><span></span><span></span><span></span>
+            <div class="co-info">
+              <p class="co-status" :class="callState">
+                <span class="co-dot" :class="callState"></span>
+                {{ STATE_TEXT[callState] }}
+              </p>
             </div>
           </div>
 
@@ -1359,7 +1382,7 @@ const displayMessages = computed(() => {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  color: #c9cede;
+  color: #b9a08f;
   font-size: 13px;
 }
 .loader {
@@ -1384,16 +1407,14 @@ const displayMessages = computed(() => {
   max-width: 340px;
 }
 .idle-orb {
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  background: rgba(31, 107, 82, 0.35);
-  color: #a9d8c4;
+  width: 120px;
+  height: 181px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 6px;
 }
+.idle-orb :deep(.cs-root) { width: 100%; height: 100%; }
 .idle-title {
   margin: 0;
   color: #fff;
@@ -1429,102 +1450,78 @@ const displayMessages = computed(() => {
   outline-offset: 2px;
 }
 
+/* ====== 通话中右下角陪伴浮窗（横向：图+状态文字）====== */
 .call-overlay {
   position: absolute;
-  right: 18px;
-  bottom: 18px;
+  right: 16px;
+  bottom: 16px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
-  padding: 14px 18px;
-  background: rgba(16, 19, 28, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 18px;
-  backdrop-filter: blur(10px);
-  min-width: 148px;
+  gap: 10px;
+  padding: 12px 16px 12px 14px;
+  background: rgba(16, 19, 28, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  backdrop-filter: blur(14px);
   z-index: 2;
 }
-.ai-orb-wrap {
-  position: relative;
-  width: 92px;
-  height: 92px;
+
+/* 角色头像区 —— 比例对齐视频素材(784x1184≈0.662)，全身立绘不拉伸变形 */
+.co-avatar {
+  width: 100px;
+  height: 151px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid transparent;
-}
-.ring.listening {
-  border-color: rgba(62, 207, 142, 0.55);
-  animation: vc-pulse 2.4s ease-out infinite;
-}
-.ring-late.listening { animation-delay: 1.2s; }
-.ring.thinking {
-  border: 2px dashed rgba(217, 161, 59, 0.7);
-  animation: vc-spin 8s linear infinite;
-}
-.ring.speaking {
-  border-color: rgba(255, 255, 255, 0.35);
-  animation: vc-pulse 1.2s ease-out infinite;
-}
-.ring-late.speaking { animation-delay: 0.6s; }
-@keyframes vc-pulse {
-  0% { transform: scale(0.86); opacity: 0.9; }
-  100% { transform: scale(1.22); opacity: 0; }
-}
-.ai-orb {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: linear-gradient(150deg, #2a8262, #17533f);
-  color: #eaf6f0;
+.co-avatar :deep(.cs-root) { width: 100%; height: 100%; }
+
+/* 状态信息区 */
+.co-info {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 12px 40px rgba(23, 83, 63, 0.45);
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
-.ai-name {
-  margin: 4px 0 0;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-}
-.ai-state {
+
+.co-status {
   margin: 0;
   font-size: 12px;
-  color: #aeb4c4;
-}
-.ai-state.listening { color: #7fd8b2; }
-.ai-state.thinking { color: #e5c06f; }
-.ai-state.speaking { color: #b7e3cf; }
-
-.equalizer {
+  font-weight: 600;
+  letter-spacing: 0.02em;
   display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 16px;
-  margin-top: 4px;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
-.equalizer span {
-  width: 4px;
-  border-radius: 2px;
-  background: #7fd8b2;
-  animation: vc-eq 0.9s ease-in-out infinite;
+
+/* 状态指示灯（呼吸小圆点） */
+.co-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: co-dot-pulse 2s ease-in-out infinite;
 }
-.equalizer span:nth-child(1) { height: 8px; }
-.equalizer span:nth-child(2) { height: 16px; animation-delay: 0.12s; }
-.equalizer span:nth-child(3) { height: 12px; animation-delay: 0.24s; }
-.equalizer span:nth-child(4) { height: 18px; animation-delay: 0.36s; }
-.equalizer span:nth-child(5) { height: 10px; animation-delay: 0.48s; }
-@keyframes vc-eq {
-  0%, 100% { transform: scaleY(0.6); }
-  50% { transform: scaleY(1.25); }
+@keyframes co-dot-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.85); }
+  50%      { opacity: 1;   transform: scale(1.15); }
 }
+
+/* 各状态颜色 */
+.co-status.listening,
+.co-dot.listening    { color: #7fd8b2; }
+.co-dot.listening    { background: #3ecf8e; box-shadow: 0 0 6px rgba(62,207,142,0.45); }
+
+.co-status.thinking,
+.co-dot.thinking     { color: #e5c06f; }
+.co-dot.thinking     { background: #d9a13b; box-shadow: 0 0 6px rgba(217,161,59,0.45); }
+
+.co-status.speaking,
+.co-dot.speaking     { color: #b7e3cf; }
+.co-dot.speaking     { background: #7fd8b2; box-shadow: 0 0 8px rgba(127,216,178,0.55); animation-duration: 0.9s; }
 
 .vlm-caption {
   position: absolute;

@@ -2,18 +2,19 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { io, type Socket } from 'socket.io-client'
 import {
-  PhRobot,
   PhVideoCamera,
   PhVideoCameraSlash,
   PhMicrophone,
   PhStop,
 } from '@phosphor-icons/vue'
+import ChatAvatar from '@/components/ai-lab/ChatAvatar.vue'
 
 // ================================================================
 //  常量与映射
 // ================================================================
 const API_BASE_URL = ''
 
+// 陪伴角色（中性小头像，无性别区分）
 const EMOTION_CN: Record<string, string> = {
   happy: '开心',
   sad: '悲伤',
@@ -24,13 +25,13 @@ const EMOTION_CN: Record<string, string> = {
   neutral: '平静',
 }
 const EMOTION_COLOR: Record<string, string> = {
-  happy: '#2e9e6b',
-  sad: '#4a7fd4',
-  angry: '#d64545',
+  happy: '#cf9b4a',
+  sad: '#9c83ad',
+  angry: '#cf7a5b',
   surprised: '#d9a13b',
-  fearful: '#8a63d2',
-  disgusted: '#2c8f8f',
-  neutral: '#9aa1ae',
+  fearful: '#b58a9a',
+  disgusted: '#9cae8e',
+  neutral: '#b5a392',
 }
 const DEEPFACE_TO_UNIFIED: Record<string, string> = {
   happy: 'happy',
@@ -448,14 +449,14 @@ onUnmounted(() => {
           :class="m.role === 'user' ? 'user' : 'assistant'"
         >
           <div v-if="m.role === 'assistant'" class="avatar" aria-hidden="true">
-            <PhRobot :size="20" weight="duotone" />
+            <ChatAvatar />
           </div>
           <div class="bubble">{{ m.content }}</div>
         </div>
 
         <div v-if="sending" class="msg-row assistant">
           <div class="avatar" aria-hidden="true">
-            <PhRobot :size="20" weight="duotone" />
+            <ChatAvatar />
           </div>
           <div class="bubble typing" aria-label="AI 正在思考">
             <span></span><span></span><span></span>
@@ -507,7 +508,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* 设计规范：纸白底 / 墨色文字 / 松绿强调 / 圆角 14-12 两级 */
+/* 设计规范：暖陶底 / 墨褐文字 / 陶土行动色 + 柔雾紫(AI 陪伴身份) / 圆角 14-12 两级 */
 .ai-chat-page {
   position: fixed;
   left: 0;
@@ -537,7 +538,7 @@ onUnmounted(() => {
   flex-wrap: wrap;
 }
 .camera-card.active {
-  border-color: color-mix(in srgb, var(--color-pine) 35%, var(--color-hairline));
+  border-color: color-mix(in srgb, var(--color-lilac) 38%, var(--color-hairline));
 }
 .camera-video-wrap {
   position: relative;
@@ -591,7 +592,7 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 .emotion-dot.neutral {
-  background: #9aa1ae;
+  background: #b5a392;
 }
 .emotion-label {
   font-weight: 600;
@@ -618,7 +619,7 @@ onUnmounted(() => {
   background: #c8cac2;
 }
 .status-dot.on {
-  background: var(--color-pine);
+  background: var(--color-lilac);
 }
 .camera-sub {
   font-size: 12px;
@@ -648,7 +649,7 @@ onUnmounted(() => {
 .cam-btn.primary {
   background: var(--color-pine);
   border-color: var(--color-pine);
-  color: #fff;
+  color: var(--color-card);
 }
 .cam-btn.primary:hover {
   background: var(--color-pine-deep);
@@ -708,15 +709,20 @@ onUnmounted(() => {
   align-self: flex-start;
 }
 .avatar {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  background: var(--color-pine-deep);
-  color: #fff;
+  background: var(--color-lilac-soft);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .bubble {
   padding: 11px 15px;
@@ -727,14 +733,14 @@ onUnmounted(() => {
   word-break: break-word;
 }
 .msg-row.assistant .bubble {
-  background: var(--color-card);
+  background: var(--color-lilac-soft);
   border: 1px solid var(--color-hairline);
   color: var(--color-ink);
   border-top-left-radius: 4px;
 }
 .msg-row.user .bubble {
   background: var(--color-pine);
-  color: #fff;
+  color: var(--color-card);
   border-top-right-radius: 4px;
 }
 .typing {
@@ -747,7 +753,7 @@ onUnmounted(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-pine);
+  background: var(--color-lilac);
   opacity: 0.35;
   animation: blink 1.2s infinite ease-in-out;
 }
@@ -787,8 +793,8 @@ onUnmounted(() => {
 }
 .context-line {
   font-size: 12.5px;
-  color: var(--color-pine);
-  background: var(--color-pine-soft);
+  color: var(--color-lilac-deep);
+  background: var(--color-lilac-soft);
   border-radius: 10px;
   padding: 6px 10px;
   margin-bottom: 10px;
@@ -850,7 +856,7 @@ onUnmounted(() => {
 .send-btn {
   border: none;
   background: var(--color-pine);
-  color: #fff;
+  color: var(--color-card);
   font-size: 14px;
   font-weight: 700;
   padding: 10px 22px;

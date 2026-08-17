@@ -1,17 +1,43 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #f4f5f2;
-  --color-card: #ffffff;
-  --color-ink: #1c1c1a;
-  --color-ink-soft: #5b5b54;
-  --color-ink-faint: #8a8a82;
-  --color-hairline: #e2e3dd;
-  --color-pine: #1f6b52;
-  --color-pine-deep: #17533f;
-  --color-pine-soft: #e4efe9;
+  /* ===== 静谧紫罗兰 · Quiet Violet：温柔、疗愈、辽阔的方向 =====
+     品牌/行动＝深紫罗兰(violet，语义锚点：温柔·疗愈·辽阔)，陪伴/安抚＝雾蓝(lilac，蓝紫同系、与主紫区分)，
+     贵气点缀＝月光银(silver，仅 10%)，自然点缀＝苔绿/淡薰衣草。暖米底 + 编辑感衬线 +
+     银线呼吸涟漪签名，克制而高级。紫+暖米+月光银，如暮色花田与远岸月华。 */
+  --color-paper: #ebe9e2;        /* 暖米底：略带暖灰的白，比纯白柔、不刺眼，托住紫 */
+  --color-paper-2: #e2dfd6;     /* 更深暖底，分区/卡内底纹 */
+  --color-card: #fbf9f4;        /* 暖象牙白卡片（比纯白柔） */
+  --color-ink: #2b2833;         /* 暖墨近黑（微紫灰，与紫呼应）：正文，非纯黑 */
+  --color-ink-soft: #68646f;    /* 暖灰紫：次级文字 */
+  --color-ink-faint: #9a96a2;   /* 弱提示/元信息 */
+  --color-hairline: #dcd7dd;    /* 柔线：淡暖边 */
+
+  --color-pine: #6b5b95;        /* 深紫罗兰主色（品牌/行动/疗愈），沉而雅 */
+  --color-pine-deep: #564a7a;   /* 更深紫罗兰：悬停 */
+  --color-pine-soft: #e7e2f1;   /* 浅薰衣草底：浅填充 */
+
+  /* 贵气点缀：月光银（仅 10%，用于品牌环、印章、收尾细线、聚焦，清冷克制） */
+  --color-gold: #a6abc0;
+  --color-gold-deep: #7c8298;
+  --color-gold-soft: #eceef4;
+
+  /* 身份色：雾蓝（陪伴 / AI / 安抚，蓝紫同系，与主紫区分） */
+  --color-lilac: #7e8baa;
+  --color-lilac-deep: #66749a;
+  --color-lilac-soft: #e3e8f0;
+
+  /* 自然点缀 */
+  --color-sage: #8c977a;        /* 哑光苔绿：平静/自然 */
+  --color-blush: #ddd2ea;       /* 淡薰衣草：温度 */
+  --color-sand: #e6dfd0;        /* 暖沙：底纹 */
+  --color-glow: #e6e0f0;        /* 淡薰衣草光：光球 */
+
   --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC",
     ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader", "Noto Serif SC", "Songti SC", "Source Han Serif SC", Georgia,
+    "Times New Roman", serif;
+  --font-hand: "LXGW WenKai", "LXGW WenKai Screen", "Xingkai SC", "STKaiti", "KaiTi", cursive;
   --font-mono: "SF Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
 }
 
@@ -22,6 +48,66 @@ html {
 body {
   @apply bg-paper text-ink font-sans antialiased;
   -webkit-tap-highlight-color: transparent;
+  /* 更从容的阅读节奏（不刺眼、不挤） */
+  line-height: 1.72;
+  font-size: 15.5px;
+  /* 暖色晨光：顶部两束柔光 + 底部一抹金桃，缓缓把页面裹住（更沉，不刺眼） */
+  background-image:
+    radial-gradient(130% 88% at 50% -14%, #ebe6f2 0%, rgba(235, 230, 242, 0) 56%),
+    radial-gradient(96% 62% at 100% 0%, #e6e0f0 0%, rgba(230, 224, 240, 0) 52%),
+    radial-gradient(84% 60% at 0% 100%, #efe7da 0%, rgba(239, 231, 218, 0) 50%);
+  background-attachment: fixed;
+}
+/* 极淡颗粒肌理：去掉「AI 通用扁平感」，像纸/肌肤的暖噪点（不带动任何文字） */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  opacity: 0.045;
+  mix-blend-mode: multiply;
+}
+
+/* 标题衬线，自带文学感与安定感；断行更优雅 */
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+h1 { font-size: clamp(2rem, 1.2rem + 3vw, 3rem); line-height: 1.12; }
+h2 { font-size: clamp(1.4rem, 1.1rem + 1vw, 1.8rem); }
+h3 { font-size: clamp(1.15rem, 1rem + 0.5vw, 1.35rem); }
+
+/* 柔和选区（月光银，呼应贵气点缀） */
+::selection {
+  background: var(--color-gold-soft);
+  color: var(--color-gold-deep);
+}
+
+/* 暖色细滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c0b6cf transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c0b6cf;
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ac9fc0;
+  background-clip: content-box;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -32,24 +118,115 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-/* 目录角标：世界签名 */
+/* 安静小标题：退役「索引卡 mono 编号」，改正衬线、可读、带一截银线，克制高级（文案不动） */
 .catalog-tab {
-  @apply font-mono text-[11px] tracking-[0.08em] uppercase text-ink-faint;
+  @apply font-serif text-[12.5px] tracking-[0.14em] text-ink-soft;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.catalog-tab::before {
+  content: "";
+  width: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--color-gold), rgba(166, 171, 192, 0));
+  flex: none;
 }
 
-/* 细线卡片 */
+/* 细线卡片 → 暖白柔影卡片（更大圆角 + 轻悬浮 + 漫反射柔影） */
 .card {
-  @apply bg-card border border-hairline rounded-[14px];
+  @apply bg-card border border-hairline;
+  border-radius: 24px;
+  box-shadow: 0 22px 54px -32px rgba(58, 48, 86, 0.26);
+  transition: box-shadow 0.4s ease, transform 0.4s ease, background-color 0.45s ease,
+    border-color 0.45s ease;
+}
+.card:hover {
+  box-shadow: 0 28px 64px -32px rgba(58, 48, 86, 0.34);
 }
 
+/* 银线签名延伸到卡片边框：极细月光银线 + 一层柔银微光，让「贵气」更明确（仍克制） */
+.card.gold-edge {
+  border-color: color-mix(in srgb, var(--color-gold) 42%, var(--color-hairline));
+  box-shadow:
+    0 22px 54px -32px rgba(58, 48, 86, 0.24),
+    0 0 0 1px color-mix(in srgb, var(--color-gold) 16%, transparent);
+}
+.card.gold-edge:hover {
+  box-shadow:
+    0 28px 64px -32px rgba(58, 48, 86, 0.32),
+    0 0 0 1px color-mix(in srgb, var(--color-gold) 28%, transparent);
+}
+
+/* 关键 CTA 极细月光银环：在紫罗兰主按钮外描一道柔银，呼应签名、显贵气而不刺眼 */
+.cta-gold {
+  border: 1px solid color-mix(in srgb, var(--color-gold) 55%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-gold) 22%, transparent),
+    0 12px 30px -16px rgba(166, 171, 192, 0.5);
+}
+
+/* ===== 首页 Hero 按钮组 ===== */
+/* 主按钮（AI 对话）：深紫罗兰底 + 内发光 + 柔阴影 */
+.hero-cta-primary {
+  background: linear-gradient(135deg, #6b5b95 0%, #7d6ba8 50%, #6b5b95 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 4px 20px rgba(107, 91, 149, 0.35),
+    0 0 0 1px rgba(107, 91, 149, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  letter-spacing: 0.02em;
+}
+.hero-cta-primary:hover {
+  background: linear-gradient(135deg, #7d6ba8 0%, #8e7db8 50%, #7d6ba8 100%);
+  box-shadow:
+    0 8px 28px rgba(107, 91, 149, 0.45),
+    0 0 0 1px rgba(107, 91, 149, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.shadow-cta {
+  box-shadow:
+    0 4px 20px rgba(107, 91, 149, 0.35),
+    0 0 0 1px rgba(107, 91, 149, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* 次按钮（找教练/视频通话）：玻璃拟态 + 紫色点缀 */
+.hero-cta-secondary {
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--color-ink);
+  border: 1px solid rgba(107, 91, 149, 0.18);
+  box-shadow:
+    0 2px 12px rgba(107, 91, 149, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  letter-spacing: 0.01em;
+}
+.hero-cta-secondary:hover {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(107, 91, 149, 0.32);
+  box-shadow:
+    0 4px 18px rgba(107, 91, 149, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color: var(--color-pine);
+}
+
+/* 暖色柔影工具类 */
+.shadow-warm {
+  box-shadow: 0 22px 54px -26px rgba(58, 48, 86, 0.22);
+}
+
+/* 缓慢上浮、淡入（更柔） */
 .reveal {
   opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+  transform: translateY(16px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
 }
 .reveal.is-visible {
   opacity: 1;
@@ -63,10 +240,529 @@ body {
   }
 }
 
+/* 呼吸光球：有机鹅卵石轮廓，缓慢变形 + 一吸一呼，不催促 */
+.breath-orb {
+  position: absolute;
+  border-radius: 47% 53% 60% 40% / 53% 47% 53% 47%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    var(--color-glow),
+    var(--color-blush) 58%,
+    rgba(221, 210, 234, 0) 72%
+  );
+  filter: blur(6px);
+  animation: breathe 7s ease-in-out infinite, morph 16s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.breath-orb.slow {
+  animation-duration: 11s, 20s;
+}
+/* 柔雾紫版本：用于「陪伴 / AI」区域，与陶土行动色区分 */
+.breath-orb.lilac {
+  background: radial-gradient(
+    circle at 35% 30%,
+    var(--color-lilac-soft),
+    var(--color-lilac) 58%,
+    rgba(143, 124, 158, 0) 72%
+  );
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.85;
+  }
+}
+@keyframes morph {
+  0%,
+  100% {
+    border-radius: 47% 53% 60% 40% / 53% 47% 53% 47%;
+  }
+  50% {
+    border-radius: 58% 42% 44% 56% / 45% 56% 44% 55%;
+  }
+}
+
+/* 签名符号：呼吸涟漪（同心环）——品牌性格，缓慢一吸一呼，改为月光银更清冷贵气 */
+.ripple-mark {
+  color: var(--color-gold);
+  animation: ripple 12s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ripple {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.08;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.16;
+  }
+}
+
+/* 聚焦环（月光银，更可见、更清冷贵气） */
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* 手绘母题：极缓的呼吸式漂浮，像被轻轻托着（不催促） */
+.warm-motif {
+  animation: motif-float 9s ease-in-out infinite;
+  overflow: visible;
+}
+@keyframes motif-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
 /* 按钮按压反馈 */
 .pressable {
   @apply transition-transform duration-100;
 }
 .pressable:active {
   transform: scale(0.98);
+}
+
+/* 柔和 pill 控件（标签 / 小状态） */
+.pill {
+  @apply inline-flex items-center gap-1 rounded-full bg-paper-2 text-ink-soft px-2.5 py-1 text-xs;
+}
+
+/* ===== 品牌签名 Brand Mark =====
+   双重同心圆 + 月光银小圆点，呼应静谧紫罗兰+月光银系统
+   .brand-mark-lg / .brand-mark-sm 控制尺寸 */
+.brand-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.brand-mark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-lilac);
+  opacity: 0.55;
+}
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  border: 1px solid var(--color-pine);
+  opacity: 0.5;
+}
+.brand-mark .dot {
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: var(--color-pine);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 35%, transparent);
+}
+.brand-mark-lg { width: 40px; height: 40px; }
+.brand-mark-sm { width: 24px; height: 24px; }
+.brand-mark-lg .dot { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-gold) 35%, transparent); }
+
+/* ===== 品牌印章 Brand Seal =====
+   圆形 + 衬线文字 + 极细银环，用作收尾印记（页脚/重要 CTA 旁） */
+.brand-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 55%, var(--color-hairline));
+  background: var(--color-card);
+  font-family: var(--font-serif);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--color-gold-deep);
+  position: relative;
+  flex: none;
+}
+.brand-seal::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 25%, transparent);
+}
+
+/* ===== 品牌水印 Brand Watermark =====
+   大尺寸淡色背景文字，首页/落地页用作背景装饰 */
+.brand-watermark {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--color-pine);
+  opacity: 0.04;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ===== 日记卡片 Journal Card：温暖、私密、有日记质感 =====
+   每条情绪记录是一张「活页」，左侧情绪面孔为视觉锚点，
+   内容区用衬线引语风格展示 AI 回应，元信息用 pill 标签。
+   整体像一本被温柔翻开的日记本。 */
+.journal-card {
+  position: relative;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: 20px;
+  padding: 1.6rem 1.8rem;
+  box-shadow:
+    0 1px 2px rgba(58, 48, 86, 0.04),
+    0 8px 24px -12px rgba(58, 48, 86, 0.14);
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+.journal-card:hover {
+  box-shadow:
+    0 1px 3px rgba(58, 48, 86, 0.06),
+    0 12px 32px -12px rgba(58, 48, 86, 0.2);
+  transform: translateY(-1px);
+}
+
+/* 日记卡左侧：情绪面孔背景（极淡色相晕染） */
+.journal-mood-bg {
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--mood-accent) 12%, transparent) 0%, transparent 70%);
+}
+
+/* 日记卡元信息：情绪标签 pill */
+.journal-mood-tag {
+  background: color-mix(in srgb, var(--mood-accent) 10%, var(--color-paper));
+  color: color-mix(in srgb, var(--mood-accent) 75%, var(--color-ink));
+  border: 1px solid color-mix(in srgb, var(--mood-accent) 18%, transparent);
+}
+
+/* ===== 手写感引语 QuoteBlock：今日一句 / 情感收尾 =====
+   温润半手写的霞鹜文楷，配一截银线起笔与极缓淡入，像被轻轻写下的安抚。 */
+.quote-block {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-hand);
+  color: var(--color-ink);
+  line-height: 1.8;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: quote-in 1.1s ease-out forwards;
+}
+@keyframes quote-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.quote-block::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -10px;
+  width: 30px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--color-gold), rgba(166, 171, 192, 0));
+}
+.quote-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  letter-spacing: 0.22em;
+  color: var(--color-gold-deep);
+  margin-bottom: 0.55rem;
+}
+.quote-text {
+  margin: 0;
+  font-size: 1.35rem;
+}
+.quote-attr {
+  margin-top: 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-faint);
+}
+/* 尺寸 */
+.q-sm .quote-text { font-size: 1.05rem; }
+.q-lg .quote-text { font-size: 1.7rem; }
+/* 对齐 */
+.q-center { text-align: center; }
+.q-center::before { left: 50%; transform: translateX(-50%); }
+.q-center .quote-label { margin-left: auto; margin-right: auto; }
+/* 色调：起笔银线 + 文字微染色 */
+.q-gold::before { background: linear-gradient(90deg, var(--color-gold), rgba(166, 171, 192, 0)); }
+.q-lilac::before { background: linear-gradient(90deg, var(--color-lilac), rgba(143, 124, 158, 0)); }
+.q-lilac .quote-label { color: var(--color-lilac-deep); }
+.q-clay::before { background: linear-gradient(90deg, var(--color-pine), rgba(154, 85, 56, 0)); }
+.q-clay .quote-label { color: var(--color-pine-deep); }
+.q-ink::before { background: linear-gradient(90deg, var(--color-ink-faint), rgba(155, 138, 121, 0)); }
+
+/* ===== 主题切换：平滑过渡（不刺眼） ===== */
+body,
+header,
+footer,
+nav,
+.theme-toggle,
+input,
+textarea,
+select,
+button {
+  transition: background-color 0.45s ease, border-color 0.45s ease, color 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+/* ===== 主题切换开关（日 / 夜）===== */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-card);
+  color: var(--color-ink-soft);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.theme-toggle:hover {
+  border-color: var(--color-gold);
+  color: var(--color-ink);
+}
+.theme-toggle .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 22%, transparent);
+}
+.theme-toggle .label {
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================================
+   静谧紫夜模式（[data-theme="dark"]）：更沉、更温柔、给难过 / 夜间用户
+   仅覆写颜色令牌与少量硬编码渐变/阴影；所有工具类经 var() 自动联动。
+   ========================================================================= */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-paper: #1a1722; /* 深紫近黑底：比纯黑更沉、更温柔 */
+  --color-paper-2: #221d2c; /* 分区/底纹，略抬升 */
+  --color-card: #231d2e; /* 紫灰卡面，浮起于底 */
+  --color-ink: #efe9f4; /* 暖白字：高对比、好读 */
+  --color-ink-soft: #c0b6cc; /* 暖灰紫：次级 */
+  --color-ink-faint: #88809a; /* 弱提示 */
+  --color-hairline: #312a3d; /* 柔紫线 */
+
+  --color-pine: #a896c8; /* 浅紫罗兰提亮，深色上清晰可辨 */
+  --color-pine-deep: #8f7ead;
+  --color-pine-soft: #281f36;
+
+  --color-gold: #d6d9e6; /* 月光银提亮，深色上更清冷贵气 */
+  --color-gold-deep: #aeb3c6;
+  --color-gold-soft: #2e2c3a;
+
+  --color-lilac: #9aa9c6; /* 雾蓝提亮（陪伴/AI） */
+  --color-lilac-deep: #7e8baa;
+  --color-lilac-soft: #262032; /* 近底紫蓝：陪伴光球与底色色差温和 */
+
+  --color-sage: #aab595;
+  --color-blush: #2a2333; /* 近底紫灰：浅色淡薰衣草光球在夜模式融入背景，不跳 */
+  --color-sand: #282234;
+  --color-glow: #241f30; /* 近底紫灰：呼吸光球与底色仅一档明度差，色差极小 */
+}
+
+/* 夜模式：深紫径向光包裹（更沉、更温柔，不刺眼） */
+[data-theme='dark'] body {
+  background-image:
+    radial-gradient(130% 90% at 50% -14%, #241d30 0%, rgba(36, 29, 48, 0) 60%),
+    radial-gradient(96% 62% at 100% 0%, #1f1a2a 0%, rgba(31, 26, 42, 0) 55%),
+    radial-gradient(84% 60% at 0% 100%, #201b2b 0%, rgba(32, 27, 43, 0) 55%);
+}
+
+/* 夜模式：呼吸光球改用近底色的同色系微光，并降不透明度、加大模糊，
+   圆与底色仅一档明度差，色差温和、更沉不跳 */
+[data-theme='dark'] .breath-orb {
+  opacity: 0.5;
+  filter: blur(9px);
+}
+
+/* 夜模式：颗粒肌理转亮（screen + 反相），在深底上留下极淡暖噪点 */
+[data-theme='dark'] body::before {
+  opacity: 0.06;
+  mix-blend-mode: screen;
+  filter: invert(1);
+}
+
+/* 夜模式：卡片阴影转深柔 + 顶部一线暖高光，浮起而不刺眼 */
+[data-theme='dark'] .card {
+  box-shadow:
+    0 1px 0 rgba(255, 236, 214, 0.05) inset,
+    0 24px 56px -34px rgba(0, 0, 0, 0.72);
+}
+[data-theme='dark'] .card:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 236, 214, 0.07) inset,
+    0 30px 66px -34px rgba(0, 0, 0, 0.8);
+}
+[data-theme='dark'] .shadow-warm {
+  box-shadow: 0 22px 54px -26px rgba(0, 0, 0, 0.6);
+}
+
+/* 夜模式：金边与金环 shadows 转深底版本 */
+[data-theme='dark'] .card.gold-edge {
+  box-shadow:
+    0 1px 0 rgba(255, 236, 214, 0.05) inset,
+    0 24px 56px -34px rgba(0, 0, 0, 0.72),
+    0 0 0 1px color-mix(in srgb, var(--color-gold) 20%, transparent);
+}
+[data-theme='dark'] .card.gold-edge:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 236, 214, 0.07) inset,
+    0 30px 66px -34px rgba(0, 0, 0, 0.8),
+    0 0 0 1px color-mix(in srgb, var(--color-gold) 32%, transparent);
+}
+[data-theme='dark'] .cta-gold {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-gold) 28%, transparent),
+    0 12px 30px -16px rgba(217, 178, 113, 0.45);
+}
+
+/* 夜模式：日记卡片 */
+[data-theme='dark'] .journal-card {
+  background: var(--color-card);
+  border-color: var(--color-hairline);
+  box-shadow:
+    0 1px 0 rgba(255, 236, 214, 0.03) inset,
+    0 8px 24px -12px rgba(0, 0, 0, 0.4);
+}
+[data-theme='dark'] .journal-card:hover {
+  box-shadow:
+    0 1px 0 rgba(255, 236, 214, 0.05) inset,
+    0 12px 32px -12px rgba(0, 0, 0, 0.5);
+}
+[data-theme='dark'] .journal-mood-tag {
+  background: color-mix(in srgb, var(--mood-accent) 8%, var(--color-card));
+}
+
+/* 夜模式：品牌签名/印章 */
+[data-theme='dark'] .brand-seal {
+  border-color: color-mix(in srgb, var(--color-gold) 35%, transparent);
+  color: var(--color-gold);
+  background: var(--color-card);
+}
+
+/* 夜模式：滚动条转暖深 */
+[data-theme='dark'] * {
+  scrollbar-color: #4a3a2c transparent;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: #4a3a2c;
+  background-clip: content-box;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: #5a4733;
+  background-clip: content-box;
+}
+
+/* ===== UI 打磨：全局交互细节 ===== */
+
+/* 品牌色文字选中 */
+::selection {
+  background: color-mix(in srgb, var(--color-pine) 18%, transparent);
+  color: inherit;
+}
+
+/* 平滑滚动 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 输入框聚焦：柔和紫环 */
+textarea:focus,
+input:not([type="checkbox"]):not([type="radio"]):focus {
+  outline: none;
+  border-color: var(--color-pine);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-pine) 12%, transparent);
+}
+
+/* 输入框 placeholder 柔化 */
+::placeholder {
+  color: var(--color-ink-faint);
+  opacity: 0.75;
+}
+
+/* 链接平滑过渡 */
+a {
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+/* 卡片内链接悬浮微提亮 */
+.card a:hover {
+  color: var(--color-pine);
+}
+
+/* 情绪选择器按钮打磨 */
+.mood-btn-selected {
+  background: var(--color-pine-soft) !important;
+  border-color: transparent !important;
+  transform: scale(1.03);
+  box-shadow:
+    0 4px 16px -6px color-mix(in srgb, var(--color-pine) 30%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent);
+}
+
+/* CTA 按钮光泽 */
+.cta-gold {
+  position: relative;
+  overflow: hidden;
+}
+.cta-gold::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, #fff 18%, transparent) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.cta-gold:hover::after {
+  opacity: 1;
+}
+
+/* 页面切换淡入（配合 Reveal 组件） */
+@keyframes gentle-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 减少动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
 }

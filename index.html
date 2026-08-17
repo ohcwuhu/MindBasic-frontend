@@ -3,23 +3,48 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f4f5f2" />
+    <!-- 防闪烁：在 Vue 启动前先按本地偏好 / 系统设定定下主题 -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('mb-theme');
+          if (t !== 'dark' && t !== 'light') {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    <meta name="theme-color" content="#efeae1" />
     <title>MindBasic 心理教练成长服务平台</title>
     <meta name="description" content="成长、赋能、陪伴。自助教练工具、可信赖的心理教练服务与科普内容。" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap"
+    />
   </head>
   <body>
     <!--
-      DIRECTION CONTRACT (seed e56cdc5b)
-      THESIS: 图书馆索引卡世界。产品的一切都是"卡片"（成长行动卡、教练卡片、文章卡片），
-      界面像翻阅一套安静的目录卡片：白纸、细线、单一松绿印章色，拒绝"心理服务"的临床感与
-      常见的营销式大横幅。
-      OWN-WORLD: 冷调纸白地面 #f4f5f2 + 纯白卡片 + 墨色文字 + 一个松绿 accent；
-      卡片有目录角标（mono 分类号），细发丝线分隔，14px 圆角，无深阴影。
-      STORY: 访客翻开目录，找到此刻需要的卡片（自我教练/情绪日记/教练/文章），
-      完成一步是一步，行动卡像盖了一枚印章。
-      FIRST VIEWPORT: 左对齐大标题 + 右侧"今日卡片"堆叠；上方单行导航，主行动
-      "开始自我教练"立即可见。
-      FORM: 自有方向列表第 5 项（索引卡世界），融合 HyperCard 卡片语法。
+      DIRECTION CONTRACT (seed e56cdc5b → revised Quiet Forest / 静谧松林)
+      THESIS: 静谧松林（Quiet Forest）。克制的「心理陪伴空间」：暖瓷底 + 深暖松林绿品牌色 +
+      一抹琉璃金作 10% 贵气点缀 + 柔雾紫作 AI 陪伴身份色；大量留白、编辑感衬线(Newsreader+思源宋体)、
+      手写感引语（霞鹜文楷）做情感落点。绿＝成长·安定·自然，刻意避开 AI 默认的奶油底+陶土套路。
+      参考 Luma / Solstice Psychiatry / 森逸(古鼎灰+琉璃金) 的 quiet-luxury 心法。
+      OWN-WORLD: 暖瓷底 #efeae1 + 暖象牙白卡 #fcf9f3 + 暖墨褐字 #2b2722；
+      松林绿 #4f6b57 品牌/行动、琉璃金 #b0894f 点缀(≤10%)、柔雾紫 #8f7c9e 陪伴；
+      大圆角(24px)、漫反射暖影、金线呼吸涟漪签名、全站颗粒肌理(0.045)、手写引语 QuoteBlock。
+      STORY: 低唤醒空间，被环抱的呼吸光与金线涟漪；按需取用卡片，完成一步是一步；
+      关键落点用「今日一句」手写引语做情感收尾。
+      FIRST VIEWPORT: 左对齐衬线大标题 + 右侧"今日卡片"堆叠；主行动"开始自我教练"立即可见；
+      英雄区以手写「今日一句」替代旧索引卡小字；环境层金线涟漪 + 暖光球。
+      FORM: 自有方向(静谧松林) + 自然主义 UI(有机轮廓/颗粒肌理/慢动效) + 编辑感排版。
       FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
     -->
     <div id="app"></div>

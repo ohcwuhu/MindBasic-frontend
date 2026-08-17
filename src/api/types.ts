@@ -4,6 +4,7 @@ export interface User {
   email: string | null
   nickname: string
   avatarUrl: string | null
+  gender?: 'boy' | 'girl'
   role: 'USER' | 'COACH' | 'ADMIN'
   isDisabled: boolean
   createdAt: string
@@ -160,7 +161,7 @@ export interface Appointment {
   service: ServiceItem
   slot: { id: number; date: string; startTime: string; endTime: string }
   needDesc: string
-  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'
+status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' | 'RESCHEDULED'
   cancelReason: string | null
   canCancel: boolean
   reviewed: boolean
@@ -224,7 +225,7 @@ export interface CoachAppointment {
   service: { id: number; name: string; serviceType: string; priceInCents: number }
   slot: { id: number; date: string; startTime: string; endTime: string }
   needDesc: string
-  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'
+status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' | 'RESCHEDULED'
   cancelReason: string | null
   createdAt: string
   completedAt: string | null

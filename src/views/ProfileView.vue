@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { PhCaretDown as CaretDown, PhCamera as Camera } from '@phosphor-icons/vue'
 import { useAuthStore } from '@/stores/auth'
+import { useCompanion } from '@/composables/useCompanion'
 import { ApiError, get, post, uploadFile } from '@/api/client'
 import type { CoachProfile } from '@/api/types'
 import { useCountdown } from '@/utils/useCountdown'
@@ -32,6 +33,11 @@ const savingEmail = ref(false)
 const sendingEmailCode = ref(false)
 const coachStatus = ref<'none' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'loading'>('loading')
 const { remaining, start: startCountdown } = useCountdown()
+
+// 性别选择
+const { gender: companionGender, setGender } = useCompanion()
+const selectedGender = ref<(typeof companionGender)['value']>((auth.user?.gender as any) || companionGender.value)
+const savingGender = ref(false)
 
 function flash(message: string) {
   success.value = message
@@ -118,6 +124,19 @@ async function saveNickname() {
   }
 }
 
+async function saveGender() {
+  savingGender.value = true
+  error.value = ''
+  try {
+    await auth.updateProfile({ gender: selectedGender.value })
+    flash('陪伴角色已更新')
+  } catch (e) {
+    showError(e)
+  } finally {
+    savingGender.value = false
+  }
+}
+
 async function onAvatarChange(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
@@ -179,7 +198,7 @@ async function logout() {
 </script>
 
 <template>
-  <div class="max-w-[560px] mx-auto px-4 md:px-6 py-10 md:py-16">
+  <div class="max-w-[1080px] mx-auto px-4 md:px-6 py-10 md:py-16">
     <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">个人资料</h1>
     <p class="mt-2 text-sm text-ink-soft">管理你的账号信息。</p>
 
@@ -289,6 +308,44 @@ async function logout() {
         <span class="text-sm font-medium">{{ roleLabel[auth.user?.role ?? 'USER'] }}</span>
       </div>
 
+      <!-- 陪伴角色性别 -->
+      <div class="px-6 py-5 flex items-center justify-between gap-4">
+        <span class="text-sm text-ink-soft">陪伴角色</span>
+        <div class="flex items-center gap-3">
+          <!-- 小女孩选项 -->
+          <button
+            type="button"
+            class="gender-card"
+            :class="{ active: selectedGender === 'girl', disabled: savingGender }"
+            :disabled="savingGender"
+            @click="selectedGender = 'girl'"
+          >
+            <img src="/companion/girl.png" alt="" class="gender-thumb" draggable="false" />
+            <span>小女孩</span>
+          </button>
+          <!-- 小男孩选项 -->
+          <button
+            type="button"
+            class="gender-card"
+            :class="{ active: selectedGender === 'boy', disabled: savingGender }"
+            :disabled="savingGender"
+            @click="selectedGender = 'boy'"
+          >
+            <img src="/companion/boy.png" alt="" class="gender-thumb" draggable="false" />
+            <span>小男孩</span>
+          </button>
+          <button
+            v-if="selectedGender !== auth.user?.gender"
+            type="button"
+            :disabled="savingGender"
+            class="h-8 px-3 rounded-full bg-pine text-card text-xs font-medium disabled:opacity-60 pressable"
+            @click="saveGender"
+          >
+            {{ savingGender ? '…' : '保存' }}
+          </button>
+        </div>
+      </div>
+
       <!-- 注册时间 -->
       <div class="px-6 py-5 flex items-center justify-between gap-4">
         <span class="text-sm text-ink-soft">注册时间</span>
@@ -353,4 +410,44 @@ async function logout() {
       @cancel="deactivateOpen = false"
     />
   </div>
+
 </template>
+
+<style scoped>
+.gender-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-hairline);
+  background: var(--color-paper);
+  color: var(--color-ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.gender-card:hover:not(.disabled):not(.active) {
+  border-color: var(--color-pine);
+  color: var(--color-pine);
+  background: rgba(107, 191, 142, 0.04);
+}
+.gender-card.active {
+  border-color: var(--color-pine);
+  background: rgba(107, 191, 142, 0.08);
+  color: var(--color-pine-deep);
+  font-weight: 600;
+}
+.gender-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.gender-thumb {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+</style>
