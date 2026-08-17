@@ -140,6 +140,11 @@ const partialAssistantText = ref('')
 const partialUserText = ref('')
 const vlmDescription = ref('')
 
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem('mb_access_token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 // 多模态情感分析结果
 interface EmotionResult {
   voice_emotion: any | null
@@ -598,6 +603,7 @@ const startAudioStreaming = () => {
       errorMsg.value = ''
       const resp = await fetch('/api/vc_audio_upload', {
         method: 'POST',
+        headers: authHeaders(),
         body: formData,
       })
       const result = await resp.json()
@@ -926,7 +932,7 @@ const triggerAudioEnd = (fromManual = false) => {
         const formData = new FormData()
         formData.append('file', fullBlob, 'audio.webm')
         formData.append('sid', socket.value?.id || '')
-        fetch('/api/vc_audio_upload', { method: 'POST', body: formData })
+        fetch('/api/vc_audio_upload', { method: 'POST', headers: authHeaders(), body: formData })
           .then(r => r.json())
           .then(result => {
             if (result.ok) {
