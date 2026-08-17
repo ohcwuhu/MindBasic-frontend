@@ -22,12 +22,13 @@ export const useAuthStore = defineStore('auth', () => {
     return data.user
   }
 
-  async function register(phone: string, password: string, nickname: string): Promise<User> {
+  async function register(phone: string, password: string, nickname: string, serviceAgreed: boolean): Promise<User> {
     const data = await post<AuthOut>('/auth/register', {
       phone,
       password,
       nickname,
       privacyAgreed: true,
+      serviceAgreed,
     })
     applyAuth(data)
     return data.user

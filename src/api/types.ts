@@ -189,6 +189,11 @@ export interface WalletInfo {
   balanceInCents: number
 }
 
+export interface AgreementInfo {
+  version: string
+  content: string
+}
+
 export interface WalletTransactionItem {
   changeInCents: number
   balanceAfter: number

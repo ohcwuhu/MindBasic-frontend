@@ -12,6 +12,7 @@ const phone = ref('')
 const nickname = ref('')
 const password = ref('')
 const confirm = ref('')
+const serviceAgreed = ref(false)
 const error = ref('')
 const loading = ref(false)
 
@@ -25,9 +26,13 @@ async function submit() {
     error.value = '两次输入的密码不一致'
     return
   }
+  if (!serviceAgreed.value) {
+    error.value = '请先阅读并同意《服务协议与免责声明》'
+    return
+  }
   loading.value = true
   try {
-    await auth.register(phone.value, password.value, nickname.value)
+    await auth.register(phone.value, password.value, nickname.value, serviceAgreed.value)
     router.push('/')
   } catch (e) {
     error.value = e instanceof Error ? e.message : '注册失败，请稍后重试'
@@ -61,6 +66,18 @@ async function submit() {
         autocomplete="new-password"
       />
       <ErrorBanner v-if="error" :message="error" />
+      <label class="flex items-start gap-2.5 text-xs text-ink-soft leading-relaxed">
+        <input
+          v-model="serviceAgreed"
+          type="checkbox"
+          class="mt-0.5 w-4 h-4 accent-[#1f6b52] shrink-0"
+        />
+        <span>
+          我已阅读并同意
+          <RouterLink to="/terms" class="text-pine underline underline-offset-2">《服务协议与免责声明》</RouterLink>
+          ：本平台提供心理教练/成长辅导与自助工具，不提供心理咨询、治疗或医疗诊断服务。
+        </span>
+      </label>
       <button
         type="submit"
         :disabled="loading"
@@ -68,9 +85,6 @@ async function submit() {
       >
         {{ loading ? '注册中…' : '注册并开始' }}
       </button>
-      <p class="text-xs text-ink-faint leading-relaxed">
-        注册即表示你同意隐私政策：我们仅收集提供服务所需的信息，不会对内容做诊断或评价。
-      </p>
     </form>
   </div>
 </template>

@@ -8,6 +8,7 @@ export const router = createRouter({
     { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue') },
     { path: '/register', name: 'register', component: () => import('@/views/RegisterView.vue') },
     { path: '/forgot-password', name: 'forgot-password', component: () => import('@/views/ForgotPasswordView.vue') },
+    { path: '/terms', name: 'terms', component: () => import('@/views/TermsView.vue') },
     { path: '/self-coaching', name: 'self-coaching', component: () => import('@/views/VideoCallView.vue'), meta: { auth: true } },
     { path: '/self-coaching/records/:id', name: 'self-coaching-record', component: () => import('@/views/SelfCoachingRecordDetailView.vue'), meta: { auth: true } },
     { path: '/emotion-journal', name: 'emotion-journal', component: () => import('@/views/EmotionJournalView.vue'), meta: { auth: true } },
