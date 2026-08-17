@@ -884,7 +884,8 @@ const auditText = computed(() =>
 
     <!-- 工作台 -->
     <template v-else>
-      <div class="mt-8 grid md:grid-cols-[210px_1fr] gap-6 items-start">
+      <div class="mt-8 w-screen ml-[calc(50%_-_50vw)]">
+        <div class="grid md:grid-cols-[210px_1fr] items-start">
         <!-- 左侧导航 -->
         <aside class="workbench-nav">
           <button
@@ -914,8 +915,8 @@ const auditText = computed(() =>
           </RouterLink>
         </aside>
 
-        <!-- 内容区 -->
-        <div class="min-w-0">
+          <!-- 内容区 -->
+          <div class="min-w-0 max-w-[880px] px-4 md:px-6">
 
       <!-- 预约 -->
       <section v-if="activeTab === 'appointments'" class="mt-8">
@@ -1383,8 +1384,9 @@ const auditText = computed(() =>
           <button type="submit" :disabled="submitting" class="h-12 px-8 rounded-full bg-pine text-card font-medium hover:bg-pine-deep disabled:opacity-60 pressable">
             {{ submitting ? '保存中…' : '保存资料' }}
           </button>
-        </form>
-      </section>
+          </form>
+        </section>
+          </div>
         </div>
       </div>
     </template>

@@ -116,7 +116,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-[100dvh] flex flex-col">
+  <div class="min-h-[100dvh] flex flex-col overflow-x-clip">
     <!-- 全局氛围：呼吸涟漪（签名符号）+ 缓慢呼吸的暖光球，给页面一层被环抱的安定感（纯装饰） -->
     <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
       <svg class="ripple-mark absolute -left-10 -bottom-10 w-[34rem] h-[34rem]" viewBox="0 0 200 200" fill="none">
