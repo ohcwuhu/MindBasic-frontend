@@ -49,7 +49,11 @@ async function refreshUnread() {
     return
   }
   try {
-    unread.value = (await get<{ count: number }>('/notifications/unread-count')).count
+    const [notif, chat] = await Promise.all([
+      get<{ count: number }>('/notifications/unread-count'),
+      get<{ count: number }>('/chat/unread-count'),
+    ])
+    unread.value = (notif?.count ?? 0) + (chat?.count ?? 0)
   } catch {
     unread.value = 0
   }
