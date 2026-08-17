@@ -161,10 +161,51 @@ export interface Appointment {
   service: ServiceItem
   slot: { id: number; date: string; startTime: string; endTime: string }
   needDesc: string
-status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' | 'RESCHEDULED'
+  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' | 'RESCHEDULED'
   cancelReason: string | null
+  cancelWindow: 'free' | 'near' | 'closed'
   canCancel: boolean
   reviewed: boolean
+  paymentStatus: 'NONE' | 'CREATED' | 'PAID' | 'REFUNDED' | 'CLOSED'
+  orderNo: string | null
+  amountInCents: number | null
+  payExpireAt: string | null
+  createdAt: string
+}
+
+export interface OrderItem {
+  orderNo: string
+  type: 'APPOINTMENT' | 'TOPUP'
+  status: 'CREATED' | 'PAID' | 'CLOSED' | 'REFUNDED'
+  amountInCents: number
+  payExpireAt: string | null
+  paidAt: string | null
+  refundedAt: string | null
+  appointment: { id: number; appointmentNo: string } | null
+  createdAt: string
+}
+
+export interface WalletInfo {
+  balanceInCents: number
+}
+
+export interface WalletTransactionItem {
+  changeInCents: number
+  balanceAfter: number
+  bizType: 'TOPUP' | 'APPOINTMENT_PAY' | 'REFUND' | 'ADMIN_GRANT'
+  note: string | null
+  createdAt: string
+}
+
+export interface AdminOrderItem {
+  id: number
+  orderNo: string
+  type: 'APPOINTMENT' | 'TOPUP'
+  status: 'CREATED' | 'PAID' | 'CLOSED' | 'REFUNDED'
+  amountInCents: number
+  user: { id: number; nickname: string; phone: string }
+  paidAt: string | null
+  refundedAt: string | null
   createdAt: string
 }
 
@@ -225,8 +266,9 @@ export interface CoachAppointment {
   service: { id: number; name: string; serviceType: string; priceInCents: number }
   slot: { id: number; date: string; startTime: string; endTime: string }
   needDesc: string
-status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' | 'RESCHEDULED'
+  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW' | 'RESCHEDULED'
   cancelReason: string | null
+  paymentStatus: 'NONE' | 'CREATED' | 'PAID' | 'REFUNDED' | 'CLOSED'
   createdAt: string
   completedAt: string | null
 }

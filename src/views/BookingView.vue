@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { PhCheck as Check, PhArrowLeft as ArrowLeft } from '@phosphor-icons/vue'
+import {
+  PhArrowLeft as ArrowLeft,
+  PhCheck as Check,
+  PhLightning as Bolt,
+  PhWallet as Wallet,
+} from '@phosphor-icons/vue'
 import { get, post } from '@/api/client'
-import type { CoachDetail, CoachSlot, Appointment } from '@/api/types'
+import type { Appointment, CoachDetail, CoachSlot, WalletInfo } from '@/api/types'
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import FieldInput from '@/components/FieldInput.vue'
 
@@ -22,6 +27,12 @@ const loading = ref(true)
 const submitting = ref(false)
 const error = ref('')
 const success = ref<Appointment | null>(null)
+const paying = ref(false)
+const payError = ref('')
+const paid = ref(false)
+const wallet = ref<WalletInfo | null>(null)
+const remainSec = ref(0)
+let timer: number | undefined
 
 const selectedService = computed(() => coach.value?.services.find((s) => s.id === serviceId.value) ?? null)
 
@@ -52,6 +63,8 @@ async function submit() {
       slotId: slotId.value,
       needDesc: needDesc.value.trim(),
     })
+    void loadWallet()
+    startCountdown(success.value.payExpireAt)
   } catch (e) {
     error.value = e instanceof Error ? e.message : '预约提交失败，请重试'
   } finally {
@@ -59,9 +72,64 @@ async function submit() {
   }
 }
 
+async function loadWallet() {
+  try {
+    wallet.value = await get<WalletInfo>('/wallet')
+  } catch {
+    wallet.value = null
+  }
+}
+
+function startCountdown(expireAt: string | null) {
+  stopCountdown()
+  if (!expireAt) return
+  const deadline = new Date(expireAt).getTime()
+  const tick = () => {
+    remainSec.value = Math.max(0, Math.round((deadline - Date.now()) / 1000))
+    if (remainSec.value <= 0) stopCountdown()
+  }
+  tick()
+  timer = window.setInterval(tick, 1000)
+}
+
+function stopCountdown() {
+  if (timer) {
+    clearInterval(timer)
+    timer = undefined
+  }
+}
+
+async function pay(method: 'BALANCE' | 'MOCK') {
+  if (!success.value?.orderNo || paying.value || remainSec.value <= 0) return
+  paying.value = true
+  payError.value = ''
+  try {
+    await post(`/orders/${success.value.orderNo}/pay`, { method })
+    paid.value = true
+    stopCountdown()
+  } catch (e) {
+    payError.value = e instanceof Error ? e.message : '支付失败，请重试'
+    if (payError.value.includes('超时')) {
+      stopCountdown()
+      remainSec.value = 0
+    }
+  } finally {
+    paying.value = false
+  }
+}
+
+const payExpireText = computed(() => {
+  const s = Math.max(0, remainSec.value)
+  const mm = Math.floor(s / 60).toString().padStart(2, '0')
+  const ss = (s % 60).toString().padStart(2, '0')
+  return `${mm}:${ss}`
+})
+
 function priceText(cents: number): string {
   return cents % 100 === 0 ? `¥${cents / 100}` : `¥${(cents / 100).toFixed(2)}`
 }
+
+onUnmounted(stopCountdown)
 </script>
 
 <template>
@@ -75,22 +143,85 @@ function priceText(cents: number): string {
     <ErrorBanner v-else-if="error && !success" :message="error" class="mt-8" />
 
     <section v-else-if="success" class="card mt-8 p-8 md:p-10 text-center">
-      <span class="w-14 h-14 rounded-full bg-pine-soft text-pine flex items-center justify-center mx-auto">
-        <Check :size="28" weight="bold" />
-      </span>
-      <h1 class="mt-4 text-xl font-semibold tracking-tight">预约已提交</h1>
-      <p class="mt-3 text-[15px] text-ink-soft leading-relaxed">
-        预约单号 {{ success.appointmentNo }}，状态为待确认。教练确认后即可按约定时间联系（MVP 阶段在线下完成支付）。
-      </p>
-      <div class="mt-8 flex flex-wrap justify-center gap-3">
-        <button
-          type="button"
-          @click="router.push('/my')"
-          class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full bg-pine text-card font-medium pressable"
+      <template v-if="paid">
+        <span class="w-14 h-14 rounded-full bg-pine-soft text-pine flex items-center justify-center mx-auto">
+          <Check :size="28" weight="bold" />
+        </span>
+        <h1 class="mt-4 text-xl font-semibold tracking-tight">支付成功</h1>
+        <p class="mt-3 text-[15px] text-ink-soft leading-relaxed">
+          预约单号 {{ success.appointmentNo }} 已完成支付，等待教练确认。
+        </p>
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            @click="router.push('/my')"
+            class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full bg-pine text-card font-medium pressable"
+          >
+            查看我的预约
+          </button>
+        </div>
+      </template>
+
+      <template v-else>
+        <span class="w-14 h-14 rounded-full bg-pine-soft text-pine flex items-center justify-center mx-auto">
+          <Wallet :size="28" weight="duotone" />
+        </span>
+        <h1 class="mt-4 text-xl font-semibold tracking-tight">确认支付</h1>
+        <p class="mt-2 text-sm text-ink-soft">预约单号 {{ success.appointmentNo }}</p>
+        <p class="mt-1 text-2xl font-semibold tracking-tight text-pine">
+          {{ priceText(success.amountInCents ?? 0) }}
+        </p>
+        <p class="mt-2 text-sm text-ink-soft">支付成功后教练即可确认预约</p>
+
+        <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            type="button"
+            class="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-pine text-card font-medium pressable disabled:opacity-50"
+            :disabled="
+              paying ||
+              remainSec <= 0 ||
+              (wallet !== null && (wallet.balanceInCents < (success.amountInCents ?? 0)))
+            "
+            @click="pay('BALANCE')"
+          >
+            <Wallet :size="18" weight="duotone" />
+            余额支付{{ wallet ? `（¥${(wallet.balanceInCents / 100).toFixed(2)}）` : '' }}
+          </button>
+          <RouterLink
+            v-if="wallet && wallet.balanceInCents < (success.amountInCents ?? 0)"
+            to="/wallet"
+            class="inline-flex items-center justify-center h-12 px-6 rounded-full border border-hairline bg-card text-ink-soft text-sm pressable"
+          >
+            去充值
+          </RouterLink>
+          <button
+            type="button"
+            class="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full border border-hairline bg-card text-ink pressable disabled:opacity-50"
+            :disabled="paying || remainSec <= 0"
+            @click="pay('MOCK')"
+          >
+            <Bolt :size="18" weight="duotone" />
+            模拟支付（演示）
+          </button>
+        </div>
+
+        <p
+          v-if="payError"
+          class="mt-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-[10px] px-4 py-3"
         >
-          查看我的预约
-        </button>
-      </div>
+          {{ payError }}
+        </p>
+
+        <p class="mt-5 text-sm" :class="remainSec <= 0 ? 'text-red-800 font-medium' : 'text-ink-soft'">
+          <template v-if="remainSec <= 0">支付超时，时段已释放，请重新预约</template>
+          <template v-else>
+            请在 <span class="font-semibold text-ink tabular-nums">{{ payExpireText }}</span> 内完成支付，超时时段自动释放
+          </template>
+        </p>
+        <div class="mt-6">
+          <RouterLink to="/my" class="text-sm text-ink-soft hover:text-ink">稍后支付，去我的预约</RouterLink>
+        </div>
+      </template>
     </section>
 
     <form v-else class="mt-8 space-y-6" @submit.prevent="submit">

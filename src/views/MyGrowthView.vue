@@ -10,6 +10,7 @@ import {
   PhTrophy as Trophy,
   PhStar as Star,
   PhSmiley as Smiley,
+  PhWallet as Wallet,
 } from '@phosphor-icons/vue'
 import { get, post } from '@/api/client'
 import type {
@@ -21,6 +22,7 @@ import type {
   EmotionJournal,
   LeaderboardItem,
   SelfCoachingRecord,
+  WalletInfo,
 } from '@/api/types'
 import EmptyState from '@/components/EmptyState.vue'
 import ErrorBanner from '@/components/ErrorBanner.vue'
@@ -51,6 +53,13 @@ const reviewTarget = ref<Appointment | null>(null)
 const reviewRating = ref(5)
 const reviewContent = ref('')
 
+// 支付
+const payTarget = ref<Appointment | null>(null)
+const payMethod = ref<'BALANCE' | 'MOCK'>('BALANCE')
+const payWallet = ref<WalletInfo | null>(null)
+const payingId = ref<number | null>(null)
+const payError = ref('')
+
 const statusLabel: Record<string, string> = {
   PENDING: '待确认',
   CONFIRMED: '已确认',
@@ -58,6 +67,20 @@ const statusLabel: Record<string, string> = {
   CANCELLED: '已取消',
   NO_SHOW: '未赴约',
   RESCHEDULED: '已改期',
+}
+
+const paymentLabel: Record<string, string> = {
+  CREATED: '待支付',
+  PAID: '已支付',
+  REFUNDED: '已退款',
+  CLOSED: '已关闭',
+}
+
+const paymentClass: Record<string, string> = {
+  CREATED: 'bg-amber-100 text-amber-900',
+  PAID: 'bg-pine-soft text-pine-deep',
+  REFUNDED: 'bg-paper text-ink-faint border border-hairline',
+  CLOSED: 'bg-paper text-ink-faint border border-hairline',
 }
 
 const moodEmoji: Record<string, string> = {
@@ -113,6 +136,33 @@ async function confirmCancel() {
     await load(activeTab.value)
   } catch (e) {
     error.value = e instanceof Error ? e.message : '取消失败，请重试'
+  }
+}
+
+async function openPay(item: Appointment) {
+  payTarget.value = item
+  payMethod.value = 'BALANCE'
+  payError.value = ''
+  try {
+    payWallet.value = await get<WalletInfo>('/wallet')
+  } catch {
+    payWallet.value = null
+  }
+}
+
+async function doPay() {
+  const item = payTarget.value
+  if (!item?.orderNo || payingId.value) return
+  payingId.value = item.id
+  payError.value = ''
+  try {
+    await post(`/orders/${item.orderNo}/pay`, { method: payMethod.value })
+    payTarget.value = null
+    await load(activeTab.value)
+  } catch (e) {
+    payError.value = e instanceof Error ? e.message : '支付失败，请重试'
+  } finally {
+    payingId.value = null
   }
 }
 
@@ -211,6 +261,12 @@ function switchTab(tab: Tab) {
     >
       我的消息 · 与教练在线沟通
     </RouterLink>
+    <RouterLink
+      to="/wallet"
+      class="mt-3 inline-flex items-center gap-1.5 h-11 px-6 rounded-full bg-card border border-hairline text-pine-deep text-sm font-medium pressable"
+    >
+      我的钱包 · 余额与充值
+    </RouterLink>
 
     <div class="mt-8 flex gap-2" role="tablist" aria-label="成长记录分类">
       <button
@@ -251,24 +307,42 @@ function switchTab(tab: Tab) {
                   {{ item.slot.date }} {{ item.slot.startTime }}（{{ item.needDesc }}）
                 </p>
               </div>
-              <span
-                class="shrink-0 text-xs px-2.5 py-1 rounded-full"
-                :class="
-                  item.status === 'COMPLETED'
-                    ? 'bg-pine-soft text-pine-deep'
-                    : item.status === 'CANCELLED'
-                      ? 'bg-paper text-ink-faint border border-hairline'
-                      : item.status === 'NO_SHOW'
-                        ? 'bg-red-100 text-red-700'
-                        : item.status === 'RESCHEDULED'
-                          ? 'bg-paper text-ink-faint border border-hairline'
-                      : item.status === 'CONFIRMED'
-                        ? 'bg-amber-100 text-amber-900'
-                        : 'bg-amber-100 text-amber-900'
-                "
+              <div class="shrink-0 flex flex-col items-end gap-1.5">
+                <span
+                  class="text-xs px-2.5 py-1 rounded-full"
+                  :class="
+                    item.status === 'COMPLETED'
+                      ? 'bg-pine-soft text-pine-deep'
+                      : item.status === 'CANCELLED'
+                        ? 'bg-paper text-ink-faint border border-hairline'
+                        : item.status === 'NO_SHOW'
+                          ? 'bg-red-100 text-red-700'
+                          : item.status === 'RESCHEDULED'
+                            ? 'bg-paper text-ink-faint border border-hairline'
+                        : item.status === 'CONFIRMED'
+                          ? 'bg-amber-100 text-amber-900'
+                          : 'bg-amber-100 text-amber-900'
+                  "
+                >
+                  {{ statusLabel[item.status] }}
+                </span>
+                <span
+                  v-if="item.paymentStatus !== 'NONE'"
+                  class="text-xs px-2.5 py-1 rounded-full"
+                  :class="paymentClass[item.paymentStatus]"
+                >
+                  {{ paymentLabel[item.paymentStatus] }}
+                </span>
+              </div>
+            </div>
+            <div v-if="item.paymentStatus === 'CREATED'" class="mt-3">
+              <button
+                type="button"
+                class="h-9 px-4 rounded-full bg-pine text-card text-sm pressable"
+                @click="openPay(item)"
               >
-                {{ statusLabel[item.status] }}
-              </span>
+                去支付
+              </button>
             </div>
             <div v-if="item.canCancel" class="mt-3">
               <button
@@ -457,6 +531,84 @@ function switchTab(tab: Tab) {
     </template>
 
     <Teleport to="body">
+      <div
+        v-if="payTarget"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="确认支付"
+      >
+        <div class="absolute inset-0 bg-ink/40" @click="payTarget = null"></div>
+        <div class="relative w-full max-w-[380px] bg-card rounded-[14px] border border-hairline p-6">
+          <h2 class="text-lg font-semibold tracking-tight">确认支付</h2>
+          <p class="mt-1 text-sm text-ink-soft">
+            {{ payTarget.coach.nickname }} · {{ payTarget.service.name }}
+          </p>
+          <p class="mt-2 text-2xl font-semibold tracking-tight text-pine">
+            ¥{{ ((payTarget.amountInCents ?? 0) / 100).toFixed(2) }}
+          </p>
+          <p class="mt-1 text-sm text-ink-soft">支付成功后教练即可确认预约</p>
+
+          <div class="mt-4 space-y-2">
+            <button
+              type="button"
+              class="w-full h-11 px-4 rounded-[10px] border text-sm text-left pressable"
+              :class="payMethod === 'BALANCE' ? 'border-pine bg-pine-soft text-pine-deep font-medium' : 'border-hairline bg-card text-ink-soft'"
+              @click="payMethod = 'BALANCE'"
+            >
+              <span class="inline-flex items-center gap-2">
+                <Wallet :size="17" weight="duotone" />
+                余额支付{{ payWallet ? `（¥${(payWallet.balanceInCents / 100).toFixed(2)}）` : '' }}
+              </span>
+            </button>
+            <button
+              type="button"
+              class="w-full h-11 px-4 rounded-[10px] border text-sm text-left pressable"
+              :class="payMethod === 'MOCK' ? 'border-pine bg-pine-soft text-pine-deep font-medium' : 'border-hairline bg-card text-ink-soft'"
+              @click="payMethod = 'MOCK'"
+            >
+              模拟支付（演示）
+            </button>
+          </div>
+
+          <RouterLink
+            v-if="payMethod === 'BALANCE' && payWallet && payWallet.balanceInCents < (payTarget.amountInCents ?? 0)"
+            to="/wallet"
+            class="mt-3 inline-block text-sm text-pine hover:underline"
+            @click="payTarget = null"
+          >
+            余额不足，去充值
+          </RouterLink>
+
+          <p v-if="payError" class="mt-3 text-sm text-red-800 bg-red-50 border border-red-200 rounded-[10px] px-4 py-3">
+            {{ payError }}
+          </p>
+
+          <div class="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
+              @click="payTarget = null"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              class="h-10 px-5 rounded-full bg-pine text-card text-sm font-medium pressable disabled:opacity-50"
+              :disabled="
+                payingId !== null ||
+                (payMethod === 'BALANCE' &&
+                  payWallet !== null &&
+                  payWallet.balanceInCents < (payTarget.amountInCents ?? 0))
+              "
+              @click="doPay"
+            >
+              {{ payingId === payTarget.id ? '支付中…' : '确认支付' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div
         v-if="reviewTarget"
         class="fixed inset-0 z-50 flex items-center justify-center p-4"

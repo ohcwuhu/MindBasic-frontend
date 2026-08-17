@@ -1012,7 +1012,22 @@ const auditText = computed(() =>
                 <p class="mt-1 text-sm text-ink-soft">{{ item.service.name }} · {{ item.slot.date }} {{ item.slot.startTime }}</p>
                 <p class="mt-1 text-sm text-ink-soft">需求：{{ item.needDesc }}</p>
               </div>
-              <span class="shrink-0 text-xs px-2.5 py-1 rounded-full bg-paper border border-hairline text-ink-soft">{{ statusLabel[item.status] }}</span>
+              <div class="shrink-0 flex flex-col items-end gap-1.5">
+                <span class="text-xs px-2.5 py-1 rounded-full bg-paper border border-hairline text-ink-soft">{{ statusLabel[item.status] }}</span>
+                <span
+                  v-if="item.paymentStatus !== 'NONE'"
+                  class="text-xs px-2.5 py-1 rounded-full"
+                  :class="
+                    item.paymentStatus === 'PAID'
+                      ? 'bg-pine-soft text-pine-deep'
+                      : item.paymentStatus === 'CREATED'
+                        ? 'bg-amber-100 text-amber-900'
+                        : 'bg-paper text-ink-faint border border-hairline'
+                  "
+                >
+                  {{ item.paymentStatus === 'PAID' ? '已支付' : item.paymentStatus === 'CREATED' ? '待支付' : item.paymentStatus === 'REFUNDED' ? '已退款' : '已关闭' }}
+                </span>
+              </div>
             </div>
             <div v-if="item.status === 'PENDING' || item.status === 'CONFIRMED'" class="mt-4 flex flex-wrap items-center gap-2">
               <button v-if="item.status === 'PENDING'" type="button" class="h-9 px-4 rounded-full bg-pine text-card text-sm pressable" @click="confirmAppointment(item.id)">确认</button>
