@@ -48,7 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function updateProfile(payload: { nickname?: string; avatarUrl?: string | null }): Promise<void> {
+  async function updateProfile(payload: { nickname?: string; avatarUrl?: string | null; gender?: 'boy' | 'girl' }): Promise<void> {
     user.value = await patch<User>('/users/me', payload)
   }
 

@@ -4,6 +4,7 @@ export interface User {
   email: string | null
   nickname: string
   avatarUrl: string | null
+  gender?: 'boy' | 'girl'
   role: 'USER' | 'COACH' | 'ADMIN'
   isDisabled: boolean
   createdAt: string
