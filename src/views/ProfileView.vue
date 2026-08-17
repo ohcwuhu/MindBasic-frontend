@@ -12,7 +12,6 @@ import { ApiError, get, post, uploadFile } from '@/api/client'
 import type { CoachProfile, WalletInfo } from '@/api/types'
 import { useCountdown } from '@/utils/useCountdown'
 import ErrorBanner from '@/components/ErrorBanner.vue'
-import ConfirmDialog from '@/components/admin/ConfirmDialog.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -30,6 +29,10 @@ const oldPassword = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
 const deactivateOpen = ref(false)
+const deactivatePassword = ref('')
+const deleting = ref(false)
+const exporting = ref(false)
+const exportId = ref<number | null>(null)
 const showEmail = ref(false)
 const bindEmail = ref('')
 const bindCode = ref('')
@@ -192,11 +195,57 @@ async function changePassword() {
 }
 
 async function deactivate() {
-  deactivateOpen.value = false
+  if (!deactivatePassword.value.trim()) {
+    error.value = '请输入登录密码以确认注销'
+    return
+  }
+  deleting.value = true
+  error.value = ''
   try {
-    await post('/users/me/deactivate')
+    await post('/users/me/delete', { password: deactivatePassword.value })
+    deactivateOpen.value = false
     await auth.logout()
     router.push({ name: 'login' })
+  } catch (e) {
+    showError(e)
+  } finally {
+    deleting.value = false
+  }
+}
+
+async function doExport() {
+  if (exporting.value) return
+  exporting.value = true
+  error.value = ''
+  success.value = ''
+  try {
+    await post('/users/me/data-export')
+    const list = await get<{ items: { id: number; status: string }[] }>('/users/me/data-exports?page=1&pageSize=5')
+    const ready = list.items.find((i) => i.status === 'READY')
+    exportId.value = ready?.id ?? null
+    success.value = exportId.value ? '数据导出成功，7 天内可下载' : '导出已创建，请稍后刷新查看'
+  } catch (e) {
+    showError(e)
+  } finally {
+    exporting.value = false
+  }
+}
+
+async function downloadExport() {
+  if (!exportId.value) return
+  try {
+    const token = localStorage.getItem('mb_access_token')
+    const resp = await fetch(`/api/v1/users/me/data-exports/${exportId.value}/download`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (!resp.ok) throw new Error('下载失败')
+    const blob = await resp.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `mindbasic-data-export-${exportId.value}.json`
+    a.click()
+    URL.revokeObjectURL(url)
   } catch (e) {
     showError(e)
   }
@@ -331,6 +380,32 @@ async function logout() {
         </span>
       </RouterLink>
 
+      <!-- 数据导出 -->
+      <div class="px-6 py-5 flex items-center justify-between gap-4">
+        <span class="text-sm text-ink-soft">数据导出</span>
+        <span class="flex items-center gap-2">
+          <button
+            v-if="!exportId"
+            type="button"
+            class="h-9 px-4 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable disabled:opacity-50"
+            :disabled="exporting"
+            @click="doExport"
+          >
+            {{ exporting ? '导出中…' : '导出我的数据' }}
+          </button>
+          <template v-else>
+            <span class="text-xs text-ink-faint">JSON · 保留 7 天</span>
+            <button
+              type="button"
+              class="h-9 px-4 rounded-full bg-pine text-card text-sm pressable"
+              @click="downloadExport"
+            >
+              下载
+            </button>
+          </template>
+        </span>
+      </div>
+
       <!-- 陪伴角色性别 -->
       <div class="px-6 py-5 flex items-center justify-between gap-4">
         <span class="text-sm text-ink-soft">陪伴角色</span>
@@ -423,15 +498,48 @@ async function logout() {
       </button>
     </div>
 
-    <ConfirmDialog
-      :open="deactivateOpen"
-      title="注销账号"
-      message="注销后账号将被停用、登录失效，手机号可重新注册。确认继续？"
-      confirm-text="确认注销"
-      danger
-      @confirm="deactivate"
-      @cancel="deactivateOpen = false"
-    />
+    <Teleport to="body">
+      <div
+        v-if="deactivateOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="注销账号"
+      >
+        <div class="absolute inset-0 bg-ink/40" @click="deactivateOpen = false"></div>
+        <div class="relative w-full max-w-[380px] bg-card rounded-[14px] border border-hairline p-6">
+          <h2 class="text-lg font-semibold tracking-tight text-red-800">注销账号（删除数据）</h2>
+          <p class="mt-2 text-sm text-ink-soft leading-relaxed">
+            注销后个人数据（聊天、日记、打卡、收藏等）将被删除或匿名化，不可恢复；
+            预约与订单等财务履约记录按合规要求保留。输入登录密码确认。
+          </p>
+          <input
+            v-model="deactivatePassword"
+            type="password"
+            placeholder="登录密码"
+            autocomplete="current-password"
+            class="mt-4 w-full h-11 px-4 rounded-[10px] border border-hairline bg-paper/60 text-sm outline-none focus:border-red-700"
+          />
+          <div class="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
+              @click="deactivateOpen = false"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              class="h-10 px-5 rounded-full bg-red-800 text-card text-sm font-medium pressable disabled:opacity-50"
+              :disabled="deleting"
+              @click="deactivate"
+            >
+              {{ deleting ? '处理中…' : '确认注销并删除' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 
 </template>
