@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import {
+  PhArrowLeft as ArrowLeft,
   PhCheck as Check,
   PhX as X,
   PhPlus as Plus,
@@ -35,6 +38,33 @@ import EmptyState from '@/components/EmptyState.vue'
 import { renderMarkdown } from '@/utils/markdown'
 
 type WorkTab = 'appointments' | 'cases' | 'services' | 'slots' | 'clients' | 'reviews' | 'communities' | 'phrases' | 'profile'
+
+const router = useRouter()
+const auth = useAuthStore()
+
+const workTabs = [
+  { key: 'appointments', label: '预约管理', icon: CalendarCheck },
+  { key: 'cases', label: '个案记录', icon: CardsThree },
+  { key: 'services', label: '服务项目', icon: Plus },
+  { key: 'slots', label: '时段设置', icon: Clock },
+  { key: 'clients', label: '客户管理', icon: UsersIcon },
+  { key: 'reviews', label: '收到的评价', icon: Star },
+  { key: 'communities', label: '社群管理', icon: UsersIcon },
+  { key: 'phrases', label: '话术库', icon: ChatIcon },
+  { key: 'profile', label: '资料设置', icon: Sparkle },
+] as const
+
+const titles: Record<WorkTab, string> = {
+  appointments: '预约管理',
+  cases: '个案记录',
+  services: '服务项目',
+  slots: '时段设置',
+  clients: '客户管理',
+  reviews: '收到的评价',
+  communities: '社群管理',
+  phrases: '话术库',
+  profile: '资料设置',
+}
 
 const loading = ref(true)
 const error = ref('')
@@ -738,16 +768,62 @@ const auditText = computed(() =>
 </script>
 
 <template>
-  <div class="max-w-[880px] mx-auto px-4 md:px-6 py-10 md:py-16">
-    <p class="catalog-tab">COACH 教练工作台</p>
-    <h1 class="mt-3 text-2xl md:text-3xl font-semibold tracking-tight">教练工作台</h1>
+  <div class="min-h-[100dvh] md:grid" :class="mode === 'workbench' ? 'md:grid-cols-[220px_1fr]' : ''">
+    <!-- 左侧导航（仅工作台模式） -->
+    <aside
+      v-if="mode === 'workbench'"
+      class="hidden md:flex flex-col bg-card border-r border-hairline sticky top-16 h-[calc(100dvh-4rem)]"
+    >
+      <div class="px-6 pt-8 pb-4">
+        <p class="font-semibold tracking-tight">教练工作台</p>
+        <p class="catalog-tab mt-1">Coach Console</p>
+      </div>
+      <nav class="flex-1 px-3 space-y-1" aria-label="教练工作台导航">
+        <button
+          v-for="tab in workTabs"
+          :key="tab.key"
+          type="button"
+          class="w-full h-10 px-3 rounded-[10px] flex items-center gap-2.5 text-sm text-left pressable"
+          :class="activeTab === tab.key ? 'bg-pine-soft text-pine-deep font-medium' : 'text-ink-soft hover:bg-paper'"
+          @click="switchTab(tab.key)"
+        >
+          <component :is="tab.icon" :size="18" weight="duotone" />
+          {{ tab.label }}
+        </button>
+        <RouterLink
+          to="/coach/messages"
+          class="w-full h-10 px-3 rounded-[10px] flex items-center gap-2.5 text-sm text-ink-soft hover:bg-paper pressable"
+        >
+          <ChatIcon :size="18" weight="duotone" />
+          在线消息
+        </RouterLink>
+      </nav>
+      <div class="p-4 border-t border-hairline">
+        <button
+          type="button"
+          class="w-full h-10 px-3 rounded-[10px] flex items-center gap-2.5 text-sm text-ink-soft hover:bg-paper pressable"
+          @click="router.push('/')"
+        >
+          <ArrowLeft :size="18" />
+          返回前台
+        </button>
+        <p class="catalog-tab mt-3 px-3">{{ auth.user?.nickname }}</p>
+      </div>
+    </aside>
 
-    <ErrorBanner v-if="error" :message="error" :details="errorDetails" class="mt-8" />
+    <main class="min-w-0">
+      <template v-if="loading">
+        <div class="max-w-[880px] mx-auto px-4 md:px-8 py-8 md:py-12">
+          <div class="mt-8 h-96 rounded-[14px] bg-hairline/60 animate-pulse"></div>
+        </div>
+      </template>
 
-    <div v-if="loading" class="mt-8 h-96 rounded-[14px] bg-hairline/60 animate-pulse"></div>
-
-    <!-- 入驻表单 -->
-    <form v-else-if="mode === 'form'" class="mt-8 space-y-6" @submit.prevent="submitProfile">
+      <template v-else-if="mode === 'form'">
+        <div class="max-w-[880px] mx-auto px-4 md:px-8 py-8 md:py-12">
+          <p class="catalog-tab">COACH 教练工作台</p>
+          <h1 class="mt-3 text-2xl md:text-3xl font-semibold tracking-tight">入驻申请</h1>
+          <ErrorBanner v-if="error" :message="error" :details="errorDetails" class="mt-8" />
+          <form class="mt-8 space-y-6" @submit.prevent="submitProfile">
       <div
         v-if="profile?.auditStatus === 'REJECTED'"
         class="bg-red-50 border border-red-200 rounded-[10px] px-4 py-3 text-sm text-red-800 leading-relaxed"
@@ -859,10 +935,17 @@ const auditText = computed(() =>
       >
         {{ submitting ? '提交中…' : profile ? '保存修改并重新提交' : '提交入驻申请' }}
       </button>
-    </form>
+        </form>
+        </div>
+      </template>
 
-    <!-- 审核状态 -->
-    <section v-else-if="mode === 'status'" class="card mt-8 p-8 md:p-10 text-center">
+      <!-- 审核状态 -->
+      <template v-else-if="mode === 'status'">
+        <div class="max-w-[880px] mx-auto px-4 md:px-8 py-8 md:py-12">
+          <p class="catalog-tab">COACH 教练工作台</p>
+          <h1 class="mt-3 text-2xl md:text-3xl font-semibold tracking-tight">入驻申请</h1>
+          <ErrorBanner v-if="error" :message="error" :details="errorDetails" class="mt-8" />
+          <section class="card mt-8 p-8 md:p-10 text-center">
       <span class="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
         :class="profile?.auditStatus === 'REJECTED' ? 'bg-red-100 text-red-800' : 'bg-pine-soft text-pine'">
         <Clock :size="26" weight="duotone" />
@@ -880,43 +963,38 @@ const auditText = computed(() =>
         </button>
         <RouterLink to="/my" class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full border border-hairline bg-card text-ink pressable">返回我的成长</RouterLink>
       </div>
-    </section>
+          </section>
+        </div>
+      </template>
 
-    <!-- 工作台 -->
-    <template v-else>
-      <div class="mt-8 w-screen ml-[calc(50%_-_50vw)]">
-        <div class="grid md:grid-cols-[210px_1fr] items-start">
-        <!-- 左侧导航 -->
-        <aside class="workbench-nav">
-          <button
-            v-for="tab in [
-              { key: 'appointments', label: '预约管理', icon: CalendarCheck },
-              { key: 'cases', label: '个案记录', icon: CardsThree },
-              { key: 'services', label: '服务项目', icon: Plus },
-              { key: 'slots', label: '时段设置', icon: Clock },
-              { key: 'clients', label: '客户管理', icon: UsersIcon },
-              { key: 'reviews', label: '收到的评价', icon: Star },
-              { key: 'communities', label: '社群管理', icon: UsersIcon },
-              { key: 'phrases', label: '话术库', icon: ChatIcon },
-              { key: 'profile', label: '资料设置', icon: Sparkle },
-            ] as const"
-            :key="tab.key"
-            type="button"
-            class="workbench-nav-item"
-            :class="{ active: activeTab === tab.key }"
-            @click="switchTab(tab.key)"
-          >
-            <component :is="tab.icon" :size="18" weight="duotone" />
-            <span>{{ tab.label }}</span>
-          </button>
-          <RouterLink to="/coach/messages" class="workbench-nav-item">
-            <ChatIcon :size="18" weight="duotone" />
-            <span>在线消息</span>
-          </RouterLink>
-        </aside>
+      <!-- 工作台 -->
+      <template v-else>
+        <!-- 窄屏横向导航 -->
+        <div class="md:hidden sticky top-14 z-30 bg-paper/95 backdrop-blur border-b border-hairline px-4 py-3 overflow-x-auto">
+          <div class="flex gap-2 w-max">
+            <button
+              v-for="tab in workTabs"
+              :key="tab.key"
+              type="button"
+              class="h-9 px-4 rounded-full border text-sm whitespace-nowrap pressable"
+              :class="activeTab === tab.key ? 'bg-pine border-pine text-card' : 'border-hairline bg-card text-ink-soft'"
+              @click="switchTab(tab.key)"
+            >
+              {{ tab.label }}
+            </button>
+            <RouterLink
+              to="/coach/messages"
+              class="h-9 px-4 rounded-full border border-hairline bg-card text-ink-soft text-sm whitespace-nowrap pressable"
+            >
+              在线消息
+            </RouterLink>
+          </div>
+        </div>
 
-          <!-- 内容区 -->
-          <div class="min-w-0 max-w-[880px] px-4 md:px-6">
+        <div class="max-w-[1000px] mx-auto px-4 md:px-8 py-8 md:py-12">
+          <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">{{ titles[activeTab] }}</h1>
+          <ErrorBanner v-if="error" :message="error" :details="errorDetails" class="mt-6" />
+          <div>
 
       <!-- 预约 -->
       <section v-if="activeTab === 'appointments'" class="mt-8">
@@ -1388,8 +1466,8 @@ const auditText = computed(() =>
         </section>
           </div>
         </div>
-      </div>
-    </template>
+      </template>
+    </main>
   </div>
 
   <Teleport to="body">
@@ -1460,46 +1538,6 @@ const auditText = computed(() =>
 </template>
 
 <style>
-.workbench-nav {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-.workbench-nav-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  flex-shrink: 0;
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 14px;
-  color: var(--color-ink-soft);
-  background: transparent;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-.workbench-nav-item:hover {
-  background: var(--color-paper);
-  color: var(--color-ink);
-}
-.workbench-nav-item.active {
-  background: var(--color-pine-soft);
-  color: var(--color-pine-deep);
-  font-weight: 600;
-}
-@media (min-width: 768px) {
-  .workbench-nav {
-    flex-direction: column;
-    background: var(--color-card);
-    border: 1px solid var(--color-hairline);
-    border-radius: 14px;
-    padding: 8px;
-    position: sticky;
-    top: 80px;
-  }
-}
 .md-body {
   font-size: 14px;
   line-height: 1.7;
