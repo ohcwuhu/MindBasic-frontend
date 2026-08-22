@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { PhChatCircleDots as ChatDots, PhWarningCircle as WarningCircle } from '@phosphor-icons/vue'
-import { get } from '@/api/client'
+import { get, post } from '@/api/client'
 import type { PublicPlatformConfig } from '@/api/types'
 import VideoCallPanel from '@/components/ai-lab/VideoCallPanel.vue'
 
 const AI_ACK_KEY = 'mb_ai_ack_v1'
 
+const router = useRouter()
 const platform = ref<PublicPlatformConfig | null>(null)
 const showAck = ref(false)
+const endedConv = ref<number | null>(null)
+const summarizing = ref(false)
+const dialogError = ref('')
 
 onMounted(async () => {
   try {
@@ -26,6 +31,32 @@ function ack() {
     /* ignore */
   }
   showAck.value = false
+}
+
+function askJournal(conversationId: number) {
+  endedConv.value = conversationId
+  dialogError.value = ''
+}
+
+async function confirmJournal() {
+  const cid = endedConv.value
+  if (!cid || summarizing.value) return
+  summarizing.value = true
+  dialogError.value = ''
+  try {
+    const draft = await post<{ moodType: string; content: string; conversationId: number }>(
+      `/ai-conversations/${cid}/summary`,
+    )
+    endedConv.value = null
+    router.push({
+      path: '/emotion-journal',
+      query: { mood: draft.moodType, content: draft.content, conversationId: String(draft.conversationId) },
+    })
+  } catch (e) {
+    dialogError.value = e instanceof Error ? e.message : '总结失败，请稍后重试'
+  } finally {
+    summarizing.value = false
+  }
 }
 </script>
 
@@ -47,8 +78,47 @@ function ack() {
     </div>
 
     <div class="panel-wrap">
-      <VideoCallPanel />
+      <VideoCallPanel @conversation-ended="askJournal" />
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="endedConv !== null"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="记录到情绪日记"
+      >
+        <div class="absolute inset-0 bg-ink/40" @click="endedConv = null"></div>
+        <div class="relative w-full max-w-[380px] bg-card rounded-[14px] border border-hairline p-6">
+          <h2 class="text-lg font-semibold tracking-tight">记录到情绪日记？</h2>
+          <p class="mt-2 text-sm text-ink-soft leading-relaxed">
+            是否将本次自我教练对话总结后加入情绪日记？总结会自动填好，你可以修改后再提交。
+          </p>
+          <p v-if="dialogError" class="mt-3 text-sm text-red-800 bg-red-50 border border-red-200 rounded-[10px] px-4 py-3">
+            {{ dialogError }}
+          </p>
+          <div class="mt-6 flex justify-end gap-2">
+            <button
+              type="button"
+              class="h-10 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
+              :disabled="summarizing"
+              @click="endedConv = null"
+            >
+              暂不记录
+            </button>
+            <button
+              type="button"
+              class="h-10 px-5 rounded-full bg-pine text-card text-sm font-medium pressable disabled:opacity-50"
+              :disabled="summarizing"
+              @click="confirmJournal"
+            >
+              {{ summarizing ? '总结中…' : '记录到日记' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <Teleport to="body">
       <div

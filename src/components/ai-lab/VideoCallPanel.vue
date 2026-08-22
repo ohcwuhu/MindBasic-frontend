@@ -156,6 +156,8 @@ interface EmotionResult {
 }
 const emotionResult = ref<EmotionResult | null>(null)
 const chatBodyRef = ref<HTMLElement | null>(null)
+const conversationId = ref<number | null>(null)
+const emit = defineEmits<{ (e: 'conversation-ended', conversationId: number): void }>()
 
 // 统计
 const stats = ref({
@@ -218,6 +220,10 @@ const connectSocket = () => {
         }
       }
     }
+  })
+
+  socket.value.on('vc_conversation_ready', (data: { conversationId?: number }) => {
+    if (data?.conversationId) conversationId.value = data.conversationId
   })
 
   // ── 新事件：vc_interrupted = 仅停止 TTS，LLM 还在生成文字 ──
@@ -474,6 +480,12 @@ const stopDevices = () => {
   }
   isDeviceActive.value = false
   callState.value = 'idle'
+  // 通话结束：把会话 ID 交给父级，由其询问是否记录到情绪日记
+  if (conversationId.value && messages.value.length > 0) {
+    const cid = conversationId.value
+    emit('conversation-ended', cid)
+  }
+  conversationId.value = null
   // 清理对话和情感数据
   messages.value = []
   partialAssistantText.value = ''

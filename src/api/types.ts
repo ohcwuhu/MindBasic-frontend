@@ -127,6 +127,8 @@ export interface EmotionJournal {
   moodType: 'CALM' | 'HAPPY' | 'ANXIOUS' | 'DOWN' | 'IRRITATED' | 'OTHER'
   content: string
   feedback: string | null
+  source: 'MANUAL' | 'SELF_COACHING'
+  sourceConversationId: number | null
   createdAt: string
 }
 
@@ -199,6 +201,7 @@ export interface AiConversationItem {
   title: string
   status: 'ACTIVE' | 'ENDED'
   messageCount: number
+  journalId: number | null
   createdAt: string
   updatedAt: string
 }

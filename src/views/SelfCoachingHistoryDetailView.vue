@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { PhArrowLeft as ArrowLeft } from '@phosphor-icons/vue'
-import { get } from '@/api/client'
+import { get, post } from '@/api/client'
 import type { AiConversationItem, AiMessageItem } from '@/api/types'
 import ErrorBanner from '@/components/ErrorBanner.vue'
 
 const route = useRoute()
+const router = useRouter()
 const conversation = ref<AiConversationItem | null>(null)
 const messages = ref<AiMessageItem[]>([])
 const loading = ref(true)
 const error = ref('')
+const generating = ref(false)
+const journalCreated = ref(false)
 
 onMounted(async () => {
   try {
@@ -19,6 +22,7 @@ onMounted(async () => {
     )
     conversation.value = data.conversation
     messages.value = data.messages
+    journalCreated.value = data.conversation.journalId !== null
   } catch (e) {
     error.value = e instanceof Error ? e.message : '加载失败'
   } finally {
@@ -33,6 +37,25 @@ function fmtTime(iso: string): string {
 function emotionLabel(emotion: Record<string, unknown> | null): string {
   const cn = emotion?.fusion_emotion_cn
   return typeof cn === 'string' && cn ? cn : ''
+}
+
+async function createJournal() {
+  if (generating.value || journalCreated.value) return
+  generating.value = true
+  error.value = ''
+  try {
+    const draft = await post<{ moodType: string; content: string; conversationId: number }>(
+      `/ai-conversations/${route.params.id}/summary`,
+    )
+    router.push({
+      path: '/emotion-journal',
+      query: { mood: draft.moodType, content: draft.content, conversationId: String(draft.conversationId) },
+    })
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '总结失败，请稍后重试'
+  } finally {
+    generating.value = false
+  }
 }
 </script>
 
@@ -53,6 +76,29 @@ function emotionLabel(emotion: Record<string, unknown> | null): string {
         <p class="mt-2 text-sm text-ink-soft">
           {{ fmtTime(conversation.createdAt) }} · {{ conversation.messageCount }} 条消息
         </p>
+
+        <div class="mt-6">
+          <button
+            v-if="!journalCreated"
+            type="button"
+            class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full bg-pine text-card text-sm font-medium pressable disabled:opacity-50"
+            :disabled="generating"
+            @click="createJournal"
+          >
+            {{ generating ? '总结中…' : '总结并加入情绪日记' }}
+          </button>
+          <div v-else class="inline-flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 h-11 px-6 rounded-full bg-pine-soft text-pine-deep text-sm font-medium">
+              已生成情绪日记
+            </span>
+            <RouterLink
+              to="/emotion-journal"
+              class="inline-flex items-center gap-1.5 h-11 px-5 rounded-full border border-hairline bg-card text-sm text-ink-soft pressable"
+            >
+              去情绪日记看看
+            </RouterLink>
+          </div>
+        </div>
 
         <div v-if="messages.length" class="mt-8 space-y-5">
           <div v-for="m in messages" :key="m.id" class="flex" :class="m.role === 'USER' ? 'justify-end' : 'justify-start'">

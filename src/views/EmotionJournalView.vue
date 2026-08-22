@@ -5,6 +5,7 @@
 -->
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   PhCheck as Check,
   PhTrash as Trash,
@@ -18,6 +19,9 @@ import ErrorBanner from '@/components/ErrorBanner.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import MoodFace from '@/components/MoodFace.vue'
 import QuoteBlock from '@/components/QuoteBlock.vue'
+
+const route = useRoute()
+const router = useRouter()
 
 const moods = [
   { key: 'CALM', label: '平静', color: '#9cae8e', bg: 'rgba(156,174,142,0.12)' },
@@ -42,6 +46,18 @@ const loading = ref(true)
 const submitting = ref(false)
 const error = ref('')
 const lastFeedback = ref('')
+const pendingSource = ref<{ source: string; conversationId: number } | null>(null)
+
+onMounted(() => {
+  const mood = String(route.query.mood ?? '')
+  const text = String(route.query.content ?? '')
+  const convId = Number(route.query.conversationId || 0)
+  if (mood && moods.some((m) => m.key === mood)) {
+    selectedMood.value = mood as MoodKey
+  }
+  if (text) content.value = text
+  if (convId) pendingSource.value = { source: 'SELF_COACHING', conversationId: convId }
+})
 
 const monthTitle = computed(() => `${calYear.value} 年 ${calMonth.value} 月`)
 const todayKey = computed(() => {
@@ -155,13 +171,22 @@ async function submit() {
   submitting.value = true
   error.value = ''
   try {
-    const journal = await post<EmotionJournal>('/emotion-journals', {
+    const payload: Record<string, unknown> = {
       moodType: selectedMood.value,
       content: content.value.trim(),
-    })
+    }
+    if (pendingSource.value) {
+      payload.source = pendingSource.value.source
+      payload.sourceConversationId = pendingSource.value.conversationId
+    }
+    const journal = await post<EmotionJournal>('/emotion-journals', payload)
     lastFeedback.value = journal.feedback ?? ''
     content.value = ''
     selectedMood.value = null
+    if (pendingSource.value) {
+      pendingSource.value = null
+      router.replace({ path: '/emotion-journal' })
+    }
     await fetchAll()
   } catch (e) {
     error.value = e instanceof Error ? e.message : '保存失败，请重试'
@@ -199,7 +224,14 @@ onMounted(load)
       <ErrorBanner v-if="error" :message="error" class="mt-6" />
 
       <!-- ===== 记录区：情绪选择 + 文字输入 ===== -->
-      <form class="ej-write-card" @submit.prevent="submit">
+    <div
+      v-if="pendingSource"
+      class="mt-6 rounded-[10px] bg-pine-soft/70 text-pine-deep px-4 py-3 text-sm leading-relaxed"
+    >
+      这条内容来自「自我教练」对话总结，可以直接提交，也可以修改后再提交。
+    </div>
+
+    <form class="ej-write-card" @submit.prevent="submit">
         <!-- 情绪选择器：横向大圆点 + 标签 -->
         <fieldset class="ej-mood-fieldset">
           <legend class="ej-mood-legend">此刻的感觉</legend>
@@ -345,6 +377,13 @@ onMounted(load)
                 <span class="ej-card-tag" :style="{ '--tc': moodColor(journal.moodType), '--tb': moodBg(journal.moodType) }">
                   <span class="ej-tag-dot" :style="{ backgroundColor: moodColor(journal.moodType) }"></span>
                   {{ moodLabel(journal.moodType) }}
+                </span>
+                <span
+                  v-if="journal.source === 'SELF_COACHING'"
+                  class="ej-card-tag"
+                  style="--tc:#1f6b52;--tb:rgba(31,107,82,0.12)"
+                >
+                  自我教练
                 </span>
                 <time class="ej-card-time">{{ new Date(journal.createdAt).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false }) }}</time>
               </div>
