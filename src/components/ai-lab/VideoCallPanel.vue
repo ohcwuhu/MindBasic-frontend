@@ -10,6 +10,8 @@ import {
   PhStop,
   PhEye,
   PhWarningCircle,
+  PhPause,
+  PhPlay,
 } from '@phosphor-icons/vue'
 import CompanionSprite from './CompanionSprite.vue'
 import { useCompanion } from '@/composables/useCompanion'
@@ -118,6 +120,9 @@ let _lastVadFrameAt = 0
 // 结束通话标志：为 true 时 onstop 中不重启录音
 let isEndingCall = false
 
+// 暂停 / 继续通话
+const isPaused = ref(false)
+
 // TTS 音频播放（按句子级完整收集后再入播放队列，避免一句话被切成半段）
 let currentAudio: HTMLAudioElement | null = null
 let currentSentenceChunks: ArrayBuffer[] = []  // 正在接收的"当前句"的所有分片（vc_tts_start → vc_tts_done 之间累积）
@@ -214,7 +219,7 @@ const connectSocket = () => {
       }
       isProcessing = false
       // AI 回复完成，统一重启录音（解决"只能说一句话"）
-      if (isDeviceActive.value && mediaStream) {
+      if (isDeviceActive.value && mediaStream && !isPaused.value) {
         if (!mediaRecorder || mediaRecorder.state !== 'recording') {
           startAudioStreaming()
         }
@@ -327,7 +332,7 @@ const connectSocket = () => {
     // 出错时也要重置状态，恢复录音
     isProcessing = false
     callState.value = 'listening'
-    if (isDeviceActive.value && mediaStream) {
+    if (isDeviceActive.value && mediaStream && !isPaused.value) {
       if (!mediaRecorder || mediaRecorder.state !== 'recording') {
         startAudioStreaming()
       }
@@ -480,6 +485,7 @@ const stopDevices = () => {
   }
   isDeviceActive.value = false
   callState.value = 'idle'
+  isPaused.value = false
   // 通话结束：把会话 ID 交给父级，由其询问是否记录到情绪日记
   if (conversationId.value && messages.value.length > 0) {
     const cid = conversationId.value
@@ -579,12 +585,18 @@ const startAudioStreaming = () => {
       console.log('[VC] onstop: 正在结束通话，跳过录音处理')
       return
     }
+    // 已暂停：丢弃音频分片，不处理不上传
+    if (isPaused.value) {
+      console.log('[VC] onstop: 已暂停，丢弃音频分片')
+      speechBlobChunks = []
+      return
+    }
 
     if (chunks.length === 0) {
       console.warn('[VC] onstop: 没有分片，立即重启录音')
       // 没分片说明是被直接打断/杂音 → 立即重启
       isProcessing = false
-      if (isDeviceActive.value && mediaStream) {
+      if (isDeviceActive.value && mediaStream && !isPaused.value) {
         startAudioStreaming()
       }
       return
@@ -596,7 +608,7 @@ const startAudioStreaming = () => {
     if (fullBlob.size < SPEECH_MIN_SIZE) {
       console.warn('[VC] onstop: 录音过小(' + fullBlob.size + 'B)，判定为杂音，重启录音')
       isProcessing = false
-      if (isDeviceActive.value && mediaStream) {
+      if (isDeviceActive.value && mediaStream && !isPaused.value) {
         startAudioStreaming()
       }
       return
@@ -634,7 +646,7 @@ const startAudioStreaming = () => {
         // 上传失败 → 立即重置状态 + 重启录音
         isProcessing = false
         callState.value = 'listening'
-        if (isDeviceActive.value && mediaStream) {
+        if (isDeviceActive.value && mediaStream && !isPaused.value) {
           startAudioStreaming()
         }
       }
@@ -643,7 +655,7 @@ const startAudioStreaming = () => {
       errorMsg.value = '音频上传失败：' + (err?.message || '网络错误')
       isProcessing = false
       callState.value = 'listening'
-      if (isDeviceActive.value && mediaStream) {
+      if (isDeviceActive.value && mediaStream && !isPaused.value) {
         startAudioStreaming()
       }
     }
@@ -773,7 +785,7 @@ const drawVolume = () => {
 
     const isNowSilent = volumeLevel.value < SILENCE_THRESHOLD
     // 如果正在处理（等待 AI 回复），跳过 VAD 检测
-    const vadEnabled = !isProcessing && callState.value === 'listening'
+    const vadEnabled = !isProcessing && callState.value === 'listening' && !isPaused.value
 
     if (vadEnabled) {
       if (!isNowSilent) {
@@ -837,7 +849,7 @@ const drawVolume = () => {
     //   3) TTS 启动后 1.5s 内禁止打断（扬声器刚启动回音最大）
     //   4) 打断后 2s 冷却期内禁止再次打断
     const ttsIsActuallyPlaying = isPlayingTTS.value  // 只有音频真在播才允许自动打断
-    if (ttsIsActuallyPlaying) {
+    if (ttsIsActuallyPlaying && !isPaused.value) {
       const volumeNow = volumeLevel.value
       const now = Date.now()
       const inGracePeriod = (now - ttsLastStartedAt) < TTS_START_GRACE_MS
@@ -906,6 +918,11 @@ const triggerAudioEnd = (fromManual = false) => {
     console.log('[VC] 正在结束通话，忽略 triggerAudioEnd')
     return
   }
+  // 已暂停：不触发说话结束
+  if (isPaused.value) {
+    console.log('[VC] 已暂停，忽略 triggerAudioEnd')
+    return
+  }
   if (isProcessing) {
     console.log('[VC] 正在处理中，忽略本次触发')
     return
@@ -953,17 +970,17 @@ const triggerAudioEnd = (fromManual = false) => {
             }
             isProcessing = false
             callState.value = 'listening'
-            if (isDeviceActive.value && mediaStream) startAudioStreaming()
+            if (isDeviceActive.value && mediaStream && !isPaused.value) startAudioStreaming()
           })
           .catch(() => {
             isProcessing = false
             callState.value = 'listening'
-            if (isDeviceActive.value && mediaStream) startAudioStreaming()
+            if (isDeviceActive.value && mediaStream && !isPaused.value) startAudioStreaming()
           })
       } else {
         isProcessing = false
         callState.value = 'listening'
-        if (isDeviceActive.value && mediaStream) startAudioStreaming()
+        if (isDeviceActive.value && mediaStream && !isPaused.value) startAudioStreaming()
       }
     } else {
       isProcessing = false
@@ -996,6 +1013,35 @@ const triggerManualInterrupt = () => {
   stopTTSPlayback()
   // 但状态重置还是等后端 vc_state_change=listening，
   // 避免 LLM 还在发 token 时前端已经开始新一轮录音的竞态
+}
+
+// ================================================================
+//  暂停 / 继续通话
+// ================================================================
+const togglePause = () => {
+  if (!isDeviceActive.value) return
+
+  if (isPaused.value) {
+    // 恢复：如果 AI 处于空闲/聆听状态，重启录音
+    if (callState.value === 'listening' || callState.value === 'idle') {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        try { mediaRecorder.stop() } catch {}
+      }
+      startAudioStreaming()
+    }
+    isPaused.value = false
+    console.log('[VC] 已恢复通话')
+  } else {
+    // 暂停：停止麦克风、停止AI说话、通知后端、清空缓冲区
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      try { mediaRecorder.stop() } catch {}
+    }
+    stopTTSPlayback()
+    socket.value?.emit('vc_interrupt')
+    speechBlobChunks = []
+    isPaused.value = true
+    console.log('[VC] 已暂停通话')
+  }
 }
 
 // ================================================================
@@ -1132,7 +1178,7 @@ const displayMessages = computed(() => {
           }}
         </span>
         <span v-if="isDeviceActive" class="state-chip" :class="callState">
-          {{ STATE_TEXT[callState] }}
+          {{ isPaused ? '已暂停' : STATE_TEXT[callState] }}
         </span>
       </div>
       <div v-if="isDeviceActive" class="vc-stats">
@@ -1265,11 +1311,22 @@ const displayMessages = computed(() => {
           <PhTrashSimple :size="20" weight="duotone" />
           <span>清空</span>
         </button>
-        <button v-if="isDeviceActive" class="ctrl-btn" title="说完了（手动发送）" @click="manualSend">
+        <button v-if="isDeviceActive" class="ctrl-btn" title="暂停/继续通话" @click="togglePause">
+          <PhPause v-if="!isPaused" :size="20" weight="duotone" />
+          <PhPlay v-else :size="20" weight="duotone" />
+          <span>{{ isPaused ? '继续' : '暂停' }}</span>
+        </button>
+        <button v-if="isDeviceActive" class="ctrl-btn" title="说完了（手动发送）" :disabled="isPaused" @click="manualSend">
           <PhCheck :size="20" weight="duotone" />
           <span>说完了</span>
         </button>
-        <button v-if="isDeviceActive && callState !== 'idle'" class="ctrl-btn" title="打断 AI 回复" @click="triggerManualInterrupt">
+        <button
+          v-if="isDeviceActive && callState !== 'idle'"
+          class="ctrl-btn"
+          title="打断 AI 回复"
+          :disabled="isPaused"
+          @click="triggerManualInterrupt"
+        >
           <PhStop :size="20" weight="duotone" />
           <span>打断</span>
         </button>
@@ -1346,6 +1403,12 @@ const displayMessages = computed(() => {
   color: var(--color-pine-deep);
   background: #dcebe2;
   border-color: transparent;
+}
+.state-chip.idle.paused,
+.state-chip.listening.paused {
+  color: var(--color-ink-soft);
+  background: var(--color-paper);
+  border-color: var(--color-hairline);
 }
 .vc-stats {
   display: flex;
@@ -1757,6 +1820,10 @@ const displayMessages = computed(() => {
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.1s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.ctrl-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .ctrl-btn:hover {
   border-color: var(--color-pine);
