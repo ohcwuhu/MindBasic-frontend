@@ -194,6 +194,23 @@ export interface AgreementInfo {
   content: string
 }
 
+export interface AiConversationItem {
+  id: number
+  title: string
+  status: 'ACTIVE' | 'ENDED'
+  messageCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AiMessageItem {
+  id: number
+  role: 'USER' | 'ASSISTANT'
+  content: string
+  emotion: Record<string, unknown> | null
+  createdAt: string
+}
+
 export interface WalletTransactionItem {
   changeInCents: number
   balanceAfter: number

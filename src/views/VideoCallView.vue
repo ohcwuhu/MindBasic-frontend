@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { PhWarningCircle as WarningCircle } from '@phosphor-icons/vue'
+import { PhChatCircleDots as ChatDots, PhWarningCircle as WarningCircle } from '@phosphor-icons/vue'
 import { get } from '@/api/client'
 import type { PublicPlatformConfig } from '@/api/types'
 import VideoCallPanel from '@/components/ai-lab/VideoCallPanel.vue'
@@ -31,6 +31,16 @@ function ack() {
 
 <template>
   <div class="video-call-page">
+    <div class="flex justify-end shrink-0">
+      <RouterLink
+        to="/self-coaching/history"
+        class="inline-flex items-center gap-1.5 text-sm text-ink-soft hover:text-pine pressable"
+      >
+        <ChatDots :size="16" weight="duotone" />
+        历史记录
+      </RouterLink>
+    </div>
+
     <div v-if="platform?.aiDisclaimer" class="ai-banner">
       <span class="ai-badge">AI 生成</span>
       <span class="ai-text">{{ platform.aiDisclaimer }}</span>
