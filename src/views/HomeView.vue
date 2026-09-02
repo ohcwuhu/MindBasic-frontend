@@ -44,7 +44,7 @@ function priceText(cents: number): string {
   <div class="max-w-[1100px] mx-auto px-4 md:px-6">
     <section class="grid md:grid-cols-[1.1fr_0.9fr] gap-10 md:gap-14 pt-10 md:pt-20 pb-14 md:pb-24 items-center">
       <Reveal>
-        <p class="catalog-tab mb-4">MindBasic · 心理教练成长服务平台</p>
+        <p class="catalog-tab mb-4">Faith · 心理教练成长服务平台</p>
         <h1 class="text-[2.5rem] md:text-[3.4rem] leading-[1.08] font-semibold tracking-[-0.02em] max-w-[14ch]">
           成长不是被定义，而是被看见、被陪伴
         </h1>

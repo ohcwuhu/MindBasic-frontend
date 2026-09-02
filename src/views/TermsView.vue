@@ -26,7 +26,7 @@ onMounted(async () => {
 
     <p class="catalog-tab mt-8">SERVICE AGREEMENT · v{{ data?.version ?? '—' }}</p>
     <h1 class="mt-3 text-2xl md:text-3xl font-semibold tracking-tight">服务协议与免责声明</h1>
-    <p class="mt-2 text-sm text-ink-soft">请在使用 MindBasic 前仔细阅读。</p>
+    <p class="mt-2 text-sm text-ink-soft">请在使用 Faith 前仔细阅读。</p>
 
     <ErrorBanner v-if="error" :message="error" class="mt-6" />
 

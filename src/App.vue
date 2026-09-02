@@ -71,7 +71,7 @@ watch(() => route.fullPath, refreshUnread)
 
 const pageTitle = computed(() => {
   const map: Record<string, string> = {
-    home: 'MindBasic',
+    home: 'Faith',
     login: '登录',
     register: '注册',
     'forgot-password': '找回密码',
@@ -85,7 +85,7 @@ const pageTitle = computed(() => {
     my: '我的成长',
     profile: '个人资料',
   }
-  return map[String(route.name)] ?? 'MindBasic'
+  return map[String(route.name)] ?? 'Faith'
 })
 
 /* 全屏沉浸式页面：不显示 Footer 和底部导航 */
@@ -134,10 +134,8 @@ onMounted(() => {
     <header class="hidden md:block border-b border-hairline bg-paper/90 backdrop-blur sticky top-0 z-40">
       <div class="max-w-[1080px] mx-auto px-6 h-16 flex items-center justify-between">
           <RouterLink to="/" class="flex items-center gap-2.5">
-            <span class="brand-mark brand-mark-lg" aria-hidden="true">
-              <span class="dot"></span>
-            </span>
-            <span class="font-semibold tracking-tight">MindBasic</span>
+            <img src="/faith-icon.png" alt="" class="w-[62px] h-[62px] object-contain flex-none" />
+            <span class="font-semibold tracking-tight">Faith</span>
           </RouterLink>
         <nav class="flex items-center gap-6" aria-label="主导航">
           <RouterLink
@@ -198,9 +196,7 @@ onMounted(() => {
     <header class="md:hidden sticky top-0 z-40 bg-paper/90 backdrop-blur border-b border-hairline">
       <div class="h-14 px-4 flex items-center justify-between">
           <RouterLink to="/" class="flex items-center gap-2 font-semibold tracking-tight">
-            <span class="brand-mark brand-mark-sm" aria-hidden="true">
-              <span class="dot"></span>
-            </span>
+            <img src="/faith-icon.png" alt="" class="w-8 h-8 object-contain flex-none" />
             {{ pageTitle }}
           </RouterLink>
         <button
@@ -249,9 +245,7 @@ onMounted(() => {
       <div class="max-w-[1080px] mx-auto px-4 md:px-6 py-8 md:py-10 pb-24 md:pb-10">
         <div class="flex items-start gap-6 flex-wrap">
           <div class="flex items-center gap-3">
-            <span class="brand-mark brand-mark-lg" aria-hidden="true">
-              <span class="dot"></span>
-            </span>
+            <img src="/faith-icon.png" alt="" class="w-[62px] h-[62px] object-contain flex-none" />
             <div>
               <p class="font-semibold tracking-tight">{{ platform.platformName }}</p>
               <p class="mt-0.5 text-[12px] text-ink-faint font-serif tracking-wide">

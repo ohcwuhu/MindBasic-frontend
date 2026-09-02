@@ -63,7 +63,7 @@ const titles: Record<AdminTab, string> = {
     <aside class="hidden md:flex flex-col bg-card border-r border-hairline sticky top-16 h-[calc(100dvh-4rem)]">
       <div class="px-6 pt-8 pb-4">
         <p class="font-semibold tracking-tight">管理后台</p>
-        <p class="catalog-tab mt-1">MindBasic Console</p>
+        <p class="catalog-tab mt-1">Faith Console</p>
       </div>
       <nav class="flex-1 px-3 space-y-1" aria-label="管理后台导航">
         <button

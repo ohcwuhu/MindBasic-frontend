@@ -289,123 +289,126 @@ onMounted(load)
         <p class="ej-feedback-text">{{ lastFeedback }}</p>
       </div>
 
-      <!-- ===== 心情月历 ===== -->
-      <section class="ej-section">
-        <div class="ej-section-head">
-          <div>
-            <p class="ej-section-label">月历</p>
-            <h2 class="ej-section-title">心情轨迹</h2>
+      <!-- ===== 月历 + 记录 并排 ===== -->
+      <div class="ej-duo">
+        <!-- 心情月历 -->
+        <section class="ej-section">
+          <div class="ej-section-head">
+            <div>
+              <p class="ej-section-label">月历</p>
+              <h2 class="ej-section-title">心情轨迹</h2>
+            </div>
+            <div class="ej-month-nav">
+              <button type="button" class="ej-nav-btn" aria-label="上个月" @click="shiftMonth(-1)">
+                <CaretLeft :size="14" />
+              </button>
+              <span class="ej-month-label">{{ monthTitle }}</span>
+              <button type="button" class="ej-nav-btn" aria-label="下个月" @click="shiftMonth(1)">
+                <CaretRight :size="14" />
+              </button>
+            </div>
           </div>
-          <div class="ej-month-nav">
-            <button type="button" class="ej-nav-btn" aria-label="上个月" @click="shiftMonth(-1)">
-              <CaretLeft :size="14" />
+
+          <div class="ej-calendar-card">
+            <div v-if="loading && !calendar" class="ej-cal-skeleton">
+              <div v-for="i in 35" :key="i" class="ej-cal-dot-skel"></div>
+            </div>
+            <template v-else>
+              <div class="ej-cal-weekdays">
+                <span v-for="wd in ['日','一','二','三','四','五','六']" :key="wd" class="ej-cal-wd">{{ wd }}</span>
+              </div>
+              <div class="ej-cal-grid">
+                <template v-for="(cell, idx) in calendarGrid" :key="idx">
+                  <span v-if="!cell" class="ej-cal-cell ej-cal-empty"></span>
+                  <button
+                    v-else
+                    type="button"
+                    class="ej-cal-cell"
+                    :class="{
+                      'ej-cal-today': cell === todayKey && selectedDate !== cell,
+                      'ej-cal-selected': selectedDate === cell,
+                    }"
+                    :aria-label="`${cell} 的心情`"
+                    @click="toggleDay(cell)"
+                  >
+                    <span v-if="dayMoodKey(cell)" class="ej-cal-mood-dot" :style="{ backgroundColor: moodColor(dayMoodKey(cell)!) }"></span>
+                    <span class="ej-cal-day-num">{{ Number(cell.slice(8)) }}</span>
+                  </button>
+                </template>
+              </div>
+              <p class="ej-cal-hint">点击某一天可查看当天的记录</p>
+            </template>
+          </div>
+        </section>
+
+        <!-- 记录列表 -->
+        <section class="ej-section">
+          <div class="ej-section-head">
+            <div>
+              <p class="ej-section-label">记录</p>
+              <h2 class="ej-section-title">{{ selectedDate ? `${selectedDate} 的记录` : '心情记录' }}</h2>
+            </div>
+            <button v-if="selectedDate" type="button" class="ej-clear-btn" @click="selectedDate = null">
+              清除筛选
             </button>
-            <span class="ej-month-label">{{ monthTitle }}</span>
-            <button type="button" class="ej-nav-btn" aria-label="下个月" @click="shiftMonth(1)">
-              <CaretRight :size="14" />
-            </button>
           </div>
-        </div>
 
-        <div class="ej-calendar-card">
-          <div v-if="loading && !calendar" class="ej-cal-skeleton">
-            <div v-for="i in 35" :key="i" class="ej-cal-dot-skel"></div>
+          <!-- 骨架屏 -->
+          <div v-if="loading" class="ej-list-skeleton">
+            <div v-for="i in 3" :key="i" class="ej-card-skel"></div>
           </div>
-          <template v-else>
-            <div class="ej-cal-weekdays">
-              <span v-for="wd in ['日','一','二','三','四','五','六']" :key="wd" class="ej-cal-wd">{{ wd }}</span>
-            </div>
-            <div class="ej-cal-grid">
-              <template v-for="(cell, idx) in calendarGrid" :key="idx">
-                <span v-if="!cell" class="ej-cal-cell ej-cal-empty"></span>
-                <button
-                  v-else
-                  type="button"
-                  class="ej-cal-cell"
-                  :class="{
-                    'ej-cal-today': cell === todayKey && selectedDate !== cell,
-                    'ej-cal-selected': selectedDate === cell,
-                  }"
-                  :aria-label="`${cell} 的心情`"
-                  @click="toggleDay(cell)"
-                >
-                  <span v-if="dayMoodKey(cell)" class="ej-cal-mood-dot" :style="{ backgroundColor: moodColor(dayMoodKey(cell)!) }"></span>
-                  <span class="ej-cal-day-num">{{ Number(cell.slice(8)) }}</span>
-                </button>
-              </template>
-            </div>
-            <p class="ej-cal-hint">点击某一天可查看当天的记录</p>
-          </template>
-        </div>
-      </section>
 
-      <!-- ===== 记录列表 ===== -->
-      <section class="ej-section">
-        <div class="ej-section-head">
-          <div>
-            <p class="ej-section-label">记录</p>
-            <h2 class="ej-section-title">{{ selectedDate ? `${selectedDate} 的记录` : '心情记录' }}</h2>
-          </div>
-          <button v-if="selectedDate" type="button" class="ej-clear-btn" @click="selectedDate = null">
-            清除筛选
-          </button>
-        </div>
-
-        <!-- 骨架屏 -->
-        <div v-if="loading" class="ej-list-skeleton">
-          <div v-for="i in 3" :key="i" class="ej-card-skel"></div>
-        </div>
-
-        <!-- 日记卡片 -->
-        <div v-else-if="filteredJournals.length" class="ej-journal-list">
-          <article
-            v-for="journal in filteredJournals"
-            :key="journal.id"
-            class="ej-journal-card"
-          >
-            <div class="ej-card-left">
-              <div class="ej-card-mood-orb" :style="{ '--mc': moodColor(journal.moodType), '--mb': moodBg(journal.moodType) }">
-                <MoodFace :mood="journal.moodType" class="ej-card-mood-face" aria-hidden="true" />
-              </div>
-            </div>
-            <div class="ej-card-body">
-              <p class="ej-card-text">{{ journal.content }}</p>
-              <div v-if="journal.feedback" class="ej-card-feedback">
-                "{{ journal.feedback }}"
-              </div>
-              <div class="ej-card-meta">
-                <span class="ej-card-tag" :style="{ '--tc': moodColor(journal.moodType), '--tb': moodBg(journal.moodType) }">
-                  <span class="ej-tag-dot" :style="{ backgroundColor: moodColor(journal.moodType) }"></span>
-                  {{ moodLabel(journal.moodType) }}
-                </span>
-                <span
-                  v-if="journal.source === 'SELF_COACHING'"
-                  class="ej-card-tag"
-                  style="--tc:#1f6b52;--tb:rgba(31,107,82,0.12)"
-                >
-                  自我教练
-                </span>
-                <time class="ej-card-time">{{ new Date(journal.createdAt).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false }) }}</time>
-              </div>
-            </div>
-            <button
-              type="button"
-              class="ej-card-delete"
-              :aria-label="`删除这条日记`"
-              @click="removeJournal(journal.id)"
+          <!-- 日记卡片 -->
+          <div v-else-if="filteredJournals.length" class="ej-journal-list">
+            <article
+              v-for="journal in filteredJournals"
+              :key="journal.id"
+              class="ej-journal-card"
             >
-              <Trash :size="14" />
-            </button>
-          </article>
-        </div>
+              <div class="ej-card-left">
+                <div class="ej-card-mood-orb" :style="{ '--mc': moodColor(journal.moodType), '--mb': moodBg(journal.moodType) }">
+                  <MoodFace :mood="journal.moodType" class="ej-card-mood-face" aria-hidden="true" />
+                </div>
+              </div>
+              <div class="ej-card-body">
+                <p class="ej-card-text">{{ journal.content }}</p>
+                <div v-if="journal.feedback" class="ej-card-feedback">
+                  "{{ journal.feedback }}"
+                </div>
+                <div class="ej-card-meta">
+                  <span class="ej-card-tag" :style="{ '--tc': moodColor(journal.moodType), '--tb': moodBg(journal.moodType) }">
+                    <span class="ej-tag-dot" :style="{ backgroundColor: moodColor(journal.moodType) }"></span>
+                    {{ moodLabel(journal.moodType) }}
+                  </span>
+                  <span
+                    v-if="journal.source === 'SELF_COACHING'"
+                    class="ej-card-tag"
+                    style="--tc:#1f6b52;--tb:rgba(31,107,82,0.12)"
+                  >
+                    自我教练
+                  </span>
+                  <time class="ej-card-time">{{ new Date(journal.createdAt).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false }) }}</time>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="ej-card-delete"
+                :aria-label="`删除这条日记`"
+                @click="removeJournal(journal.id)"
+              >
+                <Trash :size="14" />
+              </button>
+            </article>
+          </div>
 
-        <div v-else class="ej-empty">
-          <EmptyState
-            :title="selectedDate ? '这一天还没有记录' : '还没有日记'"
-            :hint="selectedDate ? '换一天看看，或写下这一天的感受。' : '写下第一条，观察自己的情绪变化。'"
-          />
-        </div>
-      </section>
+          <div v-else class="ej-empty">
+            <EmptyState
+              :title="selectedDate ? '这一天还没有记录' : '还没有日记'"
+              :hint="selectedDate ? '换一天看看，或写下这一天的感受。' : '写下第一条，观察自己的情绪变化。'"
+            />
+          </div>
+        </section>
+      </div>
 
       <!-- ===== 近 30 天分布 ===== -->
       <section v-if="trend" class="ej-section">
@@ -568,6 +571,19 @@ onMounted(load)
 .ej-section-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.01em; margin-top: 0.2rem; }
 @media (min-width: 768px) { .ej-section-title { font-size: 1.35rem; } }
 
+/* 月历 + 记录 并排（宽屏两栏，窄屏自动上下堆叠） */
+.ej-duo {
+  margin-top: 2.5rem;
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+}
+.ej-duo .ej-section { margin-top: 0; }
+.ej-duo > * { min-width: 0; }
+@media (min-width: 1024px) {
+  .ej-duo { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.25rem; }
+}
+
 /* 月历导航 */
 .ej-month-nav { display: flex; align-items: center; gap: 0.35rem; }
 .ej-nav-btn {
@@ -584,7 +600,7 @@ onMounted(load)
 .ej-month-label { font-size: 0.82rem; font-weight: 600; min-width: 6rem; text-align: center; color: var(--color-ink); }
 
 /* 日历卡片 */
-.ej-calendar-card { background: var(--color-card); border: 1px solid var(--color-hairline); border-radius: 16px; padding: 1.25rem; }
+.ej-calendar-card { background: var(--color-card); border: 1px solid var(--color-hairline); border-radius: 16px; padding: 1.25rem; max-width: min(540px, 100%); }
 @media (min-width: 768px) { .ej-calendar-card { padding: 1.5rem; } }
 .ej-cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 0.4rem; }
 .ej-cal-wd { font-size: 0.72rem; font-weight: 600; color: var(--color-ink-faint); padding-bottom: 0.35rem; }
