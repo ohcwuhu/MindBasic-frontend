@@ -6,3 +6,6 @@ dist/
 .env.*
 !.env.example
 npm-debug.log*
+dev-*.log
+*.out.log
+*.err.log
