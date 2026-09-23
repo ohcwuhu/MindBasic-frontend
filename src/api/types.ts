@@ -199,8 +199,15 @@ export interface AgreementInfo {
 export interface AiConversationItem {
   id: number
   title: string
-  status: 'ACTIVE' | 'ENDED'
+  // ABANDONED = 客户端异常断开、由服务端维护任务收尾的会话
+  status: 'ACTIVE' | 'ENDED' | 'ABANDONED'
   messageCount: number
+  turnCount: number
+  finalStage: string | null
+  finalStageLabel: string | null
+  maxRiskLevel: string | null
+  summary: string | null
+  summaryConfirmedAt: string | null
   journalId: number | null
   createdAt: string
   updatedAt: string
@@ -211,6 +218,16 @@ export interface AiMessageItem {
   role: 'USER' | 'ASSISTANT'
   content: string
   emotion: Record<string, unknown> | null
+  turnIndex: number
+  stage: string | null
+  stageLabel: string | null
+  goalClear: boolean | null
+  actionReady: boolean | null
+  shouldSummarize: boolean | null
+  riskLevel: string | null
+  fusionEmotion: string | null
+  fusionConfidence: number | null
+  timings: Record<string, number> | null
   createdAt: string
 }
 

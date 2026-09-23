@@ -3,6 +3,8 @@ import { ref, onUnmounted, onMounted, nextTick, computed } from 'vue'
 import { io, Socket } from 'socket.io-client'
 import {
   PhVideoCamera,
+  PhVideoCameraSlash,
+  PhMicrophone,
   PhPhoneDisconnect,
   PhChatCircleDots,
   PhTrashSimple,
@@ -99,6 +101,34 @@ let voiceAccumulatedMs = 0          // 累积有声音时长（毫秒）
 let lastVoiceFrameAt = 0            // 上一次检测到"有声音"的时间戳（用于小停顿容忍判断）
 let gapStartAt = 0                  // 当前"处于小间隙"的起始时间（0 = 不在小间隙中）
 
+// ── 长时间没说话时的自动收尾 ─────────────────────────────────────
+//   背景：VAD 只有在"已经开口说话"之后才会判静音结束；如果用户一直不出声，
+//        通话会永远停在聆听态，既没有回复也不会自己停下。
+//   策略：三档递进，计时起点是"最后一次听到人声 / 用户操作"；
+//        AI 说话、正在处理一轮、暂停期间都不计时。
+//   三档阈值可用 Vite 环境变量覆盖（联调/录演示视频时把时间调短，例如
+//   VITE_VC_IDLE_END_MS=20000），默认值面向真实使用。
+const idleMs = (raw: unknown, fallback: number) => {
+  const n = Number(raw)
+  return Number.isFinite(n) && n > 0 ? n : fallback
+}
+const IDLE_NUDGE_MS = idleMs(import.meta.env.VITE_VC_IDLE_NUDGE_MS, 15_000)          // 15s：只温柔提示
+const IDLE_COUNTDOWN_MS = idleMs(import.meta.env.VITE_VC_IDLE_COUNTDOWN_MS, 45_000)  // 45s：开始倒计时
+const IDLE_END_MS = idleMs(import.meta.env.VITE_VC_IDLE_END_MS, 75_000)              // 75s：自动结束通话
+const IDLE_TICK_MS = 1000
+// "这算人在说话"的音量阈值。注意：VAD 判"有没有声音"用的是 4%，那是为了灵敏，
+// 但空调、风扇、窗外人声这类底噪经常就停在 4~10%，拿它当"用户在场"会导致
+// 静音计时永远被重置、自动收尾永不触发。所以判"用户在场"要更高的门槛。
+// 环境嘈杂、底噪本身就很高时可以调高：VITE_VC_SPEECH_THRESHOLD=25
+const SPEECH_ACTIVITY_THRESHOLD = idleMs(import.meta.env.VITE_VC_SPEECH_THRESHOLD, 15)
+
+let lastHumanVoiceAt = 0            // 最后一次"听到人声"的时间戳
+let idleTimer: number | null = null
+const idlePhase = ref<'none' | 'nudge' | 'countdown'>('none')
+const idleCountdownLeft = ref(0)    // 距离自动结束还有多少秒
+const idleElapsedSeconds = ref(0)   // 已经静音多少秒（画面上的实时反馈）
+const endedBySilence = ref(false)   // 本次通话是否因长时间无语音而结束
+
 // 打断（Barge-in）保护：防止 TTS 回音/环境噪音误触发
 // 核心策略：把 Barge-in 阈值设得比 VAD 高得多 + 必须连续多帧 + 播放中不触发
 const INTERRUPT_VOLUME_THRESHOLD = 28   // 打断音量阈值 ≥28%（远高于VAD的4%，回音通常<20%）
@@ -122,6 +152,30 @@ let isEndingCall = false
 
 // 暂停 / 继续通话
 const isPaused = ref(false)
+
+// ================================================================
+//  采集授权范围（按用途分开授权，通话中可随时变更）
+//  - 麦克风：通话必需，用于转写与生成回复
+//  - 摄像头画面：默认关闭，用户主动开启后才申请设备权限
+//  - 多模态线索：语音语调与表情是否参与对话策略，可随时关闭
+//  每次变更都会回传后端并写入 consent_records（授权留痕）
+// ================================================================
+const AUDIO_CONSTRAINTS: MediaTrackConstraints = {
+  echoCancellation: true,
+  noiseSuppression: true,
+  autoGainControl: true,
+}
+const VIDEO_CONSTRAINTS: MediaTrackConstraints = {
+  facingMode: 'user',
+  width: { ideal: 1280 },
+  height: { ideal: 720 },
+}
+
+const consentCamera = ref(false)
+const consentMultimodal = ref(true)
+const cameraStarting = ref(false)
+// 非阻塞提示（摄像头不可用等）：不打断对话，只在画面上说明当前模式
+const cameraNotice = ref('')
 
 // TTS 音频播放（按句子级完整收集后再入播放队列，避免一句话被切成半段）
 let currentAudio: HTMLAudioElement | null = null
@@ -204,6 +258,7 @@ const connectSocket = () => {
   // 状态变更
   socket.value.on('vc_state_change', (data: { state: string }) => {
     callState.value = data.state as CallState
+    ensureIdleWatch()  // 兜底：通话中但计时器没起来时补上（见函数注释）
     if (data.state === 'listening') {
       // 【关键修正】此时才是管线真正结束：ASR→情感→LLM 全部完成
       //   之前的 vc_interrupted 只是停止TTS播放，不是结束！
@@ -229,6 +284,21 @@ const connectSocket = () => {
 
   socket.value.on('vc_conversation_ready', (data: { conversationId?: number }) => {
     if (data?.conversationId) conversationId.value = data.conversationId
+  })
+
+  // 服务端兜底：长时间无语音由后端判定结束（前端定时器被浏览器挂起时才会走到这里）
+  socket.value.on('vc_idle_timeout', (data: { idleSeconds?: number; message?: string }) => {
+    console.log('[VC] 服务端空闲超时，自动结束通话:', data)
+    endedBySilence.value = true
+    if (isDeviceActive.value) stopDevices()
+  })
+
+  // 服务端确认后的授权范围：以服务端为准回填，保证界面显示的采集范围真实有效
+  socket.value.on('vc_consent_updated', (data: { consent?: { camera?: boolean; multimodal?: boolean } }) => {
+    const scopes = data?.consent
+    if (!scopes) return
+    if (typeof scopes.camera === 'boolean') consentCamera.value = scopes.camera
+    if (typeof scopes.multimodal === 'boolean') consentMultimodal.value = scopes.multimodal
   })
 
   // ── 新事件：vc_interrupted = 仅停止 TTS，LLM 还在生成文字 ──
@@ -421,10 +491,22 @@ const stopTTSPlayback = () => {
 }
 
 // ================================================================
-//  设备管理（摄像头 + 麦克风）
+//  设备管理（麦克风必需，摄像头按授权开启）
 // ================================================================
+// 当前生效的授权范围（每次变更后原样回传后端，作为 consent_records 的存证内容）
+const currentConsent = (basis: string) => ({
+  mic: true,
+  camera: consentCamera.value,
+  multimodal: consentMultimodal.value,
+  basis,
+})
+
+const hasCameraTrack = () =>
+  !!mediaStream && mediaStream.getVideoTracks().length > 0
+
 const startDevices = async () => {
   errorMsg.value = ''
+  cameraNotice.value = ''
   isLoading.value = true
 
   if (!navigator.mediaDevices?.getUserMedia) {
@@ -433,16 +515,32 @@ const startDevices = async () => {
     return
   }
 
+  const wantCamera = consentCamera.value
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-    })
+    let stream: MediaStream
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: wantCamera ? VIDEO_CONSTRAINTS : false,
+        audio: AUDIO_CONSTRAINTS,
+      })
+    } catch (err) {
+      // 摄像头不可用不应让整通对话失败：退回语音模式，并如实更新授权范围
+      if (!wantCamera) throw err
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: false,
+        audio: AUDIO_CONSTRAINTS,
+      })
+      consentCamera.value = false
+      cameraNotice.value = '未能开启摄像头，已使用语音模式；通话中可随时开启'
+    }
     mediaStream = stream
 
-    if (videoRef.value) {
+    if (stream.getVideoTracks().length > 0 && videoRef.value) {
       videoRef.value.srcObject = stream
       videoRef.value.addEventListener('canplay', onVideoReady, { once: true })
+    } else {
+      // 语音模式没有 video 的 canplay 事件，直接进入通话
+      onVideoReady()
     }
   } catch (err: any) {
     isLoading.value = false
@@ -453,19 +551,26 @@ const startDevices = async () => {
 const onVideoReady = () => {
   isLoading.value = false
   isDeviceActive.value = true
-  // 通知后端开始视频通话
-  socket.value?.emit('vc_start')
+  // 通知后端开始通话，并如实声明本次采集的授权范围
+  // （摄像头默认关闭，只有用户主动开启后才会申请设备权限）
+  socket.value?.emit('vc_start', {
+    consent: currentConsent('VIDEO_CALL_START'),
+  })
   // 启动音量计/VAD（持续运行，不随录音轮次重启）
   startVolumeMeter()
   // 启动音频录制
   startAudioStreaming()
-  // 启动视频帧上传
-  startFrameUpload()
+  // 启动视频帧上传（仅在已授权且确实有视频轨时）
+  if (hasCameraTrack()) startFrameUpload()
+  // 启动"长时间没说话"的自动收尾计时
+  startIdleWatch()
 }
 
 const stopDevices = () => {
   // 【关键】先设结束标志，防止 onstop 中自动重启录音
   isEndingCall = true
+  // 停止"长时间没说话"的计时（无论手动结束还是自动结束）
+  stopIdleWatch()
   // 如果 TTS 还在播放，先发送打断信号
   if (isPlayingTTS.value) {
     socket.value?.emit('vc_interrupt')
@@ -486,6 +591,8 @@ const stopDevices = () => {
   isDeviceActive.value = false
   callState.value = 'idle'
   isPaused.value = false
+  cameraStarting.value = false
+  cameraNotice.value = ''
   // 通话结束：把会话 ID 交给父级，由其询问是否记录到情绪日记
   if (conversationId.value && messages.value.length > 0) {
     const cid = conversationId.value
@@ -507,13 +614,13 @@ const stopDevices = () => {
 const handleDeviceError = (err: any) => {
   switch (err?.name) {
     case 'NotAllowedError':
-      errorMsg.value = '请允许摄像头/麦克风权限'
+      errorMsg.value = '需要麦克风权限才能开始：请在浏览器地址栏的权限设置里允许麦克风后重试'
       break
     case 'NotFoundError':
-      errorMsg.value = '找不到摄像头或麦克风设备'
+      errorMsg.value = '没有找到可用的麦克风设备，请接入麦克风后重试'
       break
     case 'NotReadableError':
-      errorMsg.value = '摄像头/麦克风被其他程序占用'
+      errorMsg.value = '麦克风被其他程序占用，关闭占用后重试'
       break
     default:
       errorMsg.value = `设备启动失败：${err?.message || '未知错误'}`
@@ -795,6 +902,17 @@ const drawVolume = () => {
         lastVoiceFrameAt = now
         gapStartAt = 0  // 有声音 → 不在小间隙中
 
+        // 1.5) 只有"像人说话的响度"才计入"用户在场"：
+        //      底噪（4~10%）不算，否则静音计时会被噪声一直重置
+        if (volumeLevel.value >= SPEECH_ACTIVITY_THRESHOLD) {
+          lastHumanVoiceAt = now
+          if (idlePhase.value !== 'none' || idleElapsedSeconds.value > 0) {
+            idlePhase.value = 'none'
+            idleCountdownLeft.value = 0
+            idleElapsedSeconds.value = 0
+          }
+        }
+
         // 2. 累积达到目标 → 标记"已开始说话"
         if (!hasVoiceStarted && voiceAccumulatedMs >= VOICE_ACCUM_TARGET_MS) {
           hasVoiceStarted = true
@@ -934,6 +1052,7 @@ const triggerAudioEnd = (fromManual = false) => {
   voiceAccumulatedMs = 0
   lastVoiceFrameAt = 0
   gapStartAt = 0
+  markUserActivity()  // 用户提交了一轮 → 空闲计时重新起算
 
   // 标记正在处理，防止 VAD 在 AI 回复期间重复触发
   isProcessing = true
@@ -1030,6 +1149,7 @@ const togglePause = () => {
       startAudioStreaming()
     }
     isPaused.value = false
+    markUserActivity()  // 主动继续通话 → 空闲计时重新起算
     console.log('[VC] 已恢复通话')
   } else {
     // 暂停：停止麦克风、停止AI说话、通知后端、清空缓冲区
@@ -1042,6 +1162,87 @@ const togglePause = () => {
     isPaused.value = true
     console.log('[VC] 已暂停通话')
   }
+}
+
+// ================================================================
+//  授权开关（摄像头 / 多模态线索）
+//  变更顺序：先改本地采集行为，再回传后端 → 后端写入 consent_records 存证
+// ================================================================
+const emitConsentChange = (basis: string) => {
+  if (!socket.value?.connected) return
+  socket.value.emit('vc_consent', { consent: currentConsent(basis) })
+}
+
+/** 开启摄像头：此时才向浏览器申请设备权限，用户拒绝则保持语音模式 */
+const enableCamera = async () => {
+  if (!isDeviceActive.value || cameraStarting.value || !mediaStream) return
+  cameraStarting.value = true
+  cameraNotice.value = ''
+  try {
+    const camStream = await navigator.mediaDevices.getUserMedia({
+      video: VIDEO_CONSTRAINTS,
+      audio: false,
+    })
+    const track = camStream.getVideoTracks()[0]
+    if (!track) throw new Error('no video track')
+    track.addEventListener('ended', handleCameraTrackEnded)
+    mediaStream.addTrack(track)
+    if (videoRef.value) {
+      videoRef.value.srcObject = mediaStream
+      try {
+        await videoRef.value.play()
+      } catch {
+        /* muted + autoplay 已足够，播放失败不阻塞通话 */
+      }
+    }
+    consentCamera.value = true
+    startFrameUpload()
+    emitConsentChange('USER_ENABLE_CAMERA')
+  } catch {
+    cameraNotice.value = '无法开启摄像头，已保持语音模式；请检查浏览器权限或设备占用'
+  } finally {
+    cameraStarting.value = false
+  }
+}
+
+/** 关闭摄像头：停止采集并撤回授权（后端同步丢弃已缓存画面帧） */
+const disableCamera = (options: { reason?: string } = {}) => {
+  stopFrameUpload()
+  if (mediaStream) {
+    mediaStream.getVideoTracks().forEach((track) => {
+      track.removeEventListener('ended', handleCameraTrackEnded)
+      track.stop()
+      mediaStream?.removeTrack(track)
+    })
+  }
+  if (videoRef.value) videoRef.value.srcObject = null
+  consentCamera.value = false
+  emitConsentChange(options.reason ?? 'USER_DISABLE_CAMERA')
+}
+
+const toggleCamera = () => {
+  if (consentCamera.value) disableCamera()
+  else void enableCamera()
+}
+
+/** 摄像头被拔出或被系统关闭：按撤回处理并说明当前模式 */
+const handleCameraTrackEnded = () => {
+  // 结束通话时也会 stop 轨道，这里不重复处理
+  if (isEndingCall || !isDeviceActive.value || !consentCamera.value) return
+  disableCamera({ reason: 'DEVICE_ENDED' })
+  cameraNotice.value = '摄像头已断开，已切换为语音模式'
+}
+
+/** 多模态线索开关：关闭后语音语调与表情不再参与对话策略 */
+const toggleMultimodal = () => {
+  consentMultimodal.value = !consentMultimodal.value
+  if (!consentMultimodal.value) {
+    // 清掉上一轮的线索展示，避免关闭后仍显示过期的语调/表情结果
+    emotionResult.value = null
+  }
+  emitConsentChange(
+    consentMultimodal.value ? 'USER_ENABLE_MULTIMODAL' : 'USER_DISABLE_MULTIMODAL',
+  )
 }
 
 // ================================================================
@@ -1135,6 +1336,7 @@ const toggleCall = () => {
   if (isDeviceActive.value) {
     stopDevices()
   } else {
+    endedBySilence.value = false
     startDevices()
   }
 }
@@ -1142,6 +1344,92 @@ const toggleCall = () => {
 // ================================================================
 //  生命周期
 // ================================================================
+
+// ================================================================
+//  长时间没说话 → 自动收尾（见文件顶部 IDLE_* 常量）
+//  - 只有"在等用户说话"时才计时：AI 说话 / 正在处理 / 已暂停 / 未通话都不算
+//  - 任何一次人声或用户操作都会把计时清零并撤销倒计时
+//  - 到点后走与「结束通话」完全相同的收尾路径，保证设备、录音、会话都被清理
+// ================================================================
+const markUserActivity = () => {
+  lastHumanVoiceAt = Date.now()
+  if (idlePhase.value !== 'none') {
+    idlePhase.value = 'none'
+    idleCountdownLeft.value = 0
+  }
+  idleElapsedSeconds.value = 0
+}
+
+const shouldCountIdle = () =>
+  isDeviceActive.value &&
+  !isPaused.value &&
+  !isProcessing &&
+  !isPlayingTTS.value &&
+  callState.value === 'listening'
+
+const stopIdleWatch = () => {
+  if (idleTimer !== null) {
+    clearInterval(idleTimer)
+    idleTimer = null
+  }
+  idlePhase.value = 'none'
+  idleCountdownLeft.value = 0
+  idleElapsedSeconds.value = 0
+}
+
+const startIdleWatch = () => {
+  stopIdleWatch()
+  lastHumanVoiceAt = Date.now()
+  console.log(
+    '[VC] 长时间无语音自动收尾已启用：' +
+    IDLE_NUDGE_MS / 1000 + 's 提示 / ' +
+    IDLE_COUNTDOWN_MS / 1000 + 's 倒计时 / ' +
+    IDLE_END_MS / 1000 + 's 自动结束（说话音量阈值 ' + SPEECH_ACTIVITY_THRESHOLD + '%）'
+  )
+  idleTimer = window.setInterval(() => {
+    if (!shouldCountIdle()) {
+      // AI 在说话 / 正在处理一轮 / 已暂停：这段时间不计入"用户没说话"
+      markUserActivity()
+      return
+    }
+    const idleMs = Date.now() - lastHumanVoiceAt
+    idleElapsedSeconds.value = Math.floor(idleMs / 1000)
+    if (idleMs >= IDLE_END_MS) {
+      console.log('[VC] 长时间无语音（' + Math.round(idleMs / 1000) + 's），自动结束通话')
+      stopIdleWatch()
+      endedBySilence.value = true
+      stopDevices()
+      return
+    }
+    if (idleMs >= IDLE_COUNTDOWN_MS) {
+      if (idlePhase.value !== 'countdown') {
+        console.log('[VC] 静音 ' + idleElapsedSeconds.value + 's → 进入倒计时')
+      }
+      idlePhase.value = 'countdown'
+      idleCountdownLeft.value = Math.max(1, Math.ceil((IDLE_END_MS - idleMs) / 1000))
+    } else if (idleMs >= IDLE_NUDGE_MS) {
+      if (idlePhase.value === 'none') {
+        console.log('[VC] 静音 ' + idleElapsedSeconds.value + 's → 温柔提示')
+      }
+      idlePhase.value = 'nudge'
+      idleCountdownLeft.value = 0
+    } else if (idlePhase.value !== 'none') {
+      idlePhase.value = 'none'
+      idleCountdownLeft.value = 0
+    }
+  }, IDLE_TICK_MS)
+}
+
+// 兜底：只要通话在进行且计时器不在跑，就补上。
+// 场景：热更新（HMR）替换模块后组件实例不会重新 mount，onMounted 里的启动不会重跑；
+//      或者标签页曾被挂起导致定时器丢失。
+const ensureIdleWatch = () => {
+  if (isDeviceActive.value && idleTimer === null) {
+    console.log('[VC] 补启"长时间无语音"计时器')
+    startIdleWatch()
+  }
+}
+
 onMounted(() => {
   connectSocket()
 })
@@ -1178,7 +1466,12 @@ const displayMessages = computed(() => {
           }}
         </span>
         <span v-if="isDeviceActive" class="state-chip" :class="callState">
-          {{ isPaused ? '已暂停' : STATE_TEXT[callState] }}
+          {{
+            isPaused ? '已暂停'
+            : (callState === 'listening' && idleElapsedSeconds >= 3)
+              ? STATE_TEXT[callState] + ' · 已静音 ' + idleElapsedSeconds + 's'
+              : STATE_TEXT[callState]
+          }}
         </span>
       </div>
       <div v-if="isDeviceActive" class="vc-stats">
@@ -1191,9 +1484,31 @@ const displayMessages = computed(() => {
     <div class="vc-main">
       <section class="vc-stage" :class="{ active: isDeviceActive }">
         <!-- 摄像头画面为主画面（大屏显示自己） -->
-        <video ref="videoRef" class="stage-video" autoplay playsinline muted></video>
+        <video
+          ref="videoRef"
+          class="stage-video"
+          :class="{ hidden: isDeviceActive && !consentCamera }"
+          autoplay
+          playsinline
+          muted
+        ></video>
         <canvas ref="canvasRef" class="stage-canvas"></canvas>
-        <span v-if="isDeviceActive" class="self-tag">我</span>
+        <span v-if="isDeviceActive && consentCamera" class="self-tag">我</span>
+
+        <!-- 摄像头关闭：如实说明当前处于语音模式，并给出重新开启的入口 -->
+        <div v-if="isDeviceActive && !consentCamera" class="stage-camoff">
+          <PhVideoCameraSlash :size="26" weight="duotone" aria-hidden="true" />
+          <p class="camoff-title">摄像头已关闭</p>
+          <p class="camoff-desc">只用语音也能继续，AI 仍然听得见你</p>
+          <button
+            type="button"
+            class="camoff-btn"
+            :disabled="cameraStarting"
+            @click="toggleCamera"
+          >
+            {{ cameraStarting ? '正在开启…' : '开启摄像头' }}
+          </button>
+        </div>
 
         <div v-if="isLoading" class="stage-loading">
           <span class="loader"></span>
@@ -1206,7 +1521,62 @@ const displayMessages = computed(() => {
           <CompanionSprite :gender="gender" state="idle" />
           </div>
           <p class="idle-title">自我教练</p>
-          <p class="idle-desc">开启摄像头和麦克风，像打电话一样聊聊你的状态</p>
+          <p class="idle-desc">用语音像打电话一样聊聊你的状态；摄像头可选，随时可以关掉</p>
+
+          <p v-if="endedBySilence" class="idle-ended" role="status">
+            长时间没有听到你的声音，上一通通话已自动结束。想继续随时可以重新开始。
+          </p>
+
+          <!-- 分项授权：麦克风必需，摄像头与多模态线索可选，且通话中随时能改 -->
+          <ul class="consent-list">
+            <li class="consent-item">
+              <PhMicrophone :size="16" weight="duotone" aria-hidden="true" />
+              <span class="consent-text">
+                <span class="consent-name">麦克风与转写</span>
+                <span class="consent-note">通话必需 · 用你的话生成回复</span>
+              </span>
+              <span class="consent-fixed">必需</span>
+            </li>
+            <li class="consent-item">
+              <PhEye :size="16" weight="duotone" aria-hidden="true" />
+              <span class="consent-text">
+                <span class="consent-name">多模态线索</span>
+                <span class="consent-note">用语调与表情补充情境，可随时关闭</span>
+              </span>
+              <button
+                type="button"
+                class="switch"
+                role="switch"
+                :aria-checked="consentMultimodal"
+                aria-label="多模态线索"
+                @click="consentMultimodal = !consentMultimodal"
+              >
+                <span class="switch-track" :class="{ on: consentMultimodal }">
+                  <span class="switch-thumb"></span>
+                </span>
+              </button>
+            </li>
+            <li class="consent-item">
+              <PhVideoCamera :size="16" weight="duotone" aria-hidden="true" />
+              <span class="consent-text">
+                <span class="consent-name">摄像头画面</span>
+                <span class="consent-note">开启后才采集画面，关闭时仍可对话</span>
+              </span>
+              <button
+                type="button"
+                class="switch"
+                role="switch"
+                :aria-checked="consentCamera"
+                aria-label="摄像头画面"
+                @click="consentCamera = !consentCamera"
+              >
+                <span class="switch-track" :class="{ on: consentCamera }">
+                  <span class="switch-thumb"></span>
+                </span>
+              </button>
+            </li>
+          </ul>
+
           <button class="start-call-btn" @click="toggleCall">
             <PhVideoCamera :size="18" weight="bold" />
             开始自我教练
@@ -1233,6 +1603,24 @@ const displayMessages = computed(() => {
           </div>
         </template>
 
+        <p v-if="isDeviceActive && cameraNotice && !errorMsg" class="stage-notice" role="status">
+          {{ cameraNotice }}
+        </p>
+
+        <!-- 长时间没说话：先温柔提示，再到点前倒计时，最后自动结束通话 -->
+        <p
+          v-if="isDeviceActive && idlePhase !== 'none' && !errorMsg"
+          class="stage-notice idle"
+          :class="idlePhase"
+          role="status"
+        >
+          <template v-if="idlePhase === 'nudge'">我在听，慢慢来，不着急</template>
+          <template v-else>
+            <span>{{ idleElapsedSeconds }} 秒没有听到你的声音了，{{ idleCountdownLeft }} 秒后将自动结束通话</span>
+            <button type="button" class="idle-keep-btn" @click="markUserActivity">继续通话</button>
+          </template>
+        </p>
+
         <p v-if="errorMsg" class="stage-error" role="alert">
           <PhWarningCircle :size="15" weight="bold" />
           {{ errorMsg }}
@@ -1249,32 +1637,55 @@ const displayMessages = computed(() => {
           <span v-if="partialAssistantText" class="typing-hint">AI 正在回复…</span>
         </div>
 
-        <!-- 情绪分析（紧凑芯片） -->
-        <div v-if="emotionResult" class="emotion-strip">
-          <div v-if="emotionResult.fusion" class="emo-chip">
-            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.fusion.final_emotion) }"></span>
-            <span class="emo-name">融合</span>
-            <span class="emo-val">{{ emotionResult.fusion.final_emotion_cn }}</span>
+        <!-- 多模态线索：开关 + 本轮线索（关闭后不再展示语调 / 表情 / 融合结果） -->
+        <div v-if="isDeviceActive" class="signal-panel">
+          <div class="signal-head">
+            <span class="signal-title">多模态线索</span>
+            <button
+              type="button"
+              class="switch"
+              role="switch"
+              :aria-checked="consentMultimodal"
+              aria-label="多模态线索"
+              @click="toggleMultimodal"
+            >
+              <span class="switch-track" :class="{ on: consentMultimodal }">
+                <span class="switch-thumb"></span>
+              </span>
+              <span class="signal-state">{{ consentMultimodal ? '已开启' : '已关闭' }}</span>
+            </button>
           </div>
-          <div v-if="emotionResult.voice_emotion" class="emo-chip">
-            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.voice_emotion.emotion) }"></span>
-            <span class="emo-name">语调</span>
-            <span class="emo-val">{{ emotionResult.voice_emotion.emotion_cn }}</span>
-          </div>
-          <div v-if="emotionResult.text_emotion" class="emo-chip">
-            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.text_emotion.emotion) }"></span>
-            <span class="emo-name">文本</span>
-            <span class="emo-val">{{ emotionResult.text_emotion.emotion_cn }}</span>
-          </div>
-          <div v-if="emotionResult.facial_emotion && emotionResult.facial_emotion.frame_count > 0" class="emo-chip">
-            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.facial_emotion.dominant_emotion) }"></span>
-            <span class="emo-name">面部</span>
-            <span class="emo-val">{{ emotionResult.facial_emotion.dominant_emotion_cn }}</span>
-          </div>
-          <div class="emo-chip">
-            <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.asr_emo) }"></span>
-            <span class="emo-name">ASR</span>
-            <span class="emo-val">{{ getEmotionCn(emotionResult.asr_emo) }}</span>
+
+          <p v-if="!consentMultimodal" class="signal-hint">
+            语音语调与表情不再参与对话，仅按文字内容理解
+          </p>
+
+          <div v-else-if="emotionResult" class="emotion-strip">
+            <div v-if="emotionResult.fusion" class="emo-chip">
+              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.fusion.final_emotion) }"></span>
+              <span class="emo-name">融合</span>
+              <span class="emo-val">{{ emotionResult.fusion.final_emotion_cn }}</span>
+            </div>
+            <div v-if="emotionResult.voice_emotion" class="emo-chip">
+              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.voice_emotion.emotion) }"></span>
+              <span class="emo-name">语调</span>
+              <span class="emo-val">{{ emotionResult.voice_emotion.emotion_cn }}</span>
+            </div>
+            <div v-if="emotionResult.text_emotion" class="emo-chip">
+              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.text_emotion.emotion) }"></span>
+              <span class="emo-name">文本</span>
+              <span class="emo-val">{{ emotionResult.text_emotion.emotion_cn }}</span>
+            </div>
+            <div v-if="emotionResult.facial_emotion && emotionResult.facial_emotion.frame_count > 0" class="emo-chip">
+              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.facial_emotion.dominant_emotion) }"></span>
+              <span class="emo-name">面部</span>
+              <span class="emo-val">{{ emotionResult.facial_emotion.dominant_emotion_cn }}</span>
+            </div>
+            <div class="emo-chip">
+              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.asr_emo) }"></span>
+              <span class="emo-name">ASR</span>
+              <span class="emo-val">{{ getEmotionCn(emotionResult.asr_emo) }}</span>
+            </div>
           </div>
         </div>
 
@@ -1311,6 +1722,19 @@ const displayMessages = computed(() => {
           <PhTrashSimple :size="20" weight="duotone" />
           <span>清空</span>
         </button>
+        <button
+          v-if="isDeviceActive"
+          class="ctrl-btn"
+          :class="{ inactive: !consentCamera }"
+          :aria-pressed="consentCamera"
+          :disabled="cameraStarting"
+          :title="consentCamera ? '关闭摄像头' : '开启摄像头'"
+          @click="toggleCamera"
+        >
+          <PhVideoCamera v-if="consentCamera" :size="20" weight="duotone" />
+          <PhVideoCameraSlash v-else :size="20" weight="duotone" />
+          <span>{{ consentCamera ? '关闭摄像头' : '开启摄像头' }}</span>
+        </button>
         <button v-if="isDeviceActive" class="ctrl-btn" title="暂停/继续通话" @click="togglePause">
           <PhPause v-if="!isPaused" :size="20" weight="duotone" />
           <PhPlay v-else :size="20" weight="duotone" />
@@ -1337,7 +1761,7 @@ const displayMessages = computed(() => {
       </div>
     </div>
 
-    <p class="vc-tips">说话后停顿 1.5 秒 AI 自动回复 · AI 说话时直接开口可打断 · 问「这是什么」可让 AI 观察画面</p>
+    <p class="vc-tips">说话后停顿 1.5 秒 AI 自动回复 · AI 说话时直接开口可打断 · 长时间不出声会自动结束通话 · 开启摄像头后可问「这是什么」让 AI 观察画面</p>
   </div>
 </template>
 <style scoped>
@@ -1446,6 +1870,7 @@ const displayMessages = computed(() => {
   object-fit: cover;
   transform: scaleX(-1);
 }
+.stage-video.hidden { display: none; }
 .stage-canvas { display: none; }
 .self-tag {
   position: absolute;
@@ -1489,7 +1914,7 @@ const displayMessages = computed(() => {
   gap: 10px;
   text-align: center;
   padding: 24px;
-  max-width: 340px;
+  max-width: 364px;
 }
 .idle-orb {
   width: 120px;
@@ -1512,6 +1937,16 @@ const displayMessages = computed(() => {
   font-size: 13px;
   line-height: 1.6;
 }
+.idle-ended {
+  margin: 4px 0 0;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(217, 161, 59, 0.12);
+  border: 1px solid rgba(217, 161, 59, 0.35);
+  color: #f0dcb0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
 .start-call-btn {
   margin-top: 10px;
   display: inline-flex;
@@ -1530,9 +1965,95 @@ const displayMessages = computed(() => {
 .start-call-btn:hover { background: #2a8262; }
 .start-call-btn:active { transform: scale(0.98); }
 .start-call-btn:focus-visible,
-.ctrl-btn:focus-visible {
+.ctrl-btn:focus-visible,
+.switch:focus-visible {
   outline: 2px solid #9fd4bd;
   outline-offset: 2px;
+}
+
+/* ===== 分项授权清单（开场前） ===== */
+.consent-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  --switch-on: #a896c8;
+  --switch-off: rgba(255, 255, 255, 0.22);
+}
+.consent-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: #c9cede;
+}
+.consent-item + .consent-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.consent-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.consent-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #eaecf3;
+}
+.consent-note {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #a6adc0;
+}
+.consent-fixed {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a6adc0;
+}
+
+/* ===== 开关（开场清单与通话侧栏共用） ===== */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.switch-track {
+  display: inline-flex;
+  align-items: center;
+  width: 36px;
+  height: 20px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--switch-off, rgba(104, 100, 111, 0.32));
+  transition: background 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.switch-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.switch-track.on {
+  background: var(--switch-on, var(--color-pine));
+}
+.switch-track.on .switch-thumb {
+  transform: translateX(16px);
 }
 
 /* ====== 通话中右下角陪伴浮窗（横向：图+状态文字）====== */
@@ -1646,6 +2167,105 @@ const displayMessages = computed(() => {
   z-index: 3;
 }
 
+/* 摄像头关闭：语音模式下的舞台说明（如实告知当前采集范围） */
+.stage-camoff {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  padding: 24px;
+  max-width: 320px;
+  color: #c9cede;
+}
+.camoff-title {
+  margin: 6px 0 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+.camoff-desc {
+  margin: 0;
+  color: #aeb4c4;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.camoff-btn {
+  margin-top: 12px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: transparent;
+  color: #eef0f7;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.camoff-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.42);
+}
+.camoff-btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+.camoff-btn:focus-visible {
+  outline: 2px solid #9fd4bd;
+  outline-offset: 2px;
+}
+
+/* 摄像头不可用等非阻塞提示（不打断对话） */
+.stage-notice {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  margin: 0;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: rgba(16, 19, 28, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #d7dbe6;
+  font-size: 12.5px;
+  z-index: 3;
+}
+
+/* 长时间没说话：先提示、再倒计时（倒计时阶段用琥珀色，提醒"即将结束"） */
+.stage-notice.idle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+.stage-notice.idle.countdown {
+  background: rgba(58, 44, 20, 0.92);
+  border-color: rgba(217, 161, 59, 0.5);
+  color: #f0dcb0;
+}
+.idle-keep-btn {
+  appearance: none;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.idle-keep-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.idle-keep-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+}
+
 /* ===== 对话侧栏 ===== */
 .vc-sidebar {
   width: 372px;
@@ -1678,11 +2298,42 @@ const displayMessages = computed(() => {
   color: var(--color-pine);
 }
 
+/* 多模态线索：开关 + 本轮线索 */
+.signal-panel {
+  border-bottom: 1px solid var(--color-hairline);
+  --switch-on: var(--color-pine);
+  --switch-off: rgba(104, 100, 111, 0.32);
+}
+.signal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px 6px;
+}
+.signal-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-soft);
+}
+.signal-state {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-ink-faint);
+}
+.signal-hint {
+  margin: 0;
+  padding: 0 14px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+}
+
 .emotion-strip {
   display: flex;
   gap: 6px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--color-hairline);
+  padding: 0 14px 10px;
   flex-wrap: wrap;
 }
 .emo-chip {
@@ -1831,6 +2482,10 @@ const displayMessages = computed(() => {
 }
 .ctrl-btn:active {
   transform: scale(0.97);
+}
+.ctrl-btn.inactive {
+  background: var(--color-paper);
+  color: var(--color-ink-faint);
 }
 .ctrl-btn.end {
   background: var(--color-pine);
