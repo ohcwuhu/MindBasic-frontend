@@ -66,6 +66,10 @@ const callState = ref<CallState>('idle')
 const isDeviceActive = ref(false)
 const isLoading = ref(false)
 const errorMsg = ref('')
+// 通话是否已经建立过（vc_start 已发出且未结束）。
+// 用于区分"首次连接"和"断线重连"：重连后必须补发 vc_start，
+// 否则服务端会话绑在旧 sid 上，用户再说话会被静默丢弃。
+let callEstablished = false
 
 // 视频 DOM
 const videoRef = ref<HTMLVideoElement | null>(null)
@@ -242,6 +246,29 @@ const connectSocket = () => {
   socket.value.on('connect', () => {
     socketStatus.value = 'connected'
     console.log('[VC] Socket connected, sid=' + socket.value?.id)
+
+    // ── 断线重连恢复 ──
+    // 重连会拿到新的 sid，服务端的通话会话绑在旧 sid 上。
+    // 不补发 vc_start 的话，之后每一轮 vc_audio_end 都会被服务端丢弃：
+    // 界面上一直显示"聆听中"，用户对着麦克风说话，AI 永远不回复。
+    if (callEstablished) {
+      console.log('[VC] 检测到重连，补发 vc_start 以恢复服务端会话')
+      socket.value?.emit('vc_start', {
+        consent: currentConsent('VIDEO_CALL_RECONNECT'),
+        // 带上原会话 id：服务端据此接回原会话，避免拆成两条记录并丢失上下文
+        conversation_id: conversationId.value ?? undefined,
+      })
+      // 断线期间在途的回复不会再回来，把界面从 thinking/speaking 拉回可说话状态
+      if (callState.value === 'thinking' || callState.value === 'speaking') {
+        isProcessing = false
+        callState.value = 'listening'
+      }
+      if (isDeviceActive.value && mediaStream && !isPaused.value) {
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') {
+          startAudioStreaming()
+        }
+      }
+    }
   })
 
   socket.value.on('disconnect', () => {
@@ -551,6 +578,7 @@ const startDevices = async () => {
 const onVideoReady = () => {
   isLoading.value = false
   isDeviceActive.value = true
+  callEstablished = true
   // 通知后端开始通话，并如实声明本次采集的授权范围
   // （摄像头默认关闭，只有用户主动开启后才会申请设备权限）
   socket.value?.emit('vc_start', {
@@ -589,6 +617,7 @@ const stopDevices = () => {
     videoRef.value.srcObject = null
   }
   isDeviceActive.value = false
+  callEstablished = false
   callState.value = 'idle'
   isPaused.value = false
   cameraStarting.value = false
