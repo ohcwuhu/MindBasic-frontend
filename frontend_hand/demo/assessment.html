@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>成长测评 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 成长测评：情绪、投入、关系、意义、行动五维自评，十个问题，一份可以对照着看的成长报告。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">我的成长</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <a href="my-growth.html">我的成长</a>
+            <span aria-hidden="true">/</span>
+            <span>成长测评</span>
+          </nav>
+          <h1 class="plate__title">五维成长自评</h1>
+          <p class="plate__lede">十个问题，按最近两周真实的感受选。没有对错，也不打分给你看。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="cols cols--aside">
+            <section class="panel" aria-labelledby="quiz-title">
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="quiz-title">按最近两周选</h2>
+                <p class="panel__note">已答 3 / 10</p>
+              </div>
+
+              <span class="meter" style="--meter-colour: var(--green-deep)"><i style="width: 30%"></i></span>
+
+              <div class="quiz">
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-emotion.webp" width="400" height="381" alt="" aria-hidden="true" />
+                      情绪
+                    </p>
+                    <p class="q__text">这半个月里，我能说出自己当下是什么情绪。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-emotion.webp" width="400" height="381" alt="" aria-hidden="true" />
+                      情绪
+                    </p>
+                    <p class="q__text">难受的时候，我知道做什么能让自己好一点点。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-engagement.webp" width="400" height="373" alt="" aria-hidden="true" />
+                      投入
+                    </p>
+                    <p class="q__text">做一件事的时候，我常常忘了时间。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-relation.webp" width="400" height="307" alt="" aria-hidden="true" />
+                      关系
+                    </p>
+                    <p class="q__text">身边至少有一个人，我可以把难堪的事讲给他听。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-relation.webp" width="400" height="307" alt="" aria-hidden="true" />
+                      关系
+                    </p>
+                    <p class="q__text">需要说「不」的时候，我能说出口。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-meaning.webp" width="326" height="400" alt="" aria-hidden="true" />
+                      意义
+                    </p>
+                    <p class="q__text">我知道自己现在做的事，是为了什么。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-meaning.webp" width="326" height="400" alt="" aria-hidden="true" />
+                      意义
+                    </p>
+                    <p class="q__text">回头看这半个月，我觉得有些事是值得的。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-action.webp" width="400" height="345" alt="" aria-hidden="true" />
+                      行动
+                    </p>
+                    <p class="q__text">想做的事，我通常能在三天内迈出第一步。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-action.webp" width="400" height="345" alt="" aria-hidden="true" />
+                      行动
+                    </p>
+                    <p class="q__text">事情没做完的时候，我不会整晚责备自己。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+
+                <div class="q">
+                  <div>
+                    <p class="q__dim">
+                      <img src="assets/dim-engagement.webp" width="400" height="373" alt="" aria-hidden="true" />
+                      投入
+                    </p>
+                    <p class="q__text">我愿意为一件喜欢的事，留出固定的时间。</p>
+                  </div>
+                  <div class="scale" role="group" aria-label="从完全不符合到完全符合">
+                    <button type="button" aria-label="1 分">1</button>
+                    <button type="button" aria-label="2 分">2</button>
+                    <button type="button" aria-pressed="true" aria-label="3 分">3</button>
+                    <button type="button" aria-label="4 分">4</button>
+                    <button type="button" aria-label="5 分">5</button>
+                  </div>
+                </div>
+              </div>
+
+              <p class="scale__legend">
+                <span>1 · 完全不符合</span>
+                <span>3 · 说不上来</span>
+                <span>5 · 完全符合</span>
+              </p>
+
+              <p class="panel__foot">
+                十个问题为示例题目，接入后来自平台测评模板（`GET /growth-assessments/template`）。
+              </p>
+            </section>
+
+            <aside class="stack">
+              <section class="panel" aria-labelledby="last-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="last-title">上一次的结果</h2>
+                  <p class="panel__note">2026-10-05</p>
+                </div>
+                <ul class="dims">
+                  <li class="dim" style="--meter-colour: #e0a9bd">
+                    <img src="assets/dim-emotion.webp" width="400" height="381" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="dim__label"><strong>情绪</strong><em>68</em></p>
+                      <span class="meter"><i style="width: 68%"></i></span>
+                    </div>
+                  </li>
+                  <li class="dim" style="--meter-colour: #e7a86a">
+                    <img src="assets/dim-engagement.webp" width="400" height="373" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="dim__label"><strong>投入</strong><em>54</em></p>
+                      <span class="meter"><i style="width: 54%"></i></span>
+                    </div>
+                  </li>
+                  <li class="dim" style="--meter-colour: #93c0d6">
+                    <img src="assets/dim-relation.webp" width="400" height="307" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="dim__label"><strong>关系</strong><em>61</em></p>
+                      <span class="meter"><i style="width: 61%"></i></span>
+                    </div>
+                  </li>
+                </ul>
+                <p class="panel__foot"><a class="link-quiet" href="my-growth.html">看完整报告</a></p>
+              </section>
+
+              <section class="panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">这份自评是什么</h2>
+                </div>
+                <p class="prose">
+                  它是一面镜子，不是一张诊断书：只看你最近两周的状态，帮你找到最想先动的那一维。
+                  分数高低不代表好坏，变化的方向才有意义。
+                </p>
+                <a class="btn btn--block" href="my-growth.html">
+                  <span>提交，看结果</span>
+                  <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                </a>
+                <p class="panel__foot">
+                  如果最近常有伤害自己的念头，请先拨打 <a href="tel:12356">12356</a>，或前往就近医院急诊。
+                </p>
+              </section>
+            </aside>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+        <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：题目与分数为示例内容</p>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/assessment.js"></script>
+  </body>
+</html>

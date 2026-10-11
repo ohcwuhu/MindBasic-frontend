@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>通知 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 通知：预约、审核与平台消息，读过就轻一点。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-notifications">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="login.html">注册 / 开始登录</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <span>通知</span>
+          </nav>
+          <h1 class="plate__title">通知</h1>
+          <p class="plate__lede">预约、审核和平台消息都在这里。读过的会变淡，没读的留一个实心点。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="panel" aria-labelledby="noti-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="noti-title">站内通知</h2>
+              <p class="panel__note">按时间倒序，最新的在最前面。</p>
+            </div>
+
+            <div class="filters">
+              <ul class="keys" aria-label="筛选">
+                <li><button class="key is-current" type="button" data-only="0">全部</button></li>
+                <li><button class="key" type="button" data-only="1">只看未读</button></li>
+              </ul>
+              <button class="btn btn--paper btn--small" type="button" data-read-all>全部标为已读</button>
+              <p class="filters__count" data-count aria-live="polite">示例数据 · 2 条未读</p>
+            </div>
+
+            <ul class="rows" data-list>
+              <li class="noti">
+                <span class="noti__dot" aria-hidden="true"></span>
+                <div>
+                  <p class="noti__title">预约已确认 <span class="chip chip--green">预约</span></p>
+                  <p class="noti__body">你和林教练 10 月 14 日 20:00 的那次对话，教练已经确认了。</p>
+                  <p class="noti__time">2026/10/11 20:31</p>
+                </div>
+                <button class="act" type="button">标记已读</button>
+              </li>
+              <li class="noti">
+                <span class="noti__dot" aria-hidden="true"></span>
+                <div>
+                  <p class="noti__title">这周的情绪有点沉 <span class="chip chip--lilac">系统</span></p>
+                  <p class="noti__body">连着的三天都记了「低落」。要不要找个熟悉的人说说话？</p>
+                  <p class="noti__time">2026/10/10 09:12</p>
+                </div>
+                <button class="act" type="button">标记已读</button>
+              </li>
+              <li class="noti is-read">
+                <span class="noti__dot" aria-hidden="true"></span>
+                <div>
+                  <p class="noti__title">你的自我教练记录已保存 <span class="chip">系统</span></p>
+                  <p class="noti__body">10 月 8 日那次通话的记录已经存好了，可以在「我的成长」里回看。</p>
+                  <p class="noti__time">2026/10/08 21:40</p>
+                </div>
+              </li>
+            </ul>
+
+            <div class="pager">
+              <p class="pager__count" data-pager-count>示例数据 · 共 3 条</p>
+              <div class="pager__steps">
+                <button class="btn btn--paper btn--small" type="button" data-prev disabled>上一页</button>
+                <button class="btn btn--paper btn--small" type="button" data-next disabled>下一页</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script src="scripts/api.js"></script>
+    <script src="scripts/notifications.js"></script>
+  </body>
+</html>

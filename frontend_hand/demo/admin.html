@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>管理工作台 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 管理工作台：平台运行概览、待办与最新数据。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-admin">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">个人中心</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <p class="crumbs" aria-label="位置"><span>管理工作台</span></p>
+          <h1 class="plate__title">平台的这一天</h1>
+          <p class="plate__lede">运行情况、待处理的事、最新的用户与内容 —— 都在这一页。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <nav class="keys atabs" aria-label="管理工作台模块">
+            <a class="key is-current" href="admin.html" aria-current="page">概览</a>
+            <a class="key" href="admin-users.html">用户</a>
+            <a class="key" href="admin-articles.html">内容</a>
+            <a class="key" href="admin-coach-audits.html">教练审核</a>
+          </nav>
+
+          <!-- ===== 概览 ===== -->
+          <section class="panel" aria-labelledby="stat-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="stat-title">概览</h2>
+              <p class="panel__note" data-admin-updated aria-live="polite">读取中…</p>
+            </div>
+            <ul class="stats" data-admin-stats>
+              <li class="stat"><strong>—</strong><span>注册用户</span></li>
+              <li class="stat"><strong>—</strong><span>教练</span></li>
+              <li class="stat"><strong>—</strong><span>预约</span></li>
+              <li class="stat"><strong>—</strong><span>待处理预约</span></li>
+              <li class="stat"><strong>—</strong><span>文章</span></li>
+              <li class="stat"><strong>—</strong><span>今日新增用户</span></li>
+            </ul>
+          </section>
+
+          <!-- ===== 待办 ===== -->
+          <section class="section" aria-labelledby="todo-title">
+            <div class="band__head">
+              <h2 class="band__title" id="todo-title">待处理</h2>
+              <p class="band__note">需要人看一眼的两类：危机预警与教练资质审核。</p>
+            </div>
+
+            <div class="cols cols--2">
+              <section class="panel" aria-labelledby="crisis-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="crisis-title">危机预警</h2>
+                  <p class="panel__note" data-crisis-count aria-live="polite">读取中…</p>
+                </div>
+                <ul class="stack" data-crisis-list></ul>
+              </section>
+
+              <section class="panel" aria-labelledby="audit-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="audit-title">教练资质审核</h2>
+                  <p class="panel__note" data-audit-count aria-live="polite">读取中…</p>
+                </div>
+                <ul class="stack" data-audit-list></ul>
+              </section>
+            </div>
+          </section>
+
+          <!-- ===== 两个列表 ===== -->
+          <section class="section" aria-labelledby="recent-title">
+            <div class="band__head">
+              <h2 class="band__title" id="recent-title">最新</h2>
+              <p class="band__note">最近注册的用户，与最近发布的文章。</p>
+            </div>
+
+            <div class="cols cols--2">
+              <div class="panel">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title">新用户</h2>
+                  <a class="link-quiet" href="admin-users.html">全部用户</a>
+                </div>
+                <table class="table">
+                  <thead>
+                    <tr><th>昵称</th><th>角色</th><th class="is-num">注册时间</th></tr>
+                  </thead>
+                  <tbody data-users-body>
+                    <tr><td colspan="3">读取中…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="panel">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title">新文章</h2>
+                  <a class="link-quiet" href="admin-articles.html">全部内容</a>
+                </div>
+                <table class="table">
+                  <thead>
+                    <tr><th>标题</th><th>状态</th><th class="is-num">阅读</th></tr>
+                  </thead>
+                  <tbody data-articles-body>
+                    <tr><td colspan="3">读取中…</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script src="scripts/api.js"></script>
+    <script src="scripts/admin.js"></script>
+  </body>
+</html>

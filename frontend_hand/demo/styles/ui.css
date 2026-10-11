@@ -1,0 +1,1003 @@
+/* 斐思同行 · 共用界面层
+
+   Everything the surfaces have in common lives here: the wordmark and navigation, the drawn
+   button, the paper panel and the lifted note, the band headers, the pinned stationery and
+   the compliance footer. The homepage keeps its own copy of the primitives it was signed off
+   with, so this file is what the *inner* pages are built from — same declarations, same
+   palette, same hand.
+
+   The page furniture for an inner surface is here too: `.plate` is the field's own top band
+   (the same plate the homepage opens on, bottom-anchored so its last row of pixels is the
+   grass), `.ground` carries that grass on under the whole page, and `.section` stacks the
+   bands. A page that uses them is standing on the same field as the homepage, from its first
+   pixel to its footer. */
+
+/* =====================================================================================
+   1 · masthead — the wordmark, the navigation, the two quiet links
+   ===================================================================================== */
+
+/* the field owns the top of every page, so the masthead rides on the plate's sky rather
+   than sitting above it in a strip of its own (same treatment as the homepage) */
+.masthead {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.masthead__inner {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2vw, 34px);
+  padding-block: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 0 0 auto;
+}
+
+.brand__mark {
+  width: 32px;
+  height: auto;
+}
+
+.brand__name {
+  font-family: var(--font-hand);
+  font-size: var(--fs-wordmark);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.nav {
+  margin-inline: auto;
+}
+
+.nav__list {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav__link {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding-inline: 14px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink-body);
+  white-space: nowrap;
+  transition: background-color 180ms var(--ease-out);
+}
+
+.nav__link:hover {
+  background: color-mix(in srgb, var(--lilac) 55%, transparent);
+}
+
+.nav__link.is-current {
+  background: var(--lilac);
+  color: var(--ink);
+}
+
+.masthead__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+}
+
+.link-quiet {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink-body);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.34em;
+}
+
+.link-quiet:hover {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+
+.ic {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
+/* =====================================================================================
+   2 · the drawn controls
+   ===================================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 22px;
+  border: 2px solid var(--ink-line);
+  border-radius: 44px 36px 46px 34px / 36px 46px 34px 44px;
+  background: var(--green);
+  font-family: var(--font-hand);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--ink);
+  transition: background-color 200ms var(--ease-out), transform 200ms var(--ease-out);
+}
+
+.btn:hover {
+  background: var(--green-deep);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn--yellow {
+  background: var(--yellow);
+}
+
+.btn--yellow:hover {
+  background: var(--yellow-deep);
+}
+
+.btn--paper {
+  background: var(--surface);
+}
+
+.btn--paper:hover {
+  background: var(--paper);
+}
+
+.btn--small {
+  min-height: 38px;
+  padding: 6px 18px;
+  font-size: 1rem;
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn[disabled],
+.btn[aria-disabled='true'] {
+  background: var(--paper);
+  border-color: var(--hairline);
+  color: var(--ink-muted);
+  cursor: not-allowed;
+}
+
+.btn__arrow {
+  width: 26px;
+  height: auto;
+  transition: transform 200ms var(--ease-out);
+}
+
+.btn:hover .btn__arrow {
+  transform: translateX(3px);
+}
+
+.arrow {
+  width: 28px;
+  height: auto;
+  flex: 0 0 auto;
+  transition: transform 220ms var(--ease-out);
+}
+
+.link-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.link-more:hover .arrow {
+  transform: translateX(5px);
+}
+
+/* a row action reads as a quiet link, not a button: a table with nine buttons per row is a
+   control panel, and only the destructive one gets ink of its own */
+.act {
+  padding: 2px 1px;
+  border-radius: 6px;
+  font-family: var(--font-hand);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.3em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.act:hover {
+  text-decoration-color: currentColor;
+}
+
+.act--warn {
+  color: var(--danger-ink);
+}
+
+.act[disabled],
+.act[aria-disabled='true'] {
+  color: var(--ink-muted);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+/* the inline confirm: a destructive action asks in the place it will happen, instead of
+   interrupting the whole screen for a yes/no */
+.confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.confirm__ask {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+/* =====================================================================================
+   3 · paper — a panel is drawn, a note is lifted, never both
+   ===================================================================================== */
+
+.panel {
+  position: relative;
+  padding: var(--panel-pad);
+  background: var(--surface);
+  border: 2px solid var(--ink-line);
+  border-radius: 20px 14px 22px 13px / 14px 22px 13px 20px;
+}
+
+.note {
+  position: relative;
+  background: var(--surface);
+  border-radius: 16px 12px 18px 11px / 12px 18px 11px 16px;
+  box-shadow: 0 14px 20px -15px rgba(28, 24, 22, 0.45);
+}
+
+.panel__head {
+  margin-bottom: 16px;
+}
+
+.panel__head--row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* 这一行里左侧是标题、右侧是一句说明：说明长了要自己折行，别把整行撑宽 */
+.panel__head--row > * {
+  min-width: 0;
+}
+
+.panel__title {
+  font-size: var(--fs-h2);
+}
+
+.panel__note {
+  margin-top: 4px;
+  font-size: var(--fs-small);
+  color: var(--ink-muted);
+}
+
+.panel__foot {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--hairline);
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.band__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 16px;
+}
+
+.band__title {
+  font-size: var(--fs-h2);
+}
+
+.band__note {
+  max-width: 46ch;
+  font-size: var(--fs-small);
+  color: var(--ink-body);
+}
+
+.tag {
+  font-family: var(--font-hand);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  color: var(--ink-muted);
+}
+
+.pin {
+  position: absolute;
+  top: 0;
+  left: 22px;
+  width: 20px;
+  height: auto;
+  translate: 0 -58%;
+  rotate: 5deg;
+  pointer-events: none;
+}
+
+/* a small drawn stamp for "example data" / "example draft" marks */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1.5px solid var(--hairline);
+  border-radius: 12px 9px 13px 8px / 9px 13px 8px 12px;
+  font-family: var(--font-hand);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  color: var(--ink-muted);
+  rotate: -1.4deg;
+}
+
+/* =====================================================================================
+   4 · the field an inner page stands on
+   ===================================================================================== */
+
+/* the plate, bottom-anchored: the band's last row of pixels is the plate's grass, so the
+   ground below carries on from exactly there — same seam rule as the homepage hero */
+.plate {
+  position: relative;
+  height: clamp(360px, 38vw, 540px);
+  background: url('../assets/field-bg.webp') center bottom / 100% auto no-repeat;
+}
+
+.plate__inner {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding-top: clamp(80px, 7vw, 112px);
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: var(--fs-label);
+  color: var(--ink-body);
+}
+
+.crumbs a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+}
+
+.crumbs span[aria-hidden] {
+  color: var(--ink-muted);
+}
+
+.plate__title {
+  font-size: var(--fs-hero);
+  line-height: 1.2;
+}
+
+.plate__title .mark {
+  background-size: 100% 0.36em;
+}
+
+.plate__lede {
+  margin-top: 12px;
+  max-width: 46ch;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--ink-body);
+}
+
+.ground {
+  background: url('../assets/field-ground.webp') top center / 100% auto repeat-y;
+  padding-top: var(--stack);
+  padding-bottom: var(--stack);
+}
+
+.section + .section {
+  margin-top: var(--stack);
+}
+
+.band + .band {
+  margin-top: var(--stack);
+}
+
+/* =====================================================================================
+   5 · grids
+   ===================================================================================== */
+
+.cols {
+  display: grid;
+  gap: clamp(16px, 1.6vw, 24px);
+  align-items: start;
+}
+
+.cols--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cols--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cols--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cols--aside {
+  grid-template-columns: minmax(0, 1fr) 356px;
+}
+
+.cols--aside-left {
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+/* a pill keeps its own width inside a stacked column instead of stretching to the column */
+.stack > .chip,
+.stack > .key,
+.stack > .stamp {
+  justify-self: start;
+}
+
+/* =====================================================================================
+   6 · chips, pills, keys, meters
+   ===================================================================================== */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--ink-body);
+}
+
+.chip--green {
+  background: var(--green-soft);
+  border-color: transparent;
+  color: var(--green-ink);
+}
+
+.chip--yellow {
+  background: var(--yellow-soft);
+  border-color: transparent;
+  color: var(--yellow-ink);
+}
+
+.chip--lilac {
+  background: var(--lilac);
+  border-color: transparent;
+  color: var(--ink);
+}
+
+.chip__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.key {
+  padding: 5px 14px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink-body);
+  transition: background-color 180ms var(--ease-out);
+}
+
+.key:hover {
+  background: var(--lilac);
+  color: var(--ink);
+}
+
+.key.is-current {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface);
+}
+
+/* a short checklist inside a panel: the drawn tick, then the line */
+.ticks {
+  display: grid;
+  gap: 7px;
+  margin-top: 2px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--hairline);
+}
+
+.ticks li {
+  position: relative;
+  padding-left: 18px;
+  font-size: var(--fs-small);
+  line-height: 1.55;
+  color: var(--ink-body);
+}
+
+.ticks li::before {
+  content: '';
+  position: absolute;
+  top: 0.42em;
+  left: 0;
+  width: 11px;
+  height: 11px;
+  background: url('../assets/prop-check.webp') center / contain no-repeat;
+  opacity: 0.85;
+}
+
+/* a value bar (five-dimension scores, progress) */
+.meter {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+
+.meter i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--meter-colour, var(--green));
+}
+
+/* five-step answer scale (量表) */
+.scale {
+  display: flex;
+  gap: 6px;
+}
+
+.scale button {
+  width: 38px;
+  height: 38px;
+  border: 1.5px solid var(--ink-line);
+  border-radius: 14px 10px 15px 9px / 10px 15px 9px 14px;
+  background: var(--surface);
+  font-family: var(--font-hand);
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 160ms var(--ease-out);
+}
+
+.scale button:hover {
+  background: var(--yellow);
+}
+
+.scale button[aria-pressed='true'] {
+  background: var(--green);
+}
+
+/* =====================================================================================
+   7 · lists and rows
+   ===================================================================================== */
+
+.rows {
+  display: grid;
+}
+
+.rows > li + li {
+  border-top: 1px solid var(--hairline);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 4px;
+  transition: background-color 160ms var(--ease-out);
+}
+
+.row:hover {
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+
+.row__art {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.row__title {
+  display: block;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.row__meta {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.row__side {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* =====================================================================================
+   8 · forms
+   ===================================================================================== */
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.field__row {
+  display: flex;
+  gap: 10px;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--ink-line);
+  border-radius: 14px 10px 16px 9px / 10px 16px 9px 14px;
+  font: inherit;
+  font-size: var(--fs-small);
+  color: var(--ink);
+}
+
+.textarea {
+  min-height: 108px;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--ink-muted);
+  opacity: 0.85;
+}
+
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.field__hint {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.field__error {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--danger-ink);
+}
+
+.checkline {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: var(--fs-small);
+  color: var(--ink-body);
+}
+
+.checkline input {
+  width: 17px;
+  height: 17px;
+  margin: 4px 0 0;
+  accent-color: var(--green-deep);
+  flex: 0 0 auto;
+}
+
+.checkline a {
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.3em;
+}
+
+/* the drawn tab pair (手机号密码 / 邮箱验证码) */
+.tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--paper);
+  border-radius: 999px;
+}
+
+.tab {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink-body);
+  transition: background-color 180ms var(--ease-out);
+}
+
+.tab:hover {
+  background: color-mix(in srgb, var(--lilac) 60%, transparent);
+}
+
+.tab.is-current {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* =====================================================================================
+   9 · tables (the dense surfaces keep their original skeleton: filter · table · pager)
+   ===================================================================================== */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: middle;
+}
+
+.table th {
+  font-family: var(--font-hand);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.table td.is-num,
+.table th.is-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody tr:hover {
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+}
+
+/* =====================================================================================
+   10 · empty state
+   ===================================================================================== */
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px 20px 30px;
+  text-align: center;
+}
+
+.empty img {
+  width: 96px;
+  height: auto;
+}
+
+.empty__title {
+  font-size: var(--fs-h3);
+}
+
+.empty__body {
+  max-width: 40ch;
+  font-size: var(--fs-small);
+  color: var(--ink-muted);
+}
+
+/* =====================================================================================
+   11 · the compliance footer
+   ===================================================================================== */
+
+.footer {
+  background: var(--paper);
+  border-top: 1px solid var(--paper-edge);
+}
+
+.footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 28px;
+  padding-block: 18px 22px;
+  font-size: var(--fs-small);
+}
+
+.footer__hotline a {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-decoration: underline;
+  text-decoration-color: var(--paper-edge);
+}
+
+.footer__hotline a:hover {
+  text-decoration-color: currentColor;
+}
+
+.footer__hint,
+.footer__note {
+  color: var(--ink-muted);
+}
+
+.footer__note--demo {
+  margin-left: auto;
+}
+
+.footer__links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-muted);
+}
+
+.footer__links a:hover {
+  color: var(--ink);
+}
+
+/* =====================================================================================
+   12 · dense surfaces — filter · table · pager
+
+   Any list that has to be worked through rather than browsed: a filter row over the scope,
+   the table itself, then the pager. The skeleton rows are what a table body shows while the
+   request is in flight — an operating surface keeps its shape instead of collapsing into a
+   spinner in the middle of the page. */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+  margin-bottom: 18px;
+}
+
+/* the filter row is not a form column, so its controls keep their own width */
+.filters .select {
+  width: auto;
+  min-width: 132px;
+}
+
+.filters__count {
+  margin-left: auto;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* numerals that have to line up in a column without being pushed to the right edge */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* money going out — the sign already says it, the colour makes it scannable */
+.is-out {
+  color: var(--danger-ink);
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 18px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--hairline);
+}
+
+.pager__count {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pager__steps {
+  display: flex;
+  gap: 10px;
+}
+
+/* loading: the table keeps its rows and its height, only the words are missing yet */
+.skl {
+  display: block;
+  width: var(--skl-w, 100%);
+  height: 12px;
+  border-radius: 6px;
+  background: var(--paper);
+  animation: skl-breathe 1.5s var(--ease-out) infinite;
+}
+
+@keyframes skl-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* =====================================================================================
+   13 · narrower desktop — a web surface: the layout keeps tightening, it never becomes
+        a phone composition
+   ===================================================================================== */
+
+@media (max-width: 1180px) {
+  .cols--3,
+  .cols--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cols--aside,
+  .cols--aside-left {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 980px) {
+  .nav__link {
+    padding-inline: 10px;
+    font-size: var(--fs-small);
+  }
+
+  .cols--2,
+  .cols--3,
+  .cols--4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

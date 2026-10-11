@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>个人资料 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 个人资料：昵称、头像、邮箱绑定、改密，以及数据导出、注销与删除。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">我的成长</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <a href="my-growth.html">我的成长</a>
+            <span aria-hidden="true">/</span>
+            <span>个人资料</span>
+          </nav>
+          <h1 class="plate__title">个人资料</h1>
+          <p class="plate__lede">你的记录属于你。这里能看到它、带走它，也能删掉它。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="panel">
+            <div class="account">
+              <span class="account__avatar" aria-hidden="true">小</span>
+              <div>
+                <h2 class="account__name">小舟</h2>
+                <p class="account__meta">138****0621 · 2026 年 8 月加入 · 连续记录 5 天</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="section cols cols--aside">
+            <section class="panel" aria-labelledby="basic-title">
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="basic-title">基本资料</h2>
+                <p class="panel__note">改完点保存就好</p>
+              </div>
+
+              <form class="form" action="profile.html" method="get" data-basic-form>
+                <div class="field">
+                  <label class="field__label" for="nick">昵称</label>
+                  <input class="input" id="nick" name="nickname" maxlength="20" value="小舟" />
+                  <p class="field__hint">会出现在你的日记和教练评价里。</p>
+                </div>
+
+                <div class="field">
+                  <label class="field__label" for="gender">性别</label>
+                  <select class="select" id="gender" name="gender">
+                    <option>不方便说</option>
+                    <option>女</option>
+                    <option>男</option>
+                    <option>其他</option>
+                  </select>
+                </div>
+
+                <button class="btn" type="submit">
+                  <span>保存</span>
+                  <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                </button>
+              </form>
+            </section>
+
+            <div class="stack">
+              <section class="panel" aria-labelledby="acct-title">
+                <div class="panel__head">
+                  <h2 class="panel__title" id="acct-title">账号</h2>
+                </div>
+                <div class="kv">
+                  <div class="kv__row">
+                    <span class="kv__key">手机号</span>
+                    <span class="kv__val">138****0621</span>
+                    <span class="anote">登录账号</span>
+                  </div>
+                  <div class="kv__row">
+                    <span class="kv__key">登录方式</span>
+                    <span class="kv__val">手机号密码 · 邮箱验证码</span>
+                    <span></span>
+                  </div>
+                  <div class="kv__row">
+                    <span class="kv__key">我的订单</span>
+                    <span class="kv__val" data-orders>还没有订单</span>
+                    <span></span>
+                  </div>
+                  <div class="kv__row">
+                    <span class="kv__key">通知</span>
+                    <span class="kv__val">全部开启</span>
+                    <a class="link-quiet" href="notifications.html">查看</a>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="mail-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="mail-title">邮箱</h2>
+                  <p class="panel__note" data-mail-note>绑定后能收验证码，也能自己找回密码</p>
+                </div>
+                <form class="form" data-mail-form novalidate>
+                  <div class="field">
+                    <label class="field__label" for="mail">邮箱</label>
+                    <input class="input" id="mail" name="email" type="email" placeholder="name@example.com" autocomplete="email" />
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="mailcode">验证码</label>
+                    <span class="field__row">
+                      <input class="input" id="mailcode" name="code" inputmode="numeric" maxlength="6" placeholder="6 位数字" autocomplete="one-time-code" />
+                      <button class="btn btn--paper btn--small" type="button" data-send-code>获取验证码</button>
+                    </span>
+                    <p class="field__hint" data-send-note aria-live="polite" hidden></p>
+                  </div>
+                  <p class="field__error" data-mail-error aria-live="polite" hidden></p>
+                  <div class="field__row">
+                    <button class="btn btn--small" type="submit">绑定邮箱</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="panel" aria-labelledby="pwd-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="pwd-title">修改密码</h2>
+                  <p class="panel__note">改完这台设备要重新登录一次</p>
+                </div>
+                <form class="form" data-password-form novalidate>
+                  <div class="field">
+                    <label class="field__label" for="oldpass">原密码</label>
+                    <input class="input" id="oldpass" name="oldPassword" type="password" autocomplete="current-password" />
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="newpass">新密码</label>
+                    <input class="input" id="newpass" name="newPassword" type="password" placeholder="至少 8 位，字母加数字" autocomplete="new-password" />
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="again">再输一次</label>
+                    <input class="input" id="again" name="again" type="password" autocomplete="new-password" />
+                  </div>
+                  <p class="field__error" data-password-error aria-live="polite" hidden></p>
+                  <div class="field__row">
+                    <button class="btn btn--small" type="submit">修改密码</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="panel danger" aria-labelledby="privacy-title">
+                <div class="panel__head">
+                  <h2 class="panel__title" id="privacy-title">数据与隐私</h2>
+                  <p class="panel__note" data-privacy-note>导出的文件 7 天内可以下载</p>
+                </div>
+                <ul class="stack">
+                  <li><button class="btn btn--paper btn--block" type="button" data-export>导出我的数据</button></li>
+                  <li><button class="btn btn--paper btn--block" type="button" data-deactivate>停用账号（可恢复）</button></li>
+                  <li><button class="btn btn--paper btn--block" type="button" data-delete>永久删除账号与全部记录</button></li>
+                </ul>
+                <div data-privacy-msg aria-live="polite"></div>
+                <ul class="rows" data-exports></ul>
+                <p class="panel__foot">
+                  导出会打包你的情绪日记、AI 对话与测评结果，直接下载一个 JSON 文件；
+                  删除之后无法恢复，导出的文件也留不下。
+                </p>
+              </section>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/profile.js"></script>
+  </body>
+</html>

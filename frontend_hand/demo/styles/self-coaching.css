@@ -1,0 +1,561 @@
+/* 斐思同行 · 自我教练（画风层）
+
+   这一页的 DOM 全部来自原前端的 Vue 组件 —— `VideoCallView.vue` +
+   `components/ai-lab/VideoCallPanel.vue` + `CompanionSprite.vue`，由 `vue/` 里那份
+   构建编成 `scripts/self-coaching-app.js`。原组件自带的 `<style scoped>` 也在产物里
+   （`scripts/self-coaching-app.css`），版式、栅格、间距、字号、状态名都还是它们的值。
+
+   这份样式只做两件事：
+     1. 把原组件用的 `--color-*` 令牌接到手绘世界的纸面与墨色上 —— 一处映射，整页跟着变；
+     2. 覆盖那些「原版是深色画布 / 依赖 Tailwind 工具类」的地方：舞台那块**视频面**、
+        通话中右下角的陪伴浮窗、对话侧栏与气泡、控制条、以及 VideoCallView 的两个弹窗。
+
+   背景图是这一页自己的：`纯水彩草地背景.png`（2590×1619 的整幅草地），其余十五页不变。 */
+
+/* =====================================================================================
+   0 · 页面框架 —— 页头 / 通话台 / 页脚排满一屏，通话台就是原版那一块
+   ===================================================================================== */
+
+body {
+  /* 页头是 60px 高（12+36+12，ui.css 里那套）；拿它把通话台撑满第一屏用 */
+  --masthead-h: 60px;
+  /* 这一页自己的地：客户给的「纯水彩草地背景」——一整幅水彩草地，固定不动，
+     内容从上面滑过去。（换回上一张只要把这行换成
+     `url('../assets/emotion-journal-bg.webp')` + 底色 `#e8e3d5`。） */
+  background: #c0da8d url('../assets/field-grass.webp') center center / cover fixed no-repeat;
+  /* 一屏三行：页头、通话台、页脚 —— 原版是把通话台钉在视口里（top:64px;bottom:0），
+     这里换成页头与页脚之间的那一格，其余（16px 内边距、舞台 : 侧栏 = 其余 : 372px）不变 */
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 100vh;
+}
+
+.masthead {
+  position: relative;
+  z-index: 3;
+}
+
+/* 通话台占满第一屏：页头之下正好一屏，**页脚被挤到折线下方**（往下滑一点才看到）。
+
+   这里必须是**确定的高度**（`height`，不是 `min-height`）：原版把整页钉在视口里
+   （`position: fixed; top: 64px; bottom: 0`），高度确定，所以舞台 / 对话 / 对话流才能
+   「填满一屏、各自内部滚」。换成 `min-height` 高度就变成 `auto`，`flex: 1 + overflow-y: auto`
+   的对话区失去约束 —— 消息一多整列被顶高，舞台跟着变大（「越聊视频越大」就是这么来的）。 */
+#main.page {
+  display: flex;
+  min-height: 0;
+  height: calc(100vh - var(--masthead-h));
+}
+
+#app {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 原页面：position: fixed; top: 64px; bottom: 0; background: 纸色; padding: 16px。
+   这里只把「钉在视口」换成「站在页头与页脚之间」，内边距与纵向节奏照旧。 */
+#app .video-call-page {
+  position: static;
+  inset: auto;
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  background: none; /* 让背景图透出来 —— 原版是一块平铺的纸色 */
+  padding: 12px 16px 10px;
+}
+
+.boot-note {
+  margin: 0;
+  padding: 40px 16px;
+  font-family: var(--font-hand);
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+/* =====================================================================================
+   1 · 顶栏：连接状态 / 通话状态 / 轮次
+      （原组件的 `--color-*` 令牌映射在 styles/vue-pages.css，与情绪日记页共用）
+   ===================================================================================== */
+
+#app .socket-chip,
+#app .state-chip {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--hairline);
+  color: var(--ink-body);
+}
+
+#app .socket-dot {
+  background: var(--ink-muted);
+}
+
+#app .socket-chip.connected {
+  color: var(--green-ink);
+}
+
+#app .socket-chip.connected .socket-dot {
+  background: var(--green-deep);
+}
+
+#app .socket-chip.connecting {
+  color: var(--yellow-ink);
+}
+
+#app .socket-chip.connecting .socket-dot {
+  background: var(--yellow-deep);
+}
+
+#app .socket-chip.disconnected {
+  color: #a8503c;
+}
+
+#app .socket-chip.disconnected .socket-dot {
+  background: #c1684c;
+}
+
+#app .state-chip.listening {
+  background: var(--green-soft);
+  border-color: transparent;
+  color: var(--green-ink);
+}
+
+#app .state-chip.thinking {
+  background: var(--yellow-soft);
+  border-color: transparent;
+  color: var(--yellow-ink);
+}
+
+#app .state-chip.speaking {
+  background: var(--green-soft);
+  border-color: transparent;
+  color: var(--green-deep);
+}
+
+#app .state-chip.idle.paused,
+#app .state-chip.listening.paused {
+  background: var(--paper);
+  border-color: var(--hairline);
+  color: var(--ink-muted);
+}
+
+#app .vc-stats {
+  color: var(--ink-body);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =====================================================================================
+   2 · 通话舞台 —— 一块**摄像头画面**，摄像头的画面就是这里的内容，所以它是灰的
+      （绘画世界里没有照片可放；不是插画，也不是深色画布）
+   ===================================================================================== */
+
+#app .vc-stage {
+  /* 一块**深灰的视频面**：原版这块是近黑的画布（#10131c），舞台上的字是白的。
+     3D 陪伴角色就是照着深底画、照着深底抠的（抠像阈值 30 也是为黑底定的），
+     压到亮灰上会发灰、没立体感 —— 所以这里用深灰，颜色仍是「一块灰的视频面」，
+     白字压在上面还有 9:1 以上。 */
+  background: linear-gradient(180deg, #5b5754 0%, #4b4845 60%, #454240 100%);
+  border: 2px solid var(--ink-line);
+  border-radius: 22px 14px 24px 13px / 14px 24px 13px 22px;
+}
+
+/* 开场前（未开始）：角色站在光球位、标题、说明、三项授权、开始按钮，全在深灰面上。
+   文字保持原版的浅色 —— 深底浅字，与 3D 角色同一套明暗关系。 */
+#app .stage-loading,
+#app .idle-desc,
+#app .stage-camoff,
+#app .camoff-desc {
+  color: #ded8d1;
+}
+
+#app .idle-title,
+#app .camoff-title {
+  color: #fdfaf5;
+}
+
+#app .loader {
+  border-color: rgba(255, 255, 255, 0.22);
+  border-top-color: var(--green-soft);
+}
+
+#app .idle-ended {
+  /* 原版是深底上的一条浅琥珀提示；深灰面上照旧（纸面留给侧栏与控制条那些卡片） */
+  background: rgba(247, 219, 126, 0.14);
+  border: 1px solid rgba(247, 219, 126, 0.38);
+  color: #f7e6bb;
+}
+
+#app .consent-list {
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border: 1px solid var(--hairline);
+  border-radius: 16px 11px 18px 10px / 11px 18px 10px 16px;
+  --switch-on: var(--green);
+  --switch-off: rgba(28, 24, 22, 0.18);
+}
+
+#app .consent-item {
+  color: var(--ink-body);
+}
+
+#app .consent-item + .consent-item {
+  border-top: 1px solid var(--hairline);
+}
+
+#app .consent-name {
+  color: var(--ink);
+}
+
+#app .consent-note,
+#app .consent-fixed {
+  color: var(--ink-muted);
+}
+
+#app .switch-thumb {
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(28, 24, 22, 0.25);
+}
+
+/* 开始自我教练 —— 手绘按钮：纸面墨线 + 世界里的绿 */
+#app .start-call-btn {
+  padding: 10px 26px;
+  border: 2px solid var(--ink-line);
+  border-radius: 44px 36px 46px 34px / 36px 46px 34px 44px;
+  background: var(--green);
+  color: var(--ink);
+  font-family: var(--font-hand);
+  font-size: 1.0625rem;
+}
+
+#app .start-call-btn:hover {
+  background: var(--green-deep);
+}
+
+#app .start-call-btn:focus-visible,
+#app .ctrl-btn:focus-visible,
+#app .switch:focus-visible,
+#app .camoff-btn:focus-visible,
+#app .idle-keep-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* 摄像头关闭：语音模式下的舞台说明（与上面同一套灰面配色） */
+#app .stage-camoff {
+  color: #e6e0d8;
+}
+
+#app .camoff-desc {
+  color: #e6e0d8;
+}
+
+#app .camoff-btn {
+  padding: 9px 22px;
+  border: 2px solid var(--ink-line);
+  border-radius: 44px 36px 46px 34px / 36px 46px 34px 44px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-hand);
+  font-size: 1rem;
+}
+
+#app .camoff-btn:hover:not(:disabled) {
+  background: var(--green-soft);
+  border-color: var(--ink-line);
+}
+
+/* 舞台上的短提示：摄像头提示、长时间没说话、错误
+   （原版还有一条 `.vlm-caption`：开着摄像头时 AI 对画面的一句描述 —— 演示里不发这条数据，
+   所以没给它留样式；接真后端时照原组件的类名补一条即可） */
+#app .stage-notice {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border: 1px solid var(--hairline);
+  color: var(--ink-body);
+}
+
+#app .stage-notice.idle.countdown {
+  background: var(--yellow-soft);
+  border-color: rgba(28, 24, 22, 0.22);
+  color: var(--yellow-ink);
+}
+
+#app .idle-keep-btn {
+  border: 1.5px solid var(--ink-line);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-hand);
+  font-size: var(--fs-label);
+  font-weight: 700;
+}
+
+#app .idle-keep-btn:hover {
+  background: var(--green-soft);
+}
+
+#app .stage-error {
+  background: color-mix(in srgb, var(--blush) 94%, transparent);
+  border: 1px solid rgba(28, 24, 22, 0.28);
+  color: #7d3a4a;
+}
+
+#app .self-tag {
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  color: var(--ink);
+  border-radius: 10px 7px 11px 6px / 7px 11px 6px 10px;
+}
+
+/* =====================================================================================
+   3 · 通话中右下角的陪伴浮窗 —— 保住原来那块深色毛玻璃
+      3D 角色就站在这一块上（它是照着深底画、照着深底抠的），换成亮纸会让它发灰没立体感。
+      这里只把色相挪到暖黑、换成手绘圆角，深浅关系不动。
+   ===================================================================================== */
+
+#app .call-overlay {
+  background: rgba(38, 35, 33, 0.84);
+  border: 1px solid rgba(253, 250, 245, 0.16);
+  border-radius: 20px 14px 22px 13px / 14px 22px 13px 20px;
+  box-shadow: 0 18px 30px -22px rgba(20, 18, 17, 0.8);
+  backdrop-filter: blur(14px);
+}
+
+#app .co-status {
+  font-family: var(--font-hand);
+  font-size: var(--fs-label);
+}
+
+#app .co-status.listening,
+#app .co-dot.listening {
+  color: #a9e0c3;
+}
+
+/* 手绘世界里的圆点是实心的，不带光晕：原组件那三处 0 偏移彩色 glow 在这里收掉 */
+#app .co-dot.listening {
+  background: #3ecf8e;
+  box-shadow: none;
+}
+
+#app .co-status.thinking,
+#app .co-dot.thinking {
+  color: #f0d79a;
+}
+
+#app .co-dot.thinking {
+  background: #d9a13b;
+  box-shadow: none;
+}
+
+#app .co-status.speaking,
+#app .co-dot.speaking {
+  color: #cdeed9;
+}
+
+#app .co-dot.speaking {
+  background: #7fd8b2;
+  box-shadow: none;
+}
+
+/* =====================================================================================
+   4 · 对话侧栏 —— 与首页那批纸面同一套（2px 墨线 + 手绘圆角）
+   ===================================================================================== */
+
+#app .vc-sidebar {
+  background: var(--surface);
+  border: 2px solid var(--ink-line);
+  border-radius: 18px 12px 20px 11px / 12px 20px 11px 18px;
+}
+
+#app .sidebar-header {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+#app .sidebar-title {
+  font-family: var(--font-hand);
+  font-size: var(--fs-h3);
+  color: var(--ink);
+}
+
+#app .typing-hint {
+  color: var(--green-ink);
+  font-size: var(--fs-label);
+}
+
+#app .signal-panel {
+  border-bottom: 1px solid var(--hairline);
+  --switch-on: var(--green);
+  --switch-off: rgba(28, 24, 22, 0.2);
+}
+
+#app .signal-title {
+  font-family: var(--font-hand);
+  font-size: var(--fs-label);
+  color: var(--ink);
+}
+
+#app .signal-state {
+  color: var(--ink-muted);
+}
+
+#app .signal-hint {
+  color: var(--ink-muted);
+}
+
+#app .emo-chip {
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  color: var(--ink-body);
+}
+
+#app .emo-name {
+  color: var(--ink-muted);
+}
+
+#app .emo-val {
+  color: var(--ink);
+}
+
+#app .chat-empty {
+  font-family: var(--font-hand);
+  color: var(--ink-muted);
+}
+
+#app .chat-msg.assistant .msg-bubble {
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  border-radius: 16px 12px 18px 11px / 12px 18px 11px 16px;
+  border-top-left-radius: 5px;
+  color: var(--ink);
+}
+
+#app .chat-msg.user .msg-bubble {
+  background: var(--green);
+  border: 1px solid rgba(28, 24, 22, 0.18);
+  border-radius: 16px 12px 18px 11px / 12px 18px 11px 16px;
+  border-top-right-radius: 5px;
+  color: var(--ink);
+}
+
+#app .ai-tag {
+  background: var(--green-soft);
+  color: var(--green-ink);
+}
+
+#app .msg-time {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =====================================================================================
+   5 · 底部控制条：音量 + 六个通话按钮（文案与出现条件仍是原组件的）
+   ===================================================================================== */
+
+#app .volume-meter {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--hairline);
+}
+
+#app .vol-label {
+  color: var(--ink-body);
+}
+
+#app .vol-value {
+  color: var(--green-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+#app .ctrl-btn {
+  padding: 8px 18px;
+  border: 2px solid var(--ink-line);
+  border-radius: 40px 32px 42px 30px / 32px 42px 30px 40px;
+  background: var(--surface);
+  color: var(--ink-body);
+  font-family: var(--font-hand);
+  font-size: 0.95rem;
+}
+
+#app .ctrl-btn:hover {
+  background: var(--green-soft);
+  border-color: var(--ink-line);
+  color: var(--ink);
+}
+
+#app .ctrl-btn.inactive {
+  background: var(--paper);
+  color: var(--ink-muted);
+}
+
+#app .ctrl-btn.end {
+  background: var(--green);
+  border-color: var(--ink-line);
+  color: var(--ink);
+}
+
+#app .ctrl-btn.end:hover {
+  background: var(--green-deep);
+  color: var(--ink);
+}
+
+#app .ctrl-btn.end.active {
+  background: var(--blush);
+  border-color: var(--ink-line);
+  color: #7d3a4a;
+}
+
+#app .ctrl-btn.end.active:hover {
+  background: #ecc6cf;
+}
+
+#app .vc-tips {
+  color: var(--ink-body);
+}
+
+/* =====================================================================================
+   6 · 两个弹窗（Teleport 到 body）：卡片、标题、按钮都换成纸面
+      模板里那些 Tailwind 类名（历史记录入口、弹窗内部）的实现在 `styles/vue-utils.css`
+      —— 自我教练页与情绪日记页共用同一份替身。
+   ===================================================================================== */
+
+body > div[role='dialog'] .relative.bg-card {
+  box-shadow: 0 26px 44px -30px rgba(28, 24, 22, 0.6);
+}
+
+body > div[role='dialog'] h2 {
+  font-family: var(--font-hand);
+  font-size: var(--fs-h2);
+}
+
+body > div[role='dialog'] button {
+  font-family: var(--font-hand);
+}
+
+/* =====================================================================================
+   7 · 窄屏 —— 原组件在 900px 以下把侧栏落到舞台下面，这里保持不变，只把舞台放矮一点
+   ===================================================================================== */
+
+@media (max-width: 900px) {
+  #app .video-call-page {
+    padding: 10px 12px 8px;
+  }
+}
+
+@media (max-width: 1180px) {
+  /* 舞台窄下来之后，居中的「摄像头已关闭」说明会和右下角的陪伴卡撞上
+     （原版宽屏下两者本来分得开，1180 以下原项目也没排过）。说明上移一档即可。 */
+  #app .stage-camoff {
+    align-self: flex-start;
+    margin-top: 26px;
+  }
+}
+
+@media (max-height: 940px) {
+  /* 通话前那一屏比原版少了一截纵向余量：原版是钉在视口里的整页（64px 页头、没有页脚），
+     这里上是页头、下有页脚，舞台就矮了三十来像素。矮窗口里把光球位收到与通话中
+     头像同样的 100×151（同一张立绘、同一个比例），开场那一屏就不会多出一条滚动。 */
+  #app .idle-orb {
+    width: 100px;
+    height: 151px;
+  }
+
+  #app .stage-idle {
+    padding-block: 20px;
+  }
+}

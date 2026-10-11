@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>登录 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 登录：手机号密码，或邮箱验证码。继续你的成长记录。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="register.html">免费注册</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">欢迎回来</h1>
+          <p class="plate__lede">继续你的成长记录。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="panel auth" aria-labelledby="login-title">
+            <h2 class="auth__title" id="login-title">登录斐思同行</h2>
+            <p class="auth__lede">两种方式，任选一种。</p>
+            <p class="anote" data-auth-note hidden></p>
+
+            <!-- 两个标签＝两块表单：选密码登录只出现密码那两块输入，选邮箱验证码只出现邮箱那两块。
+                 切换是页内的事（换标签不跳页、不刷新），接线见 scripts/login.js。 -->
+            <div class="tabs" role="tablist" aria-label="登录方式" data-auth-tabs>
+              <button
+                class="tab is-current"
+                type="button"
+                role="tab"
+                id="tab-password"
+                aria-selected="true"
+                aria-controls="panel-password"
+              >
+                密码登录
+              </button>
+              <button
+                class="tab"
+                type="button"
+                role="tab"
+                id="tab-email"
+                aria-selected="false"
+                aria-controls="panel-email"
+                tabindex="-1"
+              >
+                邮箱验证码
+              </button>
+            </div>
+
+            <form
+              class="form"
+              id="panel-password"
+              role="tabpanel"
+              aria-labelledby="tab-password"
+              action="index.html"
+              method="get"
+            >
+              <div class="field">
+                <label class="field__label" for="phone">手机号</label>
+                <input class="input" id="phone" name="phone" type="tel" inputmode="numeric" placeholder="请输入 11 位手机号" autocomplete="username" />
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="password">密码</label>
+                <input class="input" id="password" name="password" type="password" placeholder="请输入密码" autocomplete="current-password" />
+                <p class="field__hint"><a class="link-quiet" href="forgot-password.html">忘记密码？</a></p>
+              </div>
+
+              <p class="field__error" data-auth-error hidden></p>
+
+              <button class="btn btn--block" type="submit">
+                <span>登录</span>
+                <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </button>
+            </form>
+
+            <form
+              class="form"
+              id="panel-email"
+              role="tabpanel"
+              aria-labelledby="tab-email"
+              action="index.html"
+              method="get"
+              hidden
+            >
+              <div class="field">
+                <label class="field__label" for="email">邮箱</label>
+                <input class="input" id="email" name="email" type="email" placeholder="请输入绑定账号的邮箱" autocomplete="email" />
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="code">验证码</label>
+                <span class="field__row">
+                  <input class="input" id="code" name="code" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code" />
+                  <button class="btn btn--paper" type="button" data-send-code>获取验证码</button>
+                </span>
+                <p class="field__hint" data-send-note>验证码 10 分钟内有效，发送后 60 秒可重发。</p>
+              </div>
+
+              <p class="field__error" data-email-error hidden></p>
+
+              <button class="btn btn--block" type="submit">
+                <span>登录</span>
+                <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </button>
+            </form>
+
+            <p class="auth__alt">还没有账号？<a href="register.html">免费注册</a></p>
+          </section>
+
+          <p class="auth__aside">
+            登录即表示你已阅读并同意<a class="link-quiet" href="terms.html">《服务协议与免责声明》</a>：
+            本平台提供心理教练与自助工具，不提供心理咨询、治疗或医疗诊断服务。
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script src="scripts/login.js"></script>
+  </body>
+</html>

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>教练档案 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 教练档案：服务理念、服务项目与价格、未来 14 天可预约时段，以及公开的用户评价。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <!-- 一颗画出来的星：评分用真图标，不用字符凑 -->
+    <svg width="0" height="0" aria-hidden="true" focusable="false" style="position: absolute">
+      <symbol id="ic-star" viewBox="0 0 24 24">
+        <path d="M12 2.6l2.72 6.06 6.6.65-4.96 4.4 1.44 6.47L12 16.83 6.2 20.18l1.44-6.47L2.68 9.31l6.6-.65z" />
+      </symbol>
+    </svg>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link is-current" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">个人中心</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <a href="coaches.html">真人教练</a>
+            <span aria-hidden="true">/</span>
+            <span>教练档案</span>
+          </nav>
+          <h1 class="plate__title">知夏</h1>
+          <p class="plate__lede">8 年从业经验 · 考前焦虑与自我成长 · 累计 640 小时。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="panel">
+            <div class="profile">
+              <span class="profile__figure"><img src="assets/sym-tea.webp" width="419" height="560" alt="" aria-hidden="true" /></span>
+              <div>
+                <h2 class="profile__name">知夏</h2>
+                <p class="profile__meta">从业 8 年 · 累计 640 小时 · 平台审核通过</p>
+                <ul class="profile__tags">
+                  <li class="chip">考前焦虑</li>
+                  <li class="chip">自我成长</li>
+                  <li class="chip">睡眠困扰</li>
+                </ul>
+              </div>
+              <div class="profile__score">
+                <strong>4.9</strong>
+                <span>分 · 128 条评价</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="section cols cols--aside">
+            <div class="stack">
+              <section class="panel" aria-labelledby="concept-title">
+                <div class="panel__head">
+                  <h2 class="panel__title" id="concept-title">服务理念</h2>
+                </div>
+                <p class="prose">
+                  先陪你把手里的东西摊开看一遍，再一起挑今天能动的那一件。
+                </p>
+                <p class="prose">
+                  我在学校心理中心做过六年，见过太多「明明很努力却觉得自己不行」的同学。
+                  我们不急着给自己下诊断，先把这段日子发生了什么讲清楚——你会发现，你不是不够用力，
+                  是你一个人扛得太久了。
+                </p>
+              </section>
+
+              <section class="panel" aria-labelledby="service-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="service-title">服务项目</h2>
+                  <p class="panel__note">全部线上进行</p>
+                </div>
+                <div class="services">
+                  <div class="service">
+                    <div>
+                      <p class="service__name">单次咨询</p>
+                      <p class="service__meta">单次 · 50 分钟</p>
+                    </div>
+                    <p class="service__price">¥300</p>
+                  </div>
+                  <div class="service">
+                    <div>
+                      <p class="service__name">四周陪伴套餐</p>
+                      <p class="service__meta">套餐 · 4 次 × 50 分钟</p>
+                    </div>
+                    <p class="service__price">¥1080</p>
+                  </div>
+                  <div class="service">
+                    <div>
+                      <p class="service__name">首次了解（15 分钟）</p>
+                      <p class="service__meta">单次 · 15 分钟 · 免费</p>
+                    </div>
+                    <p class="service__price">¥0</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="slot-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="slot-title">可预约时段</h2>
+                  <p class="panel__note">未来 14 天</p>
+                </div>
+                <ul class="slots">
+                  <li><a class="slot" href="booking.html"><time datetime="2026-10-10">10-10</time><span>20:00</span></a></li>
+                  <li><a class="slot" href="booking.html"><time datetime="2026-10-11">10-11</time><span>10:00</span></a></li>
+                  <li><a class="slot" href="booking.html"><time datetime="2026-10-11">10-11</time><span>15:30</span></a></li>
+                  <li><a class="slot" href="booking.html"><time datetime="2026-10-12">10-12</time><span>19:00</span></a></li>
+                  <li class="slot slot--off"><time datetime="2026-10-13">10-13</time><span>已约满</span></li>
+                  <li><a class="slot" href="booking.html"><time datetime="2026-10-14">10-14</time><span>21:00</span></a></li>
+                  <li><a class="slot" href="booking.html"><time datetime="2026-10-15">10-15</time><span>09:30</span></a></li>
+                  <li class="slot slot--off"><time datetime="2026-10-16">10-16</time><span>已约满</span></li>
+                </ul>
+                <p class="panel__foot">时段为示例数据，接入后来自教练自己开放的排期。</p>
+              </section>
+
+              <section class="panel" aria-labelledby="review-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="review-title">用户评价</h2>
+                  <p class="panel__note">128 条 · 按时间排序</p>
+                </div>
+                <div class="reviews">
+                  <article class="review">
+                    <p class="review__head">
+                      小舟
+                      <span class="stars" role="img" aria-label="5 分">
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                      </span>
+                    </p>
+                    <p class="review__body">第一次不用解释那么多，她就懂了我在怕什么。聊完那天晚上我居然睡着了。</p>
+                    <time datetime="2026-09-28">2026-09-28</time>
+                  </article>
+                  <article class="review">
+                    <p class="review__head">
+                      阿岩
+                      <span class="stars" role="img" aria-label="5 分">
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                      </span>
+                    </p>
+                    <p class="review__body">没有鸡汤，也没有让我「加油」。她只是帮我把要背的东西排了个顺序。</p>
+                    <time datetime="2026-09-19">2026-09-19</time>
+                  </article>
+                  <article class="review">
+                    <p class="review__head">
+                      雾灯
+                      <span class="stars" role="img" aria-label="4 分">
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                        <svg class="star off" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-star" /></svg>
+                      </span>
+                    </p>
+                    <p class="review__body">节奏偏慢，但很适合我当时那种说不出话的状态。改期也很配合。</p>
+                    <time datetime="2026-09-05">2026-09-05</time>
+                  </article>
+                </div>
+                <p class="panel__foot">评价内容为示例数据。</p>
+              </section>
+            </div>
+
+            <aside class="panel" aria-labelledby="book-title">
+              <div class="panel__head">
+                <h2 class="panel__title" id="book-title">约一次聊聊</h2>
+                <p class="panel__note">先选时段，再填一句你的情况。</p>
+              </div>
+
+              <ul class="stack">
+                <li class="chip chip--green"><span class="chip__dot"></span>最快可约 今天 20:00</li>
+                <li class="chip"><span class="chip__dot"></span>50 分钟 · 线上视频</li>
+                <li class="chip"><span class="chip__dot"></span>提前 24 小时可免费改期</li>
+              </ul>
+
+              <div class="cta-row">
+                <a class="btn btn--block" href="booking.html">
+                  <span>预约咨询</span>
+                  <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                </a>
+              </div>
+
+              <p class="panel__foot">
+                还没准备好找真人？
+                <a class="link-quiet" href="self-coaching.html">先和 AI 教练聊</a>
+              </p>
+            </aside>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+        <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：教练信息与评价为示例内容</p>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/coach-detail.js"></script>
+  </body>
+</html>

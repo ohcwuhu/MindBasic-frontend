@@ -1,0 +1,8 @@
+# the toolchain is borrowed from the sibling hand-drawn surface rather than re-installed
+node_modules/
+
+# downloaded font chunks and intermediate subsets (rebuild with tools/build_font.py)
+demo/.cache/
+
+# python build artifacts
+__pycache__/

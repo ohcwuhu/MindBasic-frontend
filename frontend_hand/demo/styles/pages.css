@@ -1,0 +1,1590 @@
+/* 斐思同行 · 内层页面
+
+   The inner surfaces (找教练 / 科普 / 登录 / 我的成长 / 测评 / 社群 / 个人中心 / 协议) stand on the
+   same field as the homepage: `.plate` is the front's own top band and `.ground` carries the
+   grass on under every section. None of them is redesigned — the screens' structure, copy and
+   order are the ones the product already ships; what changes is the world they are drawn in
+   (paper, ink line, the client's own illustrations, the hand face) and the ground they stand
+   on, which is what the brief asked for.
+
+   Everything else comes from ui.css: `.panel`, `.note`, `.btn`, `.chip`, `.key`, `.row`,
+   `.field`, `.table`, `.empty`, `.meter`, `.stamp`. */
+
+/* =====================================================================================
+   0 · the field — 除首页外，每一页都站在同一张背景图上
+
+   The homepage opens on the plate itself and carries on down its grass. The inner surfaces
+   do not: they all share **one** background image, pinned to the viewport, and the page
+   scrolls over it. Nothing is stretched to the length of the document — `cover` resolves
+   against the window, so a 2500px page and a 1200px page show the identical field.
+
+   这一版按客户给的三张「纯水彩草地」系列重排：**默认**是所有内层页都不带树不带屋的那张；
+   科普中心换成「带树」那张、真人教练换成「木屋」那张 —— 一页一换只加一个 body 类。
+   ===================================================================================== */
+
+/* 底色用**这张图自己的平均色**，不是随手一个草绿：图还没到的那一帧就是它，图到了只换纹理、
+   不换颜色 —— 否则整屏会从绿翻成暖，看着就是闪一下。（实测各图整体平均色：
+   水彩草地 #E7EDC4 · 带树 #F1EEDF · 木屋 #EFE7DB · 纯草地 #C0DA8D。） */
+body {
+  background: #e7edc4 url('../assets/field-watercolour.webp') center center / cover fixed no-repeat;
+}
+
+/* 科普中心：带树的那张 */
+body.field-tree {
+  background: #f1eedf url('../assets/field-tree.webp') center center / cover fixed no-repeat;
+}
+
+/* 真人教练：木屋那张 */
+body.field-cabin {
+  background: #efe7db url('../assets/field-cabin.webp') center center / cover fixed no-repeat;
+}
+
+/* the masthead belongs to the document again — there is no picture band to float over */
+.masthead {
+  position: relative;
+}
+
+.plate {
+  height: auto;
+  background: none;
+  padding-block: 20px 4px;
+}
+
+.plate__inner {
+  height: auto;
+  padding-top: 0;
+}
+
+.plate__title {
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+}
+
+.ground {
+  background: none;
+  padding-top: clamp(20px, 2.4vw, 32px);
+  padding-bottom: var(--stack);
+}
+
+/* =====================================================================================
+   1 · 找教练 — the filters, the directory, the slots
+   ===================================================================================== */
+
+.dir__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-bottom: 18px;
+}
+
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 260px;
+  max-width: 360px;
+}
+
+.search .ic {
+  position: absolute;
+  left: 14px;
+  width: 17px;
+  height: 17px;
+  color: var(--ink-muted);
+}
+
+.search input {
+  width: 100%;
+  padding: 9px 14px 9px 38px;
+  background: var(--surface);
+  border: 1.5px solid var(--ink-line);
+  border-radius: 999px;
+  font: inherit;
+  font-size: var(--fs-small);
+  color: var(--ink);
+}
+
+.search input::placeholder {
+  color: var(--ink-muted);
+}
+
+.dir__count {
+  margin-left: auto;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.coach-card {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+}
+
+.coach-card__top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.figure {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  flex: 0 0 auto;
+  background: var(--sky);
+  border-radius: 50% 47% 53% 48% / 48% 53% 47% 50%;
+}
+
+.figure img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.coach-card__name {
+  font-family: var(--font-hand);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.coach-card__meta {
+  margin-top: 2px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.coach-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.coach-card__concept {
+  font-size: var(--fs-small);
+  line-height: 1.7;
+  color: var(--ink-body);
+}
+
+.coach-card__score {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--hairline);
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.coach-card__score strong {
+  font-family: var(--font-hand);
+  font-size: 1.25rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.slot {
+  display: grid;
+  gap: 2px;
+  padding: 10px 8px;
+  background: var(--surface);
+  border: 1.5px solid var(--ink-line);
+  border-radius: 14px 10px 15px 9px / 10px 15px 9px 14px;
+  text-align: center;
+  font-size: var(--fs-small);
+  color: var(--ink);
+  transition: background-color 180ms var(--ease-out);
+}
+
+.slot:hover {
+  background: var(--yellow);
+}
+
+.slot time {
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.slot span {
+  font-size: var(--fs-label);
+  color: var(--green-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.slot--off {
+  border-style: dashed;
+  border-color: var(--hairline);
+  color: var(--ink-muted);
+}
+
+.slot--off span {
+  color: var(--ink-muted);
+}
+
+/* the picked slot in the booking flow */
+.slot.is-picked {
+  background: var(--green);
+}
+
+/* a service that is also a radio: the whole row is the control */
+.pick {
+  cursor: pointer;
+}
+
+.pick__body {
+  display: grid;
+  gap: 3px;
+}
+
+.pick__side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pick input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green-deep);
+}
+
+.pick:has(input:checked) .service__name {
+  color: var(--green-ink);
+}
+
+.sum__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--hairline);
+  font-size: var(--fs-small);
+  color: var(--ink-muted);
+}
+
+.sum__total strong {
+  font-family: var(--font-hand);
+  font-size: 1.75rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* the three steps of booking, each one a lifted note */
+.how {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.how .figure {
+  width: 52px;
+  height: 52px;
+  background: var(--paper);
+  border-radius: 14px 10px 15px 9px / 10px 15px 9px 14px;
+}
+
+.how .figure img {
+  width: 38px;
+  height: 38px;
+}
+
+.how__title {
+  font-size: var(--fs-h3);
+}
+
+.how__body {
+  font-size: var(--fs-small);
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* =====================================================================================
+   2 · 教练档案
+   ===================================================================================== */
+
+.cta-row {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.profile {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile__figure {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  background: var(--sky);
+  border-radius: 50% 47% 53% 48% / 48% 53% 47% 50%;
+}
+
+.profile__figure img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.profile__name {
+  font-size: var(--fs-h2);
+}
+
+.profile__meta {
+  margin-top: 4px;
+  font-size: var(--fs-small);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.profile__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.profile__score {
+  text-align: right;
+}
+
+.profile__score strong {
+  font-family: var(--font-hand);
+  font-size: 2.5rem;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.profile__score span {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.services {
+  display: grid;
+}
+
+.service {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 2px;
+}
+
+.services .service + .service {
+  border-top: 1px solid var(--hairline);
+}
+
+.service__name {
+  font-family: var(--font-hand);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.service__meta {
+  margin-top: 3px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.service__price {
+  font-family: var(--font-hand);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.review {
+  padding: 14px 2px;
+}
+
+.reviews .review + .review {
+  border-top: 1px solid var(--hairline);
+}
+
+.review__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-small);
+  color: var(--ink);
+}
+
+.stars {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--yellow-deep);
+}
+
+.star {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+.star.off {
+  color: var(--hairline);
+}
+
+.review__body {
+  margin-top: 6px;
+  font-size: var(--fs-small);
+  line-height: 1.7;
+  color: var(--ink-body);
+}
+
+.review time {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =====================================================================================
+   3 · 科普中心
+   ===================================================================================== */
+
+.cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.arts {
+  display: grid;
+}
+
+.art-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 4px;
+}
+
+.arts li + li .art-row {
+  border-top: 1px solid var(--hairline);
+}
+
+.art-row__art {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.art-row__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-hand);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.art-row__summary {
+  margin-top: 4px;
+  font-size: var(--fs-small);
+  line-height: 1.65;
+  color: var(--ink-muted);
+}
+
+.art-row__side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.art-row__date {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.art-row:hover .arrow {
+  transform: translateX(5px);
+}
+
+/* =====================================================================================
+   4 · 文章
+   ===================================================================================== */
+
+.article-page {
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.article-head {
+  margin-bottom: 22px;
+}
+
+.article-head__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.prose {
+  font-size: 1rem;
+  line-height: 1.85;
+  color: var(--ink-body);
+}
+
+.prose > * + * {
+  margin-top: 1em;
+}
+
+.prose h2 {
+  margin-top: 1.8em;
+  font-size: 1.25rem;
+}
+
+.prose h3 {
+  margin-top: 1.4em;
+  font-size: 1.0625rem;
+}
+
+.prose ul {
+  display: grid;
+  gap: 7px;
+}
+
+.prose ul li {
+  position: relative;
+  padding-left: 20px;
+}
+
+.prose ul li::before {
+  content: '';
+  position: absolute;
+  top: 0.5em;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  background: url('../assets/prop-check.webp') center / contain no-repeat;
+  opacity: 0.8;
+}
+
+.prose blockquote {
+  margin: 1.4em 0;
+  padding: 14px 18px;
+  background: var(--lilac);
+  border-radius: 16px 11px 18px 10px / 11px 18px 10px 16px;
+  font-family: var(--font-hand);
+  font-size: 1.0625rem;
+  color: var(--ink);
+}
+
+.prose strong {
+  color: var(--ink);
+}
+
+.article-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--hairline);
+}
+
+/* =====================================================================================
+   5 · 登录 · 注册
+   ===================================================================================== */
+
+.auth {
+  width: min(100% - 2 * var(--gutter), 460px);
+  margin-inline: auto;
+  padding: 30px 28px 32px;
+}
+
+.auth__title {
+  font-size: 1.75rem;
+}
+
+.auth__lede {
+  margin-top: 6px;
+  font-size: var(--fs-small);
+  color: var(--ink-muted);
+}
+
+.auth .tabs {
+  display: flex;
+  margin-top: 22px;
+}
+
+.auth .tabs .tab {
+  flex: 1;
+  text-align: center;
+}
+
+.auth .form {
+  margin-top: 22px;
+}
+
+/* 两个标签各自只放自己那块表单：藏起来的那块用 `hidden`，
+   但 `.form` 自己有 `display: grid`，得把它按下去 */
+.auth .form[hidden] {
+  display: none;
+}
+
+.auth .tabs .tab[role='tab'] {
+  cursor: pointer;
+}
+
+/* 注册页：卡片下面直接就是页脚，按你说的把页脚也推到折线以下（和登录页一致）。
+   卡片底落在 920px（1440 宽），所以留「视口高 − 900」的余量就刚好落在折线下面；
+   矮窗口 clamp 到 16px —— 那种窗口里它本来就在折线以下。 */
+body.page-register .auth {
+  margin-bottom: max(16px, calc(100vh - 900px));
+}
+
+.auth__alt {
+  margin-top: 18px;
+  font-size: var(--fs-small);
+  text-align: center;
+  color: var(--ink-muted);
+}
+
+.auth__alt a {
+  font-weight: 700;
+  color: var(--green-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.3em;
+}
+
+.auth__aside {
+  width: min(100% - 2 * var(--gutter), 460px);
+  margin-inline: auto;
+  /* 卡片下面那两处提醒（这条协议提醒 + 页脚里的热线与免责声明）推到折线以下：
+     往下滑才看到。登录卡底部落在 717–737px（1440 宽，两个标签都一样），
+     所以留「视口高 − 700」就刚好落在折线下面；矮窗口 clamp 到 16px ——
+     那种窗口里它们本来就在折线以下。 */
+  margin-top: max(16px, calc(100vh - 700px));
+  font-size: var(--fs-label);
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+/* =====================================================================================
+   6 · 我的成长 — the mixed timeline
+   ===================================================================================== */
+
+.streak-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.streak-head__count {
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.streak-head__count strong {
+  font-size: 2.25rem;
+  font-weight: 700;
+}
+
+/* the seven-day strip: a filled pebble for a day that was written */
+.week {
+  display: flex;
+  gap: 8px;
+}
+
+.week li {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50% 46% 52% 48% / 48% 52% 46% 50%;
+  border: 1.5px solid var(--hairline);
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.week li.is-on {
+  background: var(--green);
+  border-color: transparent;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.week li.is-today {
+  border-color: var(--ink-line);
+}
+
+.streak-head__stats {
+  margin-top: 18px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stat {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  background: var(--paper);
+  border-radius: 16px 11px 18px 10px / 11px 18px 10px 16px;
+}
+
+.stat strong {
+  font-family: var(--font-hand);
+  font-size: 1.75rem;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat span {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.timeline {
+  display: grid;
+}
+
+.tl {
+  position: relative;
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 18px;
+  padding: 14px 0 14px 22px;
+}
+
+.tl::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 5px;
+  width: 1.5px;
+  background: var(--hairline);
+}
+
+.tl::after {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--dot, var(--green));
+  box-shadow: 0 0 0 3px var(--surface);
+}
+
+.tl time {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.tl__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tl__art {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.tl__title {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.tl__text {
+  margin-top: 3px;
+  font-size: var(--fs-small);
+  line-height: 1.65;
+  color: var(--ink-muted);
+}
+
+.dims {
+  display: grid;
+  gap: 12px;
+}
+
+.dim {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.dim img {
+  width: 46px;
+  height: 44px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.dim__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dim__label strong {
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.dim__label em {
+  font-style: normal;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dim .meter {
+  margin-top: 5px;
+}
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 10px;
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.badge img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.badge span {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--ink-body);
+}
+
+.badge.is-locked img {
+  filter: grayscale(1) contrast(0.7);
+  opacity: 0.3;
+}
+
+.badge.is-locked span {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+/* =====================================================================================
+   7 · 成长测评
+   ===================================================================================== */
+
+.quiz {
+  display: grid;
+}
+
+.q {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 2px;
+}
+
+.quiz .q + .q {
+  border-top: 1px solid var(--hairline);
+}
+
+.q__text {
+  font-size: var(--fs-small);
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.q__dim {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.q__dim img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.scale__legend {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+/* =====================================================================================
+   8 · 社群
+   ===================================================================================== */
+
+.groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.group {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+}
+
+.group__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.group__art {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.group__name {
+  font-family: var(--font-hand);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.group__meta {
+  margin-top: 2px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.group__desc {
+  font-size: var(--fs-small);
+  line-height: 1.7;
+  color: var(--ink-body);
+}
+
+.group__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--hairline);
+}
+
+.posts {
+  display: grid;
+}
+
+.post {
+  display: grid;
+  gap: 8px;
+  padding: 16px 2px;
+}
+
+.posts .post + .post {
+  border-top: 1px solid var(--hairline);
+}
+
+.post__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.post__who {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.post__title {
+  font-family: var(--font-hand);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.post__body {
+  font-size: var(--fs-small);
+  line-height: 1.75;
+  color: var(--ink-body);
+}
+
+.post__foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.post__act {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.post__act:hover {
+  color: var(--ink);
+}
+
+/* =====================================================================================
+   9 · 个人中心 · 数据与隐私
+   ===================================================================================== */
+
+.account {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.account__avatar {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  background: var(--green-soft);
+  border-radius: 50% 47% 53% 48% / 48% 53% 47% 50%;
+  font-family: var(--font-hand);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--green-ink);
+}
+
+.account__name {
+  font-size: var(--fs-h2);
+}
+
+.account__meta {
+  margin-top: 4px;
+  font-size: var(--fs-small);
+  color: var(--ink-muted);
+}
+
+.kv {
+  display: grid;
+}
+
+.kv__row {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 2px;
+}
+
+.kv .kv__row + .kv__row {
+  border-top: 1px solid var(--hairline);
+}
+
+.kv__key {
+  font-size: var(--fs-small);
+  color: var(--ink-muted);
+}
+
+.kv__val {
+  font-size: var(--fs-small);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.danger {
+  border-color: var(--ink-line);
+  background: var(--blush);
+}
+
+/* =====================================================================================
+   10 · 管理工作台 — 概览 / 用户 / 内容 / 教练审核
+
+   One workbench, four modules. The module tabs are the site's own `.keys` pills sitting on
+   the ground under the plate; each module is a filter row over one table, or — for the
+   audits — a sheet of submitted material read before the application is passed or returned.
+   Everything else is ui.css: `.filters`, `.table`, `.pager`, `.act`, `.confirm`. */
+
+.atabs {
+  margin-bottom: clamp(20px, 2.2vw, 30px);
+}
+
+/* the editing surface is the paper, not the blank sheet the reading panels use */
+.apanel {
+  background: var(--paper);
+}
+
+/* a sub-heading inside a panel (资质材料 / 服务项目 / 分类) */
+.panel__sub {
+  margin-bottom: 12px;
+  font-size: var(--fs-h3);
+}
+
+/* the audit sheet: the submitted material as label-over-value pairs, never as cards */
+.pairs {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 22px;
+  align-items: baseline;
+}
+
+.pairs dt {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.pairs dd {
+  margin: 0;
+  font-size: var(--fs-small);
+  line-height: 1.7;
+  color: var(--ink-body);
+  overflow-wrap: anywhere;
+}
+
+.pairs dd a {
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.3em;
+}
+
+.pairs dd a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* the services a coach offers, listed on the sheet */
+.svc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 16px;
+  padding: 12px 2px;
+}
+
+.svc__name {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.svc__price {
+  font-family: var(--font-hand);
+  font-size: var(--fs-small);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.svc__meta {
+  grid-column: 1 / -1;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+/* the head of the audit sheet and of a row's confirm: a name, its state, its provenance */
+.ahead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.ahead__who {
+  font-family: var(--font-hand);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ahead__meta {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* the sheet's two columns sit right under its head */
+.ahead + .cols {
+  margin-top: 18px;
+}
+
+/* what you can do with this application, at the bottom of the sheet */
+.aacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--hairline);
+}
+
+.aacts__reason {
+  display: grid;
+  gap: 12px;
+}
+
+.aacts__reason .field__row {
+  justify-content: flex-end;
+}
+
+/* a one-line add form inside a panel (a new article category) */
+.inline-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.inline-add .input {
+  flex: 1 1 200px;
+  max-width: 260px;
+}
+
+/* renaming a category happens in the cell it belongs to */
+.rename {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rename .input {
+  max-width: 220px;
+  padding-block: 6px;
+}
+
+/* a line of feedback where the action happened (a row's own cell, a panel's foot) */
+.anote {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.anote--warn {
+  color: var(--danger-ink);
+}
+
+/* =====================================================================================
+   11 · 站内通知 · 钱包 · 社群详情 · 找回密码
+
+   这几块都是「一条一条读、一笔一笔看」的东西：列表靠 `.rows` 与 `.table`，画风层只加它们
+   自己那点结构 —— 未读的圆点、余额那一栏、社群的抬头、一条帖子。 */
+
+.noti {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: start;
+  padding: 14px 2px;
+}
+
+/* 未读是实心的点，读过只剩一个圈 —— 一眼扫过去就知道有没有新东西 */
+.noti__dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 8px;
+  border-radius: 50%;
+  background: var(--green-deep);
+}
+
+.noti.is-read .noti__dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--hairline);
+}
+
+.noti__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.noti.is-read .noti__title {
+  color: var(--ink-muted);
+}
+
+.noti__body {
+  margin-top: 3px;
+  font-size: var(--fs-small);
+  line-height: 1.7;
+  color: var(--ink-body);
+  overflow-wrap: anywhere;
+}
+
+.noti.is-read .noti__body {
+  color: var(--ink-muted);
+}
+
+.noti__time {
+  margin-top: 5px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 钱包：余额与充值并排站，不是一个顶在页面中央的大数字 */
+.wallet {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 28px;
+}
+
+.wallet__sum {
+  flex: 0 0 auto;
+}
+
+.wallet__label {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.wallet__amount {
+  font-family: var(--font-hand);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.wallet__acts {
+  display: flex;
+  flex: 1 1 320px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallet__acts .input {
+  width: 132px;
+}
+
+.wallet__note {
+  flex: 1 1 100%;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+/* 社群详情：抬头一行（画 + 名字 + 说明 + 加入/退出），下面是帖子和发帖框 */
+.cd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.cd__art {
+  width: 92px;
+  height: 92px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.cd__body {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.cd__name {
+  font-size: 1.375rem;
+}
+
+.cd__meta {
+  margin-top: 6px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cd__desc {
+  margin-top: 10px;
+  font-size: var(--fs-small);
+  line-height: 1.75;
+  color: var(--ink-body);
+}
+
+.cd__side {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+/* 帖子用 `cpost-` 前缀：`.post` 那一套已经是科普中心 / 社群列表页在用的（第 8 节），
+   同名会互相改到对方的样子 */
+.cpost {
+  padding: 16px 2px;
+}
+
+.cpost__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cpost__face {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  background: var(--sky);
+  border-radius: 50% 47% 53% 48% / 48% 53% 47% 50%;
+}
+
+.cpost__face img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.cpost__who {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cpost__time {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cpost__body {
+  margin-top: 8px;
+  font-size: var(--fs-small);
+  line-height: 1.75;
+  color: var(--ink-body);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.cpost__image {
+  margin-top: 10px;
+  max-width: 320px;
+  border: 1.5px solid var(--hairline);
+  border-radius: 14px 11px 15px 10px / 11px 15px 10px 14px;
+}
+
+.cpost__acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  margin-top: 10px;
+}
+
+.cpost__meta {
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =====================================================================================
+   12 · narrower desktop
+   ===================================================================================== */
+
+@media (max-width: 1180px) {
+  .slots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .groups {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .badge-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .profile {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .profile__score {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+
+  .slots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .q {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .timeline .tl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .badge-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

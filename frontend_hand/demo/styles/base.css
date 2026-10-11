@@ -1,0 +1,169 @@
+/* 这里**不再** @import 那三份：`@import` 是串行发现的 —— 浏览器要先下完这份、解析出 import，
+   才回头去取下一份，一页多出好几趟往返，慢网下就是那段白屏（限速实测：白 1.3 秒）。
+   现在每页 <head> 里并列四行 <link>（tokens → fonts → ui → base），一次发现、并行取，
+   层叠顺序和原来一模一样。 */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* `hidden` 得压得住组件自己的 display：`.chip` 这类是 inline-flex，只有一条 UA 规则拦不住它 */
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--paper-edge) transparent;
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink-body);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* 设计稿里的文字都是「能断开的」（中文本来就断，示例里的英文也短），但真实数据里会出现
+     断不开的长串 —— 一个 132 字的邮箱、一条长网址。`anywhere` 不只是回行，它还改 min-content：
+     于是 flex / grid 子项的下限不再被那个长串撑着，整页也就不会被顶出横向滚动。 */
+  overflow-wrap: anywhere;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  /* the width/height attributes are presentational hints; without this they silently pin an
+     element's height, so a drawing scaled by CSS width alone comes out at its natural size */
+  height: auto;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.24;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: 0.3em;
+  text-decoration-thickness: 0.08em;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+}
+
+/* browser surfaces carry the palette — the parts nobody drew still belong to the design */
+::selection {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--paper-edge);
+  border: 3px solid var(--surface);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- shared primitives ------------------------------------------------------- */
+
+.wrap {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* the hand-drawn underline: the client's watercolour stroke, not a CSS border */
+.mark {
+  background-image: url('../assets/prop-underline.webp');
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 0.42em;
+  padding-bottom: 0.12em;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 20;
+  translate: 0 -200%;
+  padding: 10px 16px;
+  background: var(--yellow);
+  border: 2px solid var(--ink-line);
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.skip-link:focus-visible {
+  translate: 0;
+}

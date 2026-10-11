@@ -1,0 +1,133 @@
+/* 斐思同行 · 挂进来的 Vue 页面共用的一层
+
+   自我教练页（`VideoCallView` / `VideoCallPanel` / `CompanionSprite`）与情绪日记页
+   （`EmotionJournalView` / `MoodFace` / `QuoteBlock` / `EmptyState` / `ErrorBanner`）都是
+   原项目的组件本体，模板、类名、样式数值一字不改。这个文件放两页共用、又必须在组件之外补的东西：
+
+   1. 原组件的调色板令牌（`--color-*`，原项目 src/styles/main.css 里的那套）→ 手绘世界；
+   2. 组件模板里用到的 Tailwind 类名的最小实现 —— 手绘风这边不引 Tailwind。 */
+
+/* =====================================================================================
+   1 · 原组件的 `--color-*` → 手绘世界
+      组件里几乎所有颜色都取自这几个变量，所以这一处映射就换掉了大半张脸。
+   ===================================================================================== */
+
+body {
+  --color-paper: #f7ede1; /* 分区底、AI 气泡底 */
+  --color-paper-2: #efe3d4;
+  --color-card: var(--surface); /* 纸面卡片 */
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-muted);
+  --color-ink-faint: #9a8d80;
+  --color-hairline: var(--hairline);
+  /* 原版 --color-pine 是深紫罗兰，同时当「填充」和「文字色」用。
+     手绘世界里文字走 --green-ink（读得清），填充另在各页里逐个改成 --green。 */
+  --color-pine: var(--green-ink);
+  --color-pine-deep: #2f5230;
+  --color-pine-soft: var(--green-soft);
+  --color-gold: #c8a86a;
+  --color-gold-soft: #f7edd6;
+  --color-gold-deep: #a8873f;
+  --color-lilac: #b6a8c9;
+  --color-lilac-soft: var(--lilac);
+  --color-blush: var(--blush);
+  --color-sand: #eee0cd;
+  --color-glow: #eae0ef;
+}
+
+/* =====================================================================================
+   2 · Tailwind 类名的最小实现（只列两页真正用到的那些）
+      没列到的类名保持无样式，不会把别的页面带坏。
+   ===================================================================================== */
+
+.flex { display: flex; }
+.inline-flex { display: inline-flex; }
+.inline-block { display: inline-block; }
+.flex-col { flex-direction: column; }
+.absolute { position: absolute; }
+.relative { position: relative; }
+.fixed { position: fixed; }
+.inset-0 { inset: 0; }
+.z-50 { z-index: 50; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.shrink-0 { flex-shrink: 0; }
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+
+.gap-1\.5 { gap: 6px; }
+.gap-2 { gap: 8px; }
+.space-y-1 > * + * { margin-top: 4px; }
+
+.p-4 { padding: 16px; }
+.p-6 { padding: 24px; }
+.px-4 { padding-inline: 16px; }
+.px-5 { padding-inline: 20px; }
+.px-6 { padding-inline: 24px; }
+.py-3 { padding-block: 12px; }
+.py-16 { padding-block: 64px; }
+
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mt-6 { margin-top: 24px; }
+
+.h-10 { height: 40px; }
+.h-11 { height: 44px; }
+.h-12 { height: 48px; }
+.w-11 { width: 44px; }
+.w-12 { width: 48px; }
+
+.max-w-\[380px\] { max-width: 380px; }
+.max-w-\[420px\] { max-width: 420px; }
+.max-w-\[36ch\] { max-width: 36ch; }
+
+.text-sm { font-size: var(--fs-small); }
+.text-lg { font-size: 1.125rem; }
+.text-\[13px\] { font-size: 13px; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.tracking-tight { letter-spacing: -0.01em; }
+.leading-relaxed { line-height: 1.72; }
+
+.rounded-full { border-radius: 999px; }
+.rounded-\[14px\] { border-radius: 18px 12px 20px 11px / 12px 20px 11px 18px; }
+.rounded-\[10px\] { border-radius: 14px 10px 16px 9px / 10px 16px 9px 14px; }
+
+/* 纸面与墨线：手绘世界里「边框」是 2px 墨线，「发丝线」是 1px 淡边 */
+.border { border: 2px solid var(--ink-line); }
+.border-hairline { border-color: var(--hairline); }
+.border-red-200 { border-color: rgba(122, 60, 74, 0.28); }
+.border-red-300 { border-color: rgba(122, 60, 74, 0.34); }
+
+.bg-card { background: var(--surface); }
+.bg-paper { background: var(--paper); }
+.bg-pine { background: var(--green); }
+.bg-pine-soft { background: var(--green-soft); }
+.bg-pine-soft\/70 { background: color-mix(in srgb, var(--green-soft) 70%, transparent); }
+.bg-red-50 { background: var(--blush); }
+.bg-ink\/40 { background: rgba(28, 24, 22, 0.42); }
+
+.text-card { color: var(--ink); }
+.text-ink { color: var(--ink); }
+.text-ink-soft { color: var(--ink-muted); }
+.text-ink-faint { color: #9a8d80; }
+.text-pine { color: var(--green-ink); }
+.text-pine-deep { color: var(--green-deep); }
+.text-red-800 { color: #7d3a4a; }
+.text-red-900 { color: #71323f; }
+
+.hover\:text-pine:hover { color: var(--green-ink); }
+.underline { text-decoration: underline; }
+.underline-offset-2 { text-underline-offset: 2px; }
+.disabled\:opacity-50:disabled { opacity: 0.5; }
+
+.pressable {
+  cursor: pointer;
+  transition: transform 140ms var(--ease-out), background-color 180ms var(--ease-out);
+}
+.pressable:active {
+  transform: translateY(1px);
+}

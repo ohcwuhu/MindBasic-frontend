@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>社群 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 社群：和同路的人聊聊，也可以只看不说话。加入、发帖、置顶、点赞都在这里。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link is-current" href="communities.html" aria-current="page">社群</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">个人中心</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <span>社群</span>
+          </nav>
+          <h1 class="plate__title">和同路的人聊聊</h1>
+          <p class="plate__lede">可以发帖，也可以只看不说话。这里不劝人振作，只把话说完整。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section aria-labelledby="mine-title">
+            <div class="band__head">
+              <h2 class="band__title" id="mine-title">我加入的社群</h2>
+              <p class="band__note">一共 3 个。加入后可以发帖、点赞、评论。</p>
+            </div>
+
+            <ul class="groups">
+              <li class="note group">
+                <div class="group__top">
+                  <img class="group__art" src="assets/cat-emotion.webp" width="560" height="545" alt="" aria-hidden="true" />
+                  <div>
+                    <p class="group__name"><a class="stretch" href="community-detail.html?id=1">情绪调节小组</a></p>
+                    <p class="group__meta">1,284 位成员 · 今天 12 条新帖</p>
+                  </div>
+                </div>
+                <p class="group__desc">不评判、不给建议。说今天发生了什么，就已经够了。</p>
+                <p class="group__foot">
+                  <span class="chip chip--green"><span class="chip__dot"></span>已加入</span>
+                  <a class="link-quiet" href="community-detail.html?id=1">进去看看</a>
+                </p>
+              </li>
+
+              <li class="note group">
+                <div class="group__top">
+                  <img class="group__art" src="assets/cat-study.webp" width="560" height="547" alt="" aria-hidden="true" />
+                  <div>
+                    <p class="group__name"><a class="stretch" href="community-detail.html?id=2">考前同盟</a></p>
+                    <p class="group__meta">962 位成员 · 今天 8 条新帖</p>
+                  </div>
+                </div>
+                <p class="group__desc">一起早起、一起交作业、一起在图书馆撑到闭馆。</p>
+                <p class="group__foot">
+                  <span class="chip chip--green"><span class="chip__dot"></span>已加入</span>
+                  <a class="link-quiet" href="community-detail.html?id=2">进去看看</a>
+                </p>
+              </li>
+
+              <li class="note group">
+                <div class="group__top">
+                  <img class="group__art" src="assets/sym-moon.webp" width="560" height="560" alt="" aria-hidden="true" />
+                  <div>
+                    <p class="group__name"><a class="stretch" href="community-detail.html?id=3">夜猫子互助</a></p>
+                    <p class="group__meta">2,057 位成员 · 凌晨最热闹</p>
+                  </div>
+                </div>
+                <p class="group__desc">凌晨两点还醒着的话，来这里说一句，总有人在。</p>
+                <p class="group__foot">
+                  <span class="chip"><span class="chip__dot"></span>未加入</span>
+                  <a class="link-quiet" href="community-detail.html?id=3">去看看</a>
+                </p>
+              </li>
+
+              <li class="note group">
+                <div class="group__top">
+                  <img class="group__art" src="assets/cat-story.webp" width="437" height="560" alt="" aria-hidden="true" />
+                  <div>
+                    <p class="group__name"><a class="stretch" href="community-detail.html?id=4">教练故事会</a></p>
+                    <p class="group__meta">418 位成员 · 每周更新一篇手记</p>
+                  </div>
+                </div>
+                <p class="group__desc">教练们写下的陪伴手记，以及那些「原来不只我这样」的时刻。</p>
+                <p class="group__foot">
+                  <span class="chip"><span class="chip__dot"></span>未加入</span>
+                  <a class="link-quiet" href="community-detail.html?id=4">去看看</a>
+                </p>
+              </li>
+            </ul>
+          </section>
+
+          <section class="section cols cols--aside">
+            <section class="panel" aria-labelledby="feed-title">
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="feed-title">情绪调节小组 · 最新</h2>
+                <p class="panel__note">按最新排序</p>
+              </div>
+
+              <div class="posts">
+                <article class="post">
+                  <p class="post__head"><span class="post__who">小舟</span> · <time datetime="2026-10-09T22:40">今天 22:40</time></p>
+                  <h3 class="post__title">今天第一次在宿舍哭出来</h3>
+                  <p class="post__body">本来只是想说一句「今天好累」，结果一开口就哭了。室友没问为什么，只是给我倒了杯水。原来不用解释也可以。</p>
+                  <p class="post__foot">
+                    <a class="post__act" href="community-detail.html?id=1">♡ 32</a>
+                    <a class="post__act" href="community-detail.html?id=1">评论 7</a>
+                    <span class="chip chip--yellow">置顶</span>
+                  </p>
+                </article>
+
+                <article class="post">
+                  <p class="post__head"><span class="post__who">阿岩</span> · <time datetime="2026-10-09T19:02">今天 19:02</time></p>
+                  <h3 class="post__title">把「必须考好」改成「必须去考」之后</h3>
+                  <p class="post__body">这周试了一下，压力小了一半。分享给同样卡住的人：目标变小，不代表你变小了。</p>
+                  <p class="post__foot">
+                    <a class="post__act" href="community-detail.html?id=1">♡ 48</a>
+                    <a class="post__act" href="community-detail.html?id=1">评论 12</a>
+                  </p>
+                </article>
+
+                <article class="post">
+                  <p class="post__head"><span class="post__who">雾灯</span> · <time datetime="2026-10-08T01:15">昨天 01:15</time></p>
+                  <h3 class="post__title">凌晨一点的求助：怎么跟爸妈说我想休息</h3>
+                  <p class="post__body">不是想放弃，只是想停一周。有没有人试过怎么说出口？我练习了很多遍都觉得像在找借口。</p>
+                  <p class="post__foot">
+                    <a class="post__act" href="community-detail.html?id=1">♡ 26</a>
+                    <a class="post__act" href="community-detail.html?id=1">评论 19</a>
+                  </p>
+                </article>
+
+                <article class="post">
+                  <p class="post__head"><span class="post__who">知夏 · 教练</span> · <time datetime="2026-10-07T20:30">10 月 7 日 20:30</time></p>
+                  <h3 class="post__title">回应「像在找借口」</h3>
+                  <p class="post__body">休息不是奖励，是需求。你不需要先证明自己够累，才有资格停下来。</p>
+                  <p class="post__foot">
+                    <a class="post__act" href="community-detail.html?id=1">♡ 103</a>
+                    <a class="post__act" href="community-detail.html?id=1">评论 24</a>
+                    <span class="chip chip--lilac">教练</span>
+                  </p>
+                </article>
+              </div>
+
+              <p class="panel__foot">帖子内容为示例数据，接入后来自平台真实社群。</p>
+            </section>
+
+            <aside class="stack">
+              <section class="panel" aria-labelledby="rule-title">
+                <div class="panel__head">
+                  <h2 class="panel__title" id="rule-title">发帖前</h2>
+                </div>
+                <ul class="ticks">
+                  <li>不评判、不诊断、不给「你应该」。</li>
+                  <li>可以只写一句，也可以什么都不写。</li>
+                  <li>涉及危机的内容会被优先转介到人工支持。</li>
+                  <li>别人的故事不要带出这个社群。</li>
+                </ul>
+                <a class="btn btn--block" href="login.html">
+                  <span>写一条</span>
+                  <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                </a>
+              </section>
+
+              <section class="panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">需要马上有人吗</h2>
+                </div>
+                <p class="prose">社群不是 24 小时值守的地方。如果情况紧急，请直接找能立刻回应的人。</p>
+                <ul class="stack">
+                  <li class="chip chip--green"><span class="chip__dot"></span>心理援助热线 12356（24 小时）</li>
+                  <li class="chip"><span class="chip__dot"></span>就近医院急诊</li>
+                  <li class="chip"><a href="self-coaching.html">AI 教练随时在线</a></li>
+                </ul>
+              </section>
+
+              <section class="panel" aria-labelledby="mine-post-title">
+                <div class="panel__head">
+                  <h2 class="panel__title" id="mine-post-title">我发过的</h2>
+                </div>
+                <div class="empty">
+                  <img src="assets/mascot-hello.webp" width="420" height="420" alt="" aria-hidden="true" />
+                  <p class="empty__title">还没有发过帖</p>
+                  <p class="empty__body">第一句可以很短，比如「今天有点撑不住」。不想写正文，只写一个标题也算。</p>
+                  <a class="btn btn--small btn--paper" href="login.html">写一条</a>
+                </div>
+              </section>
+            </aside>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+        <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：帖子与人数为示例内容</p>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/communities.js"></script>
+  </body>
+</html>

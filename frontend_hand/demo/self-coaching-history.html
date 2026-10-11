@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>自我教练历史 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 自我教练历史：每一次 AI 对话都留下痕迹，可以看到走了四步里的第几步、有没有生成行动卡。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link is-current" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">我的成长</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <a href="self-coaching.html">自我教练</a>
+            <span aria-hidden="true">/</span>
+            <span>历史记录</span>
+          </nav>
+          <h1 class="plate__title">聊过的都留着</h1>
+          <p class="plate__lede">每次对话都记下走到四步里的第几步，以及有没有带走一张行动卡。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="cols cols--aside">
+            <section class="panel" aria-labelledby="hist-title">
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="hist-title">全部记录</h2>
+                <p class="panel__note">9 次对话 · 4 张行动卡</p>
+              </div>
+
+              <ul class="cats" aria-label="筛选">
+                <li><button class="key is-current" type="button">全部</button></li>
+                <li><button class="key" type="button">已生成行动卡</button></li>
+                <li><button class="key" type="button">未完成</button></li>
+                <li><button class="key" type="button">有风险提示</button></li>
+              </ul>
+
+              <ul class="rows">
+                <li>
+                  <a class="row" href="self-coaching.html">
+                    <img class="row__art" src="assets/mascot-listen.webp" width="450" height="640" alt="" aria-hidden="true" />
+                    <span>
+                      <span class="row__title">「最近什么都不太想做」</span>
+                      <span class="row__meta">10 月 8 日 · 12:04 · 6 轮 · 走到第三步（资源）</span>
+                    </span>
+                    <span class="row__side"><span class="chip chip--green">已生成行动卡</span></span>
+                  </a>
+                </li>
+                <li>
+                  <a class="row" href="self-coaching.html">
+                    <img class="row__art" src="assets/mascot-think.webp" width="450" height="640" alt="" aria-hidden="true" />
+                    <span>
+                      <span class="row__title">「考前一想到就心跳很快」</span>
+                      <span class="row__meta">10 月 5 日 · 21:40 · 9 轮 · 走到第四步（行动）</span>
+                    </span>
+                    <span class="row__side"><span class="chip chip--green">已生成行动卡</span></span>
+                  </a>
+                </li>
+                <li>
+                  <a class="row" href="self-coaching.html">
+                    <img class="row__art" src="assets/mascot-comfort.webp" width="520" height="640" alt="" aria-hidden="true" />
+                    <span>
+                      <span class="row__title">「和室友吵架了，不知道谁对」</span>
+                      <span class="row__meta">10 月 2 日 · 23:12 · 4 轮 · 停在第一步（现状）</span>
+                    </span>
+                    <span class="row__side"><span class="chip">未完成</span></span>
+                  </a>
+                </li>
+                <li>
+                  <a class="row" href="self-coaching.html">
+                    <img class="row__art" src="assets/mascot-sleepy.webp" width="420" height="420" alt="" aria-hidden="true" />
+                    <span>
+                      <span class="row__title">凌晨两点的那一段</span>
+                      <span class="row__meta">9 月 30 日 · 02:07 · 12 轮 · 出现风险提示，已转介热线</span>
+                    </span>
+                    <span class="row__side"><span class="chip chip--yellow">有风险提示</span></span>
+                  </a>
+                </li>
+                <li>
+                  <a class="row" href="self-coaching.html">
+                    <img class="row__art" src="assets/mascot-hello.webp" width="420" height="420" alt="" aria-hidden="true" />
+                    <span>
+                      <span class="row__title">第一次打开自我教练</span>
+                      <span class="row__meta">8 月 21 日 · 20:15 · 3 轮</span>
+                    </span>
+                    <span class="row__side"><span class="chip">未完成</span></span>
+                  </a>
+                </li>
+              </ul>
+
+              <p class="panel__foot">记录内容为示例数据，接入后来自你的真实会话。</p>
+            </section>
+
+            <aside class="stack">
+              <section class="panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">开一段新的</h2>
+                </div>
+                <p class="prose">不用组织语言。从最近最难受的那一小会儿开始就行。</p>
+                <a class="btn btn--block" href="self-coaching.html">
+                  <span>开始聊聊</span>
+                  <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                </a>
+              </section>
+
+              <section class="panel">
+                <div class="panel__head">
+                  <h2 class="panel__title">四步是什么</h2>
+                </div>
+                <ul class="ticks">
+                  <li>现状：此刻发生了什么</li>
+                  <li>期望：你希望它变成什么样</li>
+                  <li>资源：你手上已经有的东西</li>
+                  <li>行动：接下来 24 小时能做的一件小事</li>
+                </ul>
+              </section>
+            </aside>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+        <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：会话记录为示例内容</p>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/self-coaching-history.js"></script>
+  </body>
+</html>

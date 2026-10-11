@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>情绪日记 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 情绪日记：选一个表情，写一句话，收到一句资源导向的回应。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <!-- 原组件的样式：vue/ 里那份构建产出，内容就是 EmotionJournalView + MoodFace +
+         QuoteBlock + EmptyState + ErrorBanner 这几个 SFC 的 <style scoped>，一个字节没改 -->
+    <link rel="stylesheet" href="scripts/emotion-journal-app.css" />
+    <!-- 挂进来的 Vue 页面共用的一层：原组件令牌映射 + Tailwind 工具类替身 -->
+    <link rel="stylesheet" href="styles/vue-pages.css" />
+    <!-- 这一页的画风：手账纸 + 素材库2.0 的贴纸/印章/图钉，版式与文案仍是原组件的 -->
+    <link rel="stylesheet" href="styles/emotion-journal.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link is-current" href="emotion-journal.html" aria-current="page">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">个人中心</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================================
+         Vue 挂载点：原前端的 `EmotionJournalView` 原样挂在这里 —— 页头、来自自我教练的提示、
+         此刻的感觉（六个心情）、写一句话 + 字数 + 记录此刻、AI 回应、月历 + 心情记录并排、
+         近 30 天分布、今日一句，全部是项目里跑的那份组件（含提交、删除、切月、点某天筛选）。
+         见 vue/journal-main.js 与 vue/vite.config.mjs。
+         ============================================================================ -->
+    <main id="main" class="page">
+      <div id="app">
+        <p class="boot-note">正在加载情绪日记…（这一页由原前端的 Vue 组件渲染，需要脚本）</p>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script src="scripts/emotion-journal-app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>注册 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 注册：记录会保存在你的账户里，随时可以回看。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-register">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="login.html">已有账号，去登录</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">创建你的成长账户</h1>
+          <p class="plate__lede">记录会保存在你的账户里，随时可以回看。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="panel auth" aria-labelledby="reg-title">
+            <h2 class="auth__title" id="reg-title">填写基本信息</h2>
+            <p class="auth__lede">一分钟就好，之后可以随时补充。</p>
+
+            <!-- 两个密码框故意不写 name：万一脚本没跑起来（关掉了 JS）退化成原生提交，
+                 密码也不会跟着 query string 跑到地址栏与历史里 -->
+            <form class="form" action="index.html" method="get">
+              <div class="field">
+                <label class="field__label" for="r-phone">手机号</label>
+                <input class="input" id="r-phone" name="phone" type="tel" inputmode="numeric" placeholder="请输入 11 位手机号" autocomplete="tel" />
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="r-nick">昵称</label>
+                <input class="input" id="r-nick" name="nickname" maxlength="20" placeholder="怎么称呼你" autocomplete="nickname" />
+                <p class="field__hint">昵称会出现在你的情绪日记和评价里。</p>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="r-pass">密码</label>
+                <input class="input" id="r-pass" type="password" placeholder="至少 8 位，包含字母与数字" autocomplete="new-password" />
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="r-pass2">确认密码</label>
+                <input class="input" id="r-pass2" type="password" placeholder="再输入一次密码" autocomplete="new-password" />
+              </div>
+
+              <label class="checkline">
+                <input type="checkbox" name="agreed" />
+                <span>
+                  我已阅读并同意<a href="terms.html">《服务协议与免责声明》</a>：本平台提供心理教练与成长辅导、
+                  以及自助工具，不提供心理咨询、治疗或医疗诊断服务。
+                </span>
+              </label>
+
+              <button class="btn btn--block" type="submit">
+                <span>注册并开始</span>
+                <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </button>
+            </form>
+
+            <p class="auth__alt">已经有账号了？<a href="login.html">直接登录</a></p>
+          </section>
+
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/register.js"></script>
+  </body>
+</html>

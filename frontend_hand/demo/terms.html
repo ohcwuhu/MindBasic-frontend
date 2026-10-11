@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>服务协议与免责声明 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 服务协议与免责声明：平台提供心理教练与成长辅导以及自助工具，不提供心理咨询、治疗或医疗诊断服务。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="register.html">返回注册</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <span>服务协议与免责声明</span>
+          </nav>
+          <h1 class="plate__title">服务协议与免责声明</h1>
+          <p class="plate__lede">请在使用斐思同行前仔细阅读。当前版本 v1.2 · 2026-08-01 生效。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <article class="article-page panel">
+            <div class="prose">
+              <h2>一、我们提供什么</h2>
+              <p>
+                斐思同行是一个心理教练与成长辅导平台，提供三类服务：AI 自我教练对话、情绪日记与成长测评等自助工具，
+                以及由经平台审核的教练提供的真人教练服务。
+              </p>
+              <p>
+                平台提供的是心理教练/成长辅导与自助工具，<strong>不提供心理咨询、心理治疗或医疗诊断服务</strong>，
+                也不能替代精神科医生的诊疗。
+              </p>
+
+              <h2>二、AI 教练的边界</h2>
+              <p>
+                AI 教练的回应由模型生成，会标注「AI 生成」。它不会做出诊断，不会开具处方，
+                也可能出现理解偏差。你可以随时打断、否定或结束对话。
+              </p>
+              <p>
+                当我们识别到可能的危机情形时，会优先向你展示心理援助热线与线下求助渠道，
+                并可能把相关内容转介到人工支持。
+              </p>
+
+              <h2>三、紧急情况</h2>
+              <p>
+                如果你有伤害自己或他人的念头，请<strong>立即</strong>拨打心理援助热线 <a href="tel:12356">12356</a>，
+                或直接前往最近的医院急诊。平台不提供 24 小时紧急干预。
+              </p>
+
+              <h2>四、账号与身份</h2>
+              <p>
+                你需要以真实可用的手机号注册，并妥善保管密码。账号仅供本人使用，
+                不得出租、出借或转让。未满 18 周岁者应在监护人知情并同意的情况下使用。
+              </p>
+
+              <h2>五、真人教练服务</h2>
+              <p>
+                教练的资质、服务项目与价格由教练本人在平台提交，并经平台审核后展示。
+                预约、改期与取消以预约页展示的规则为准；提前 24 小时可以免费改期。
+                服务结束后你可以提交评价，评价内容公开可查。
+              </p>
+
+              <h2>六、你的内容与隐私</h2>
+              <p>
+                你的情绪日记、AI 对话记录与测评结果属于你。我们仅在提供服务所必需的范围内处理这些数据，
+                不会用于广告投放，也不会在未经你同意的情况下向第三方提供。
+              </p>
+              <ul>
+                <li>你可以随时在「个人资料 · 数据与隐私」导出你的全部记录；</li>
+                <li>你可以停用账号（可恢复），或永久删除账号与全部记录（不可恢复）；</li>
+                <li>涉及危机的记录，会在去标识化后由人工支持流程处理，用于保障你的安全。</li>
+              </ul>
+
+              <h2>七、社区规范</h2>
+              <p>
+                在社群中发言时，请不要评判他人、不要诊断他人、不要发布广告或违法内容。
+                涉及他人隐私的内容不得发布或转述。违反规范的账号可能被限制发言。
+              </p>
+
+              <h2>八、免责声明</h2>
+              <p>
+                平台不对服务结果做出承诺。因你未如实描述个人情况、未遵从教练建议、
+                或未及时寻求线下医疗帮助而产生的后果，由你自行承担。
+              </p>
+
+              <h2>九、协议更新</h2>
+              <p>
+                协议更新时，我们会在站内通知你，并保留历史版本。继续使用即视为接受更新后的版本；
+                如果你不接受，可以停止使用并申请删除账号。
+              </p>
+
+              <h2>十、联系我们</h2>
+              <p>对协议有疑问，或希望行使你的数据权利，可以通过站内「个人资料 · 数据与隐私」提交申请。</p>
+            </div>
+
+            <div class="article-foot">
+              <a class="btn btn--small btn--paper" href="register.html">返回注册</a>
+              <a class="btn btn--small" href="index.html">
+                <span>回到首页</span>
+                <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </a>
+            </div>
+
+            <p class="panel__foot">本文为设计演示稿，正式文本由平台配置下发（`GET /platform/agreement`）。</p>
+          </article>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/terms.js"></script>
+  </body>
+</html>

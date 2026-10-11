@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>预约咨询 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 预约咨询：选服务、选时段、写一句你的情况，然后生成订单。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link is-current" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">个人中心</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <a href="coaches.html">真人教练</a>
+            <span aria-hidden="true">/</span>
+            <a href="coach-detail.html">知夏</a>
+            <span aria-hidden="true">/</span>
+            <span>预约</span>
+          </nav>
+          <h1 class="plate__title">约一次聊聊</h1>
+          <p class="plate__lede">三步：选服务、选时段、写一句你的情况。下单前都可以反悔。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="cols cols--aside">
+            <div class="stack">
+              <section class="panel" aria-labelledby="s1-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="s1-title">① 选服务</h2>
+                  <p class="panel__note">都线上进行</p>
+                </div>
+                <div class="services">
+                  <label class="service pick">
+                    <span class="pick__body">
+                      <span class="service__name">单次咨询</span>
+                      <span class="service__meta">单次 · 50 分钟</span>
+                    </span>
+                    <span class="pick__side">
+                      <span class="service__price">¥300</span>
+                      <input type="radio" name="service" value="single" checked />
+                    </span>
+                  </label>
+                  <label class="service pick">
+                    <span class="pick__body">
+                      <span class="service__name">四周陪伴套餐</span>
+                      <span class="service__meta">套餐 · 4 次 × 50 分钟</span>
+                    </span>
+                    <span class="pick__side">
+                      <span class="service__price">¥1080</span>
+                      <input type="radio" name="service" value="pack" />
+                    </span>
+                  </label>
+                  <label class="service pick">
+                    <span class="pick__body">
+                      <span class="service__name">首次了解（15 分钟）</span>
+                      <span class="service__meta">单次 · 免费</span>
+                    </span>
+                    <span class="pick__side">
+                      <span class="service__price">¥0</span>
+                      <input type="radio" name="service" value="intro" />
+                    </span>
+                  </label>
+                </div>
+              </section>
+
+              <section class="panel" aria-labelledby="s2-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="s2-title">② 选时段</h2>
+                  <p class="panel__note">未来 14 天</p>
+                </div>
+                <ul class="slots">
+                  <li><button class="slot is-picked" type="button"><time datetime="2026-10-10">10-10</time><span>20:00</span></button></li>
+                  <li><button class="slot" type="button"><time datetime="2026-10-11">10-11</time><span>10:00</span></button></li>
+                  <li><button class="slot" type="button"><time datetime="2026-10-11">10-11</time><span>15:30</span></button></li>
+                  <li><button class="slot" type="button"><time datetime="2026-10-12">10-12</time><span>19:00</span></button></li>
+                  <li><button class="slot slot--off" type="button" disabled><time datetime="2026-10-13">10-13</time><span>已约满</span></button></li>
+                  <li><button class="slot" type="button"><time datetime="2026-10-14">10-14</time><span>21:00</span></button></li>
+                </ul>
+              </section>
+
+              <section class="panel" aria-labelledby="s3-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="s3-title">③ 写一句你的情况</h2>
+                  <p class="panel__note">选填，但教练会更好准备</p>
+                </div>
+                <form class="form" action="profile.html" method="get">
+                  <div class="field">
+                    <label class="field__label" for="need">想聊什么</label>
+                    <textarea class="textarea" id="need" name="need" placeholder="比如：下个月有场重要的考试，最近一想到就睡不着，白天也没什么力气…"></textarea>
+                    <p class="field__hint">你写的内容只有你和教练能看到。0 / 500</p>
+                  </div>
+
+                  <label class="checkline">
+                    <input type="checkbox" name="agree" checked />
+                    <span>我已阅读并同意<a href="terms.html">《服务协议与免责声明》</a>，并了解本平台不提供心理咨询、治疗或医疗诊断服务。</span>
+                  </label>
+                </form>
+              </section>
+            </div>
+
+            <aside class="panel" aria-labelledby="sum-title">
+              <div class="panel__head">
+                <h2 class="panel__title" id="sum-title">订单</h2>
+                <p class="panel__note">确认后生成待支付订单，30 分钟内有效。</p>
+              </div>
+
+              <div class="kv">
+                <div class="kv__row">
+                  <span class="kv__key">教练</span>
+                  <span class="kv__val">知夏</span>
+                  <span></span>
+                </div>
+                <div class="kv__row">
+                  <span class="kv__key">服务</span>
+                  <span class="kv__val">单次咨询 · 50 分钟</span>
+                  <span></span>
+                </div>
+                <div class="kv__row">
+                  <span class="kv__key">时间</span>
+                  <span class="kv__val">10-10 20:00</span>
+                  <span></span>
+                </div>
+                <div class="kv__row">
+                  <span class="kv__key">方式</span>
+                  <span class="kv__val">线上视频</span>
+                  <span></span>
+                </div>
+              </div>
+
+              <p class="sum__total"><span>合计</span><strong>¥300</strong></p>
+
+              <a class="btn btn--block" href="profile.html">
+                <span>提交订单</span>
+                <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </a>
+
+              <p class="panel__foot">
+                提前 24 小时可免费改期或取消。时段与价格为示例数据。
+              </p>
+            </aside>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/booking.js"></script>
+  </body>
+</html>

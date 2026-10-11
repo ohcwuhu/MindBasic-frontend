@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #f1eedf;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-tree.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>科普中心 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 科普中心：成长技巧、教练故事与常见困惑，每篇都按「问题、资源、行动」写，不学术、不说教。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="field-tree">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link is-current" href="articles.html" aria-current="page">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="register.html">注册</a>
+          <a class="btn btn--yellow" href="login.html"><span>开始登录</span></a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">成长技巧、教练故事与常见困惑</h1>
+          <p class="plate__lede">所有内容都按「问题、资源、行动」写，不学术、不说教。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="panel" aria-labelledby="list-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="list-title">先挑一类看</h2>
+              <p class="panel__note">共 7 篇 · 每周更新</p>
+            </div>
+
+            <ul class="cats" aria-label="文章分类">
+              <li><button class="key is-current" type="button">全部</button></li>
+              <li><button class="key" type="button">情绪调节</button></li>
+              <li><button class="key" type="button">学习方法</button></li>
+              <li><button class="key" type="button">人际关系</button></li>
+              <li><button class="key" type="button">自我成长</button></li>
+              <li><button class="key" type="button">危机科普</button></li>
+              <li><button class="key" type="button">教练故事</button></li>
+            </ul>
+
+            <ul class="arts">
+              <li>
+                <a class="art-row" href="article-detail.html">
+                  <img class="art-row__art" src="assets/cat-emotion.webp" width="560" height="545" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="art-row__title">考前焦虑：为什么越想睡越睡不着</span>
+                    <span class="art-row__summary">越告诉自己「快点睡」，脑子越清醒。先处理那件没做完的事，身体才肯放你走。</span>
+                  </span>
+                  <span class="art-row__side">
+                    <span class="art-row__date">2026-09-30</span>
+                    <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a class="art-row" href="article-detail.html">
+                  <img class="art-row__art" src="assets/cat-study.webp" width="560" height="547" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="art-row__title">拖延不是懒：把任务切到能开始的大小</span>
+                    <span class="art-row__summary">你不是不想做，是那件事在你心里太大。切到「两分钟能开始」为止。</span>
+                  </span>
+                  <span class="art-row__side">
+                    <span class="art-row__date">2026-09-27</span>
+                    <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a class="art-row" href="article-detail.html">
+                  <img class="art-row__art" src="assets/cat-relation.webp" width="560" height="479" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="art-row__title">被父母否定时，怎么把话说出口</span>
+                    <span class="art-row__summary">先不争对错。把「我想让你知道」放在前面，话才有地方落下。</span>
+                  </span>
+                  <span class="art-row__side">
+                    <span class="art-row__date">2026-09-22</span>
+                    <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a class="art-row" href="article-detail.html">
+                  <img class="art-row__art" src="assets/cat-growth.webp" width="390" height="560" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="art-row__title">情绪上来时，先做这一件小事</span>
+                    <span class="art-row__summary">不是深呼吸。是先把身体放到一个安全的地方，再让情绪自己退潮。</span>
+                  </span>
+                  <span class="art-row__side">
+                    <span class="art-row__date">2026-09-18</span>
+                    <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a class="art-row" href="article-detail.html">
+                  <img class="art-row__art" src="assets/cat-crisis.webp" width="560" height="560" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="art-row__title">怎么分辨「低落」和需要立刻求助</span>
+                    <span class="art-row__summary">持续多久、影响多大、有没有伤害自己的念头——三条线帮你说清楚。</span>
+                  </span>
+                  <span class="art-row__side">
+                    <span class="art-row__date">2026-09-12</span>
+                    <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a class="art-row" href="article-detail.html">
+                  <img class="art-row__art" src="assets/cat-story.webp" width="437" height="560" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="art-row__title">一位教练的手记：陪一个人走过低谷</span>
+                    <span class="art-row__summary">八次会面里她说得最多的一句是「我不知道」。后来我们把那团雾画了出来。</span>
+                  </span>
+                  <span class="art-row__side">
+                    <span class="art-row__date">2026-09-06</span>
+                    <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a class="art-row" href="article-detail.html">
+                  <img class="art-row__art" src="assets/cat-emotion.webp" width="560" height="545" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="art-row__title">写下来为什么有用：把感觉变成一条线</span>
+                    <span class="art-row__summary">情绪在脑子里是一团，写下来才变成一段有头有尾的事。</span>
+                  </span>
+                  <span class="art-row__side">
+                    <span class="art-row__date">2026-08-29</span>
+                    <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+                  </span>
+                </a>
+              </li>
+            </ul>
+
+            <p class="panel__foot">文章标题与日期为示例数据，接入后来自平台真实内容库。</p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+        <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：文章条目为示例内容</p>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/articles.js"></script>
+  </body>
+</html>

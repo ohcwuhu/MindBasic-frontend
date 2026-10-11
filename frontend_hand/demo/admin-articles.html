@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>内容 · 管理工作台 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 管理工作台：科普中心的文章与分类，在这里写、改、上线。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-admin">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="admin.html">管理工作台</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">内容</h1>
+          <p class="plate__lede">科普中心里的每一篇文章：写、改、上线、下线，都在这一页。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <nav class="keys atabs" aria-label="管理工作台模块">
+            <a class="key" href="admin.html">概览</a>
+            <a class="key" href="admin-users.html">用户</a>
+            <a class="key is-current" href="admin-articles.html" aria-current="page">内容</a>
+            <a class="key" href="admin-coach-audits.html">教练审核</a>
+          </nav>
+
+          <!-- ===== 写 / 改（默认收起，点「写一篇」或某行的「编辑」才展开） ===== -->
+          <section class="panel apanel" data-editor hidden aria-labelledby="editor-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="editor-title" data-editor-title>写一篇</h2>
+              <p class="panel__note">正文存的是 HTML，科普中心那边按原样渲染。</p>
+            </div>
+
+            <form class="form" data-form novalidate>
+              <div class="cols cols--2">
+                <div class="field">
+                  <label class="field__label" for="a-title">标题</label>
+                  <input class="input" id="a-title" name="title" maxlength="128" required />
+                </div>
+                <div class="field">
+                  <label class="field__label" for="a-summary">摘要</label>
+                  <input class="input" id="a-summary" name="summary" maxlength="255" placeholder="列表里那一行小字，可以留空" />
+                </div>
+              </div>
+
+              <div class="cols cols--3">
+                <div class="field">
+                  <label class="field__label" for="a-category">分类</label>
+                  <select class="select" id="a-category" name="categoryId">
+                    <option value="">未分类</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="a-status">状态</label>
+                  <select class="select" id="a-status" name="status">
+                    <option value="DRAFT">草稿</option>
+                    <option value="PUBLISHED">已发布</option>
+                    <option value="OFFLINE">已下线</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="a-cover">封面图地址</label>
+                  <input class="input" id="a-cover" name="coverUrl" maxlength="512" placeholder="留空就按分类自动配图" />
+                </div>
+              </div>
+
+              <label class="checkline">
+                <input type="checkbox" name="isPinned" />
+                <span>置顶 —— 在科普中心里排在最前面</span>
+              </label>
+
+              <div class="field">
+                <label class="field__label" for="a-content">正文</label>
+                <textarea class="textarea" id="a-content" name="content" rows="10" required></textarea>
+                <p class="field__hint">用简单 HTML 分段：&lt;p&gt;…&lt;/p&gt;、&lt;blockquote&gt;…&lt;/blockquote&gt;。</p>
+              </div>
+
+              <p class="field__error" data-form-error aria-live="polite" hidden></p>
+
+              <div class="field__row">
+                <button class="btn" type="submit" data-save>保存</button>
+                <button class="btn btn--paper" type="button" data-cancel>取消</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- ===== 文章 ===== -->
+          <section class="panel" aria-labelledby="articles-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="articles-title">文章</h2>
+              <p class="panel__note">按更新时间排，刚动过的排在最前。</p>
+            </div>
+
+            <div class="filters">
+              <label class="search">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="1.8" />
+                  <path d="M15.2 15.2 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+                <input type="search" name="keyword" placeholder="搜标题" aria-label="搜文章标题" />
+              </label>
+
+              <select class="select" name="status" aria-label="按状态筛">
+                <option value="">全部状态</option>
+                <option value="PUBLISHED">已发布</option>
+                <option value="DRAFT">草稿</option>
+                <option value="OFFLINE">已下线</option>
+              </select>
+
+              <select class="select" name="categoryId" aria-label="按分类筛">
+                <option value="">全部分类</option>
+                <option value="1">成长技巧</option>
+                <option value="2">教练真实故事</option>
+                <option value="3">常见成长困惑</option>
+              </select>
+
+              <button class="btn btn--small" type="button" data-apply>查询</button>
+              <button class="btn btn--paper btn--small" type="button" data-reset>重置</button>
+              <button class="btn btn--yellow btn--small" type="button" data-new>写一篇</button>
+
+              <p class="filters__count" data-count aria-live="polite">示例数据 · 3 篇</p>
+            </div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">标题</th>
+                  <th scope="col">分类</th>
+                  <th scope="col">状态</th>
+                  <th scope="col" class="is-num">阅读</th>
+                  <th scope="col">更新时间</th>
+                  <th scope="col">操作</th>
+                </tr>
+              </thead>
+              <tbody data-rows>
+                <tr>
+                  <td>孩子越来越沉默，父母可以怎么做</td>
+                  <td>常见成长困惑</td>
+                  <td><span class="chip chip--green">已发布</span></td>
+                  <td class="is-num">1</td>
+                  <td class="tnum">2026/10/11 18:44</td>
+                  <td><button class="act" type="button">编辑</button> <button class="act" type="button">下线</button> <button class="act act--warn" type="button">删除</button></td>
+                </tr>
+                <tr>
+                  <td>考前一周，如何安顿自己的情绪 <span class="chip chip--yellow">置顶</span></td>
+                  <td>成长技巧</td>
+                  <td><span class="chip chip--green">已发布</span></td>
+                  <td class="is-num">4</td>
+                  <td class="tnum">2026/10/11 06:10</td>
+                  <td><button class="act" type="button">编辑</button> <button class="act" type="button">下线</button> <button class="act act--warn" type="button">删除</button></td>
+                </tr>
+                <tr>
+                  <td>一位教练的故事：陪伴比答案更重要</td>
+                  <td>教练真实故事</td>
+                  <td><span class="chip chip--yellow">草稿</span></td>
+                  <td class="is-num">0</td>
+                  <td class="tnum">2026/09/21 05:41</td>
+                  <td><button class="act" type="button">编辑</button> <button class="act" type="button">发布</button> <button class="act act--warn" type="button">删除</button></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="pager">
+              <p class="pager__count" data-pager-count aria-live="polite">示例数据 · 共 3 篇</p>
+              <div class="pager__steps">
+                <button class="btn btn--paper btn--small" type="button" data-prev disabled>上一页</button>
+                <button class="btn btn--paper btn--small" type="button" data-next disabled>下一页</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 分类 ===== -->
+          <section class="section" aria-labelledby="cats-title">
+            <div class="band__head">
+              <h2 class="band__title" id="cats-title">分类</h2>
+              <p class="band__note">科普中心顶上那排标签就是这里来的。分类下还有文章时删不掉。</p>
+            </div>
+
+            <section class="panel">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">分类</th>
+                    <th scope="col" class="is-num">排序</th>
+                    <th scope="col">状态</th>
+                    <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody data-cats>
+                  <tr>
+                    <td>成长技巧</td>
+                    <td class="is-num">1</td>
+                    <td><span class="chip chip--green">启用中</span></td>
+                    <td><button class="act" type="button">改名</button> <button class="act" type="button">停用</button> <button class="act act--warn" type="button">删除</button></td>
+                  </tr>
+                  <tr>
+                    <td>教练真实故事</td>
+                    <td class="is-num">2</td>
+                    <td><span class="chip chip--green">启用中</span></td>
+                    <td><button class="act" type="button">改名</button> <button class="act" type="button">停用</button> <button class="act act--warn" type="button">删除</button></td>
+                  </tr>
+                  <tr>
+                    <td>常见成长困惑</td>
+                    <td class="is-num">3</td>
+                    <td><span class="chip chip--green">启用中</span></td>
+                    <td><button class="act" type="button">改名</button> <button class="act" type="button">停用</button> <button class="act act--warn" type="button">删除</button></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="inline-add">
+                <label class="visually-hidden" for="new-cat">新分类的名字</label>
+                <input class="input" id="new-cat" name="newCategory" maxlength="32" placeholder="新分类的名字" />
+                <button class="btn btn--small" type="button" data-add-cat>新增分类</button>
+                <span data-cat-msg aria-live="polite"></span>
+              </div>
+            </section>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script src="scripts/api.js"></script>
+    <script src="scripts/admin-shared.js"></script>
+    <script src="scripts/admin-articles.js"></script>
+  </body>
+</html>

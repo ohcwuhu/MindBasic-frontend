@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #c0da8d;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-grass.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>自我教练 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 自我教练：用语音像打电话一样聊聊你的状态，摄像头可选。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <!-- 原组件的样式：vue/ 里那份构建产出，内容就是 VideoCallView + VideoCallPanel +
+         CompanionSprite 三个 SFC 的 <style scoped>，一个字节没改 -->
+    <link rel="stylesheet" href="scripts/self-coaching-app.css" />
+    <!-- 挂进来的 Vue 页面共用的一层：原组件令牌映射 + Tailwind 工具类替身 -->
+    <link rel="stylesheet" href="styles/vue-pages.css" />
+    <!-- 这一页的画风：只覆盖配色与纸面，版式、文案、行为仍是原组件的 -->
+    <link rel="stylesheet" href="styles/self-coaching.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link is-current" href="self-coaching.html" aria-current="page">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">个人中心</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================================
+         Vue 挂载点：原前端的 `VideoCallView` 原样挂在这里 —— 历史记录入口、AI 说明横幅、
+         VideoCallPanel（通话台 + 对话侧栏 + 控制条）、「AI 自我教练说明」与
+         「记录到情绪日记？」两个弹窗，全部是项目里跑的那份组件。
+         见 vue/main.js 与 vue/vite.config.mjs。
+         ============================================================================ -->
+    <main id="main" class="page">
+      <div id="app">
+        <p class="boot-note">正在加载自我教练…（这一页由原前端的 Vue 组件渲染，需要脚本）</p>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+
+    <script src="scripts/self-coaching-app.js"></script>
+    <script src="scripts/self-coaching-note.js"></script>
+  </body>
+</html>

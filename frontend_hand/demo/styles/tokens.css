@@ -1,0 +1,65 @@
+/* Design tokens — 斐思同行 · 手绘风首页 2.0
+   The palette, the two type voices and the paper surface are inherited from the surface
+   already shipped in 项目主体/手绘风前端 (itself sampled from the client's approved board:
+   page #FFFAF6, paper #FEECDD, ink #1C1816, action green #8CBE8B, header yellow #F7DB7E,
+   active-nav lilac #E9E1F0). The sky / grass / blush steps below are read out of the two
+   new background plates in 素材库2.0 (web-background.png, 两人草地聊天), so the page's
+   light and ground match the art it sits on rather than being invented. */
+
+:root {
+  /* --- paper & ink -------------------------------------------------------------- */
+  --surface: #fffaf6;
+  --paper: #feecdd;
+  --paper-edge: #f4d9bf;
+  --ink: #1c1816;
+  --ink-body: #241f1c;
+  --ink-muted: #6f6459;
+  --hairline: rgba(28, 24, 22, 0.16);
+  --ink-line: rgba(28, 24, 22, 0.82);
+
+  /* --- the world's own colours -------------------------------------------------- */
+  --green: #8cbe8b;
+  --green-deep: #6ea46d;
+  --green-soft: #dcebd8;
+  /* the green that is dark enough to carry words on paper (--green-deep is a fill, not ink) */
+  --green-ink: #3f6b3e;
+  --yellow: #f7db7e;
+  --yellow-deep: #e0bf58;
+  --yellow-soft: #fdf1c8;
+  --yellow-ink: #6b5320; /* secondary words on the yellow note, tinted from its own hue */
+  --lilac: #e9e1f0;
+  --blush: #f4d7de;
+  --sky: #cfe4ef;
+  --sky-deep: #93c0d6;
+  --grass: #dcebc9;
+  --clay: #d09a6c;
+
+  --focus: #2f6b4f;
+  /* the ink for things that went wrong — field errors and destructive row actions */
+  --danger-ink: #a8503c;
+
+  /* --- type --------------------------------------------------------------------- */
+  /* the hand is the brand's display voice; both stacks mirror the project's own type
+     system, with self-hosted subsets appended so the page sets correctly anywhere */
+  --font-hand: 'LXGW WenKai', 'LXGW WenKai Screen', 'Xingkai SC', 'STKaiti', 'KaiTi',
+    'Noto Sans SC', cursive;
+  --font-ui: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC',
+    'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --fs-hero: clamp(2.125rem, 3.15vw, 3.125rem); /* 34 → 50px */
+  --fs-h2: clamp(1.25rem, 1.42vw, 1.5rem);
+  --fs-h3: clamp(1.0625rem, 1.05vw, 1.125rem);
+  --fs-body: clamp(0.9375rem, 0.92vw, 1rem);
+  --fs-small: 0.875rem;
+  --fs-label: 0.8125rem;
+  --fs-wordmark: clamp(1.25rem, 1.45vw, 1.5rem);
+
+  /* --- layout ------------------------------------------------------------------- */
+  --page-max: 1200px;
+  --gutter: clamp(20px, 3.2vw, 48px);
+  --measure: 68ch;
+  --stack: clamp(34px, 3.2vw, 54px); /* the air between bands */
+  --panel-pad: clamp(18px, 1.5vw, 24px);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}

@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #efe7db;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-cabin.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>找教练 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 找教练：每位教练都经过平台审核，可按标签筛选、按关键词搜索，查看评分与可约时段。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="field-cabin">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link is-current" href="coaches.html" aria-current="page">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="register.html">注册</a>
+          <a class="btn btn--yellow" href="login.html"><span>开始登录</span></a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">找到适合你的教练</h1>
+          <p class="plate__lede">每位教练都经过平台审核。服务理念以赋能、陪伴、资源导向为准。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="panel" aria-labelledby="dir-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="dir-title">按你的困扰找</h2>
+              <p class="panel__note">点标签筛一类，也可以直接搜昵称。</p>
+            </div>
+
+            <div class="dir__bar">
+              <ul class="keys" aria-label="标签筛选">
+                <li><button class="key is-current" type="button">全部</button></li>
+                <li><button class="key" type="button">考前焦虑</button></li>
+                <li><button class="key" type="button">职场压力</button></li>
+                <li><button class="key" type="button">亲子沟通</button></li>
+                <li><button class="key" type="button">情绪低落</button></li>
+                <li><button class="key" type="button">目标规划</button></li>
+              </ul>
+
+              <label class="search">
+                <svg class="ic" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="1.8" />
+                  <path d="M15.2 15.2 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+                <input type="search" placeholder="搜索教练昵称" aria-label="搜索教练昵称" />
+              </label>
+
+              <p class="dir__count">6 位教练 · 按评分排序</p>
+            </div>
+
+            <ul class="cols cols--2">
+              <li class="note coach-card">
+                <div class="coach-card__top">
+                  <span class="figure"><img src="assets/sym-tea.webp" width="419" height="560" alt="" aria-hidden="true" /></span>
+                  <div>
+                    <p class="coach-card__name"><a class="stretch" href="coach-detail.html">知夏</a></p>
+                    <p class="coach-card__meta">从业 8 年 · 累计 640 小时</p>
+                  </div>
+                </div>
+                <ul class="coach-card__tags">
+                  <li class="chip">考前焦虑</li>
+                  <li class="chip">自我成长</li>
+                </ul>
+                <p class="coach-card__concept">先陪你把手里的东西摊开看一遍，再一起挑今天能动的那一件。</p>
+                <p class="coach-card__score"><strong>4.9</strong> 分 · 128 条评价 · 最近可约 今天 20:00</p>
+              </li>
+
+              <li class="note coach-card">
+                <div class="coach-card__top">
+                  <span class="figure"><img src="assets/sym-chair.webp" width="351" height="560" alt="" aria-hidden="true" /></span>
+                  <div>
+                    <p class="coach-card__name"><a class="stretch" href="coach-detail.html">林深</a></p>
+                    <p class="coach-card__meta">从业 5 年 · 累计 390 小时</p>
+                  </div>
+                </div>
+                <ul class="coach-card__tags">
+                  <li class="chip">人际关系</li>
+                  <li class="chip">情绪调节</li>
+                </ul>
+                <p class="coach-card__concept">关系里的难受，多半是话没有说出口。我们从怎么开口开始练。</p>
+                <p class="coach-card__score"><strong>4.8</strong> 分 · 96 条评价 · 最近可约 明天 10:00</p>
+              </li>
+
+              <li class="note coach-card">
+                <div class="coach-card__top">
+                  <span class="figure"><img src="assets/sym-cat.webp" width="560" height="528" alt="" aria-hidden="true" /></span>
+                  <div>
+                    <p class="coach-card__name"><a class="stretch" href="coach-detail.html">晚风</a></p>
+                    <p class="coach-card__meta">从业 6 年 · 累计 470 小时</p>
+                  </div>
+                </div>
+                <ul class="coach-card__tags">
+                  <li class="chip">学习方法</li>
+                  <li class="chip">未来迷茫</li>
+                </ul>
+                <p class="coach-card__concept">拖延不是懒。我们把任务切到你能开始的那一档。</p>
+                <p class="coach-card__score"><strong>4.7</strong> 分 · 74 条评价 · 最近可约 周六 15:30</p>
+              </li>
+
+              <li class="note coach-card">
+                <div class="coach-card__top">
+                  <span class="figure"><img src="assets/sym-lamp.webp" width="560" height="560" alt="" aria-hidden="true" /></span>
+                  <div>
+                    <p class="coach-card__name"><a class="stretch" href="coach-detail.html">沈砚</a></p>
+                    <p class="coach-card__meta">从业 9 年 · 累计 720 小时</p>
+                  </div>
+                </div>
+                <ul class="coach-card__tags">
+                  <li class="chip">职场压力</li>
+                  <li class="chip">目标规划</li>
+                </ul>
+                <p class="coach-card__concept">先把「必须」和「想要」分开，路就短了一半。</p>
+                <p class="coach-card__score"><strong>4.9</strong> 分 · 156 条评价 · 最近可约 周五 19:00</p>
+              </li>
+
+              <li class="note coach-card">
+                <div class="coach-card__top">
+                  <span class="figure"><img src="assets/sym-plant.webp" width="560" height="560" alt="" aria-hidden="true" /></span>
+                  <div>
+                    <p class="coach-card__name"><a class="stretch" href="coach-detail.html">苏木</a></p>
+                    <p class="coach-card__meta">从业 4 年 · 累计 260 小时</p>
+                  </div>
+                </div>
+                <ul class="coach-card__tags">
+                  <li class="chip">情绪低落</li>
+                  <li class="chip">亲子沟通</li>
+                </ul>
+                <p class="coach-card__concept">低落的时候不用先振作。先让今天过得去，再谈往前。</p>
+                <p class="coach-card__score"><strong>4.8</strong> 分 · 61 条评价 · 最近可约 周四 21:00</p>
+              </li>
+
+              <li class="note coach-card">
+                <div class="coach-card__top">
+                  <span class="figure"><img src="assets/sym-scarf.webp" width="560" height="560" alt="" aria-hidden="true" /></span>
+                  <div>
+                    <p class="coach-card__name"><a class="stretch" href="coach-detail.html">白露</a></p>
+                    <p class="coach-card__meta">从业 7 年 · 累计 510 小时</p>
+                  </div>
+                </div>
+                <ul class="coach-card__tags">
+                  <li class="chip">情绪调节</li>
+                  <li class="chip">自我成长</li>
+                </ul>
+                <p class="coach-card__concept">情绪不是要解决的问题，它是先到的那封信。</p>
+                <p class="coach-card__score"><strong>4.7</strong> 分 · 88 条评价 · 最近可约 周日 11:00</p>
+              </li>
+            </ul>
+
+            <p class="panel__foot">教练姓名、评分、时段为示例数据，接入后来自平台真实资料。</p>
+          </section>
+
+          <section class="section panel" aria-labelledby="how-title">
+            <div class="panel__head">
+              <h2 class="panel__title" id="how-title">预约怎么走</h2>
+              <p class="panel__note">不用一次就把话说清楚，按顺序来就好。</p>
+            </div>
+
+            <ul class="cols cols--3">
+              <li class="note how">
+                <span class="figure"><img src="assets/mascot-listen.webp" width="450" height="640" alt="" aria-hidden="true" /></span>
+                <h3 class="how__title">① 先说说你的情况</h3>
+                <p class="how__body">下单前可以和教练聊两句，说清楚你想解决什么，不合适也能换人。</p>
+              </li>
+              <li class="note how">
+                <span class="figure"><img src="assets/sym-tea.webp" width="419" height="560" alt="" aria-hidden="true" /></span>
+                <h3 class="how__title">② 选一个能坐下来的时段</h3>
+                <p class="how__body">未来 14 天的可约时段都摆在教练页上，选中就能下单。</p>
+              </li>
+              <li class="note how">
+                <span class="figure"><img src="assets/sym-chair.webp" width="351" height="560" alt="" aria-hidden="true" /></span>
+                <h3 class="how__title">③ 聊完可以评价</h3>
+                <p class="how__body">评价公开可查。临时有事也能改期，不扣费用。</p>
+              </li>
+            </ul>
+
+            <p class="panel__foot">
+              还不想找真人？
+              <a class="link-quiet" href="self-coaching.html">先和 AI 教练聊几句</a>
+            </p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+        <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：教练信息与测评数据为示例内容</p>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/coaches.js"></script>
+  </body>
+</html>

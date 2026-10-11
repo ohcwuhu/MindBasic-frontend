@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e6e0d1;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/hero-plate.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>斐思同行 · 把心事说出来，让心慢慢轻下来</title>
+    <meta
+      name="description"
+      content="斐思同行：用对话梳理心情，用记录看见自己。AI 自我教练、情绪日记，以及经审核的真人教练。"
+    />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/home.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <!-- the plate is the page's own sky: the masthead sits straight on it -->
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link is-current" href="index.html" aria-current="page">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="register.html">注册</a>
+          <a class="btn btn--yellow" href="login.html">
+            <span class="btn__label" data-session-label>开始登录</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ============================================================================
+           The homepage is two things: the client's painting (首页背景-双人聊天版) shown
+           whole as the first band, and the four ways in pinned across the seam where the
+           painting meets its own grass. Nothing else — the page ends there.
+           ============================================================================ -->
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="wrap hero__inner">
+          <div class="hero__copy">
+            <h1 class="hero__title" id="hero-title">
+              <span class="hero__line">把心事说出来</span>
+              <span class="hero__line">让心<span class="mark">慢慢轻下来</span></span>
+            </h1>
+            <p class="hero__lede">
+              用对话梳理心情，用记录看见自己。每一个情绪，都值得被温柔接住。
+            </p>
+            <div class="hero__actions">
+              <a class="btn" href="self-coaching.html">
+                <span>开始聊聊</span>
+                <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </a>
+              <a class="link-more" href="articles.html">
+                先看看怎么用
+                <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </a>
+            </div>
+            <ul class="hero__chips">
+              <li>不用注册也能先逛</li>
+              <li>AI 教练 7×24 在线</li>
+              <li>真人教练全部经审核</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- 快速使用：四个入口便签压在画与地的接缝上，一半在画里的草地上，一半在画外 -->
+        <div class="wrap hero__entries">
+          <ul class="entries">
+            <li class="entry note">
+              <img class="entry__art" src="assets/mascot-listen.webp" width="450" height="640" alt="小苗侧耳倾听的样子" />
+              <div class="entry__text">
+                <h2 class="entry__title">自我教练</h2>
+                <p class="entry__desc">和 AI 教练聊几句，边聊边把心里那团乱线理出个头。</p>
+              </div>
+              <a class="entry__go" href="self-coaching.html" aria-label="进入自我教练">
+                <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </a>
+            </li>
+
+            <li class="entry note">
+              <img class="entry__art" src="assets/mood-calm.webp" width="300" height="269" alt="表情：平静" />
+              <div class="entry__text">
+                <h2 class="entry__title">情绪日记</h2>
+                <p class="entry__desc">记下今天的心情，会收到一句接住你的话。</p>
+              </div>
+              <a class="entry__go" href="emotion-journal.html" aria-label="进入情绪日记">
+                <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </a>
+            </li>
+
+            <li class="entry note">
+              <img class="entry__art" src="assets/sym-chair.webp" width="351" height="560" alt="手绘的一把椅子" />
+              <div class="entry__text">
+                <h2 class="entry__title">找教练</h2>
+                <p class="entry__desc">经审核的真人教练，在你需要更深支持时接手。</p>
+              </div>
+              <a class="entry__go" href="coaches.html" aria-label="查看教练列表">
+                <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </a>
+            </li>
+
+            <li class="entry note">
+              <img class="entry__art" src="assets/sym-book.webp" width="480" height="384" alt="手绘的一本书" />
+              <div class="entry__text">
+                <h2 class="entry__title">科普中心</h2>
+                <p class="entry__desc">成长技巧、常见困惑、教练故事，都写成了能读懂的文章。</p>
+              </div>
+              <a class="entry__go" href="articles.html" aria-label="进入科普中心">
+                <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- the painting's own bottom edge, carried on just far enough to give the four notes
+           a base to stand on. The page ends here. -->
+      <div class="ground"></div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+        <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：教练信息与测评数据为示例内容</p>
+      </div>
+    </footer>
+  </body>
+</html>

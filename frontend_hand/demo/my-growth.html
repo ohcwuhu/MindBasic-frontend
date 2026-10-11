@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #e7edc4;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>我的成长 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 我的成长：情绪日记、AI 对话、成长测评与打卡徽章，放在同一条时间轴上。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="profile.html">个人资料</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <span>我的成长</span>
+          </nav>
+          <h1 class="plate__title">我的成长</h1>
+          <p class="plate__lede">情绪、对话、测评和打卡都在这里，按时间排成一条线。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="panel" aria-labelledby="streak-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="streak-title">这一周</h2>
+              <p class="panel__note">再记两天，解锁「连续 7 天」徽章。</p>
+            </div>
+
+            <div class="streak-head">
+              <p class="streak-head__count"><strong>5</strong> 天连续记录</p>
+              <ol class="week" aria-label="最近七天记录情况">
+                <li class="is-on" aria-label="已记录">一</li>
+                <li class="is-on" aria-label="已记录">二</li>
+                <li class="is-on" aria-label="已记录">三</li>
+                <li class="is-on" aria-label="已记录">四</li>
+                <li class="is-on is-today" aria-label="今天，已记录">五</li>
+                <li aria-label="未记录">六</li>
+                <li aria-label="未记录">日</li>
+              </ol>
+              <a class="link-quiet" href="emotion-journal.html">写今天这一条</a>
+            </div>
+
+            <ul class="stats streak-head__stats">
+              <li class="stat"><strong>24</strong><span>条情绪日记</span></li>
+              <li class="stat"><strong>9</strong><span>次 AI 对话</span></li>
+              <li class="stat"><strong>2</strong><span>次成长测评</span></li>
+            </ul>
+          </section>
+
+          <section class="section cols cols--aside">
+            <section class="panel" aria-labelledby="tl-title">
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="tl-title">最近发生的事</h2>
+                <p class="panel__note">情绪 + 对话 + 测评 + 打卡</p>
+              </div>
+
+              <ol class="timeline">
+                <li class="tl" style="--dot: #e0a14c">
+                  <time datetime="2026-10-09">10 月 9 日</time>
+                  <div class="tl__body">
+                    <img class="tl__art" src="assets/mood-happy.webp" width="300" height="288" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="tl__title">心情打卡 · 开心</p>
+                      <p class="tl__text">「今天把那章背完了，居然有点想笑。」——AI 回应：这份轻松是你自己挣来的。</p>
+                    </div>
+                  </div>
+                </li>
+
+                <li class="tl" style="--dot: #8cbe8b">
+                  <time datetime="2026-10-08">10 月 8 日</time>
+                  <div class="tl__body">
+                    <img class="tl__art" src="assets/mascot-listen.webp" width="450" height="640" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="tl__title">AI 对话 · 第 9 次</p>
+                      <p class="tl__text">四步走到第三步（资源），留下一张行动卡：睡前把明天要做的三件事写下来。</p>
+                    </div>
+                  </div>
+                </li>
+
+                <li class="tl" style="--dot: #93c0d6">
+                  <time datetime="2026-10-05">10 月 5 日</time>
+                  <div class="tl__body">
+                    <img class="tl__art" src="assets/dim-relation.webp" width="400" height="307" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="tl__title">成长测评 · 第 2 次</p>
+                      <p class="tl__text">关系 61 分（比上月 +4），情绪 68 分（+6），其余三项基本持平。</p>
+                    </div>
+                  </div>
+                </li>
+
+                <li class="tl" style="--dot: #c08aa6">
+                  <time datetime="2026-10-03">10 月 3 日</time>
+                  <div class="tl__body">
+                    <img class="tl__art" src="assets/mood-low.webp" width="300" height="266" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="tl__title">心情打卡 · 低落</p>
+                      <p class="tl__text">「说不清为什么，就是提不起劲。」</p>
+                    </div>
+                  </div>
+                </li>
+
+                <li class="tl" style="--dot: #8cbe8b">
+                  <time datetime="2026-09-30">9 月 30 日</time>
+                  <div class="tl__body">
+                    <img class="tl__art" src="assets/badge-first-coach.webp" width="400" height="397" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="tl__title">拿到一枚章 · 教练首谈</p>
+                      <p class="tl__text">和知夏完成了第一次 50 分钟的会面。</p>
+                    </div>
+                  </div>
+                </li>
+              </ol>
+
+              <p class="panel__foot">时间轴内容为示例数据，接入后来自你的真实记录。</p>
+            </section>
+
+            <div class="stack">
+              <section class="panel" aria-labelledby="dim-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="dim-title">五维自评</h2>
+                  <a class="link-quiet" href="assessment.html">再做一次</a>
+                </div>
+                <ul class="dims">
+                  <li class="dim" style="--meter-colour: #e0a9bd">
+                    <img src="assets/dim-emotion.webp" width="400" height="381" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="dim__label"><strong>情绪</strong><em>68 · +6</em></p>
+                      <span class="meter"><i style="width: 68%"></i></span>
+                    </div>
+                  </li>
+                  <li class="dim" style="--meter-colour: #e7a86a">
+                    <img src="assets/dim-engagement.webp" width="400" height="373" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="dim__label"><strong>投入</strong><em>54 · +3</em></p>
+                      <span class="meter"><i style="width: 54%"></i></span>
+                    </div>
+                  </li>
+                  <li class="dim" style="--meter-colour: #93c0d6">
+                    <img src="assets/dim-relation.webp" width="400" height="307" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="dim__label"><strong>关系</strong><em>61 · +4</em></p>
+                      <span class="meter"><i style="width: 61%"></i></span>
+                    </div>
+                  </li>
+                  <li class="dim" style="--meter-colour: #e8d27f">
+                    <img src="assets/dim-meaning.webp" width="326" height="400" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="dim__label"><strong>意义</strong><em>47 · +2</em></p>
+                      <span class="meter"><i style="width: 47%"></i></span>
+                    </div>
+                  </li>
+                  <li class="dim" style="--meter-colour: #8cbe8b">
+                    <img src="assets/dim-action.webp" width="400" height="345" alt="" aria-hidden="true" />
+                    <div>
+                      <p class="dim__label"><strong>行动</strong><em>72 · +8</em></p>
+                      <span class="meter"><i style="width: 72%"></i></span>
+                    </div>
+                  </li>
+                </ul>
+                <p class="panel__foot">测评分数为示例数据。</p>
+              </section>
+
+              <section class="panel" aria-labelledby="badge-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="badge-title">已经盖下的章</h2>
+                  <p class="panel__note">4 / 6</p>
+                </div>
+                <ul class="badge-grid">
+                  <li class="badge">
+                    <img src="assets/badge-first-journal.webp" width="400" height="391" alt="" aria-hidden="true" />
+                    <span>第一篇日记</span>
+                  </li>
+                  <li class="badge">
+                    <img src="assets/badge-first-chat.webp" width="400" height="360" alt="" aria-hidden="true" />
+                    <span>首次对话</span>
+                  </li>
+                  <li class="badge">
+                    <img src="assets/badge-streak-7.webp" width="400" height="356" alt="" aria-hidden="true" />
+                    <span>连续 7 天</span>
+                  </li>
+                  <li class="badge">
+                    <img src="assets/badge-first-coach.webp" width="400" height="397" alt="" aria-hidden="true" />
+                    <span>教练首谈</span>
+                  </li>
+                  <li class="badge is-locked">
+                    <img src="assets/badge-night.webp" width="400" height="390" alt="" aria-hidden="true" />
+                    <span>深夜陪伴</span>
+                  </li>
+                  <li class="badge is-locked">
+                    <img src="assets/badge-streak-30.webp" width="400" height="392" alt="" aria-hidden="true" />
+                    <span>坚持 30 天</span>
+                  </li>
+                </ul>
+                <p class="panel__foot">
+                  数据与隐私都在<a class="link-quiet" href="profile.html">个人资料</a>里，可以导出或删除。
+                </p>
+              </section>
+
+              <section class="panel" aria-labelledby="account-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="account-title">账号</h2>
+                  <p class="panel__note" data-account-note>小舟 · 138****0621</p>
+                </div>
+                <ul class="stack">
+                  <li><a class="btn btn--paper btn--block" href="profile.html">个人资料与隐私</a></li>
+                  <!-- 退出登录从页头挪到了这里；没登录（静态演示）时它是隐藏的，
+                       由 session-nav.js 在确认已登录之后放出来并接上动作 -->
+                  <li><button class="btn btn--paper btn--block" type="button" data-logout hidden>退出登录</button></li>
+                </ul>
+                <p class="panel__foot">退出之后这台设备要重新登录才能继续用；记录都留在账号里。</p>
+              </section>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+        <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：记录与分数为示例内容</p>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/my-growth.js"></script>
+  </body>
+</html>
