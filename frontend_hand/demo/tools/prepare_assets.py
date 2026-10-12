@@ -28,9 +28,11 @@ HAND_FRONTEND = Path(r"C:\Users\26329\Desktop\斐思同行\项目主体\手绘�
 COMPANION = Path(r"C:\Users\26329\Desktop\斐思同行\项目主体\项目代码\MindBasic-frontend\public\companion")
 # 交付目录本身（frontend_hand）：客户端后来放进来的那几张背景图在这里
 HAND = Path(r"C:\Users\26329\Desktop\斐思同行\项目主体\frontend_hand")
-# 客户端给的第二版首页背景（整幅「两人草地聊天」，人物已经在画里）—— 他们放在交付目录里
+# 客户端给的第三版首页背景（「双人聊天版 · 优化后」，2896 × 1448，2 : 1）—— 他们放在交付目录里。
+# 这一版人物组更小、更靠左，左上留白更大，专门给首屏文案让位；合成与调色说明见
+# 演示图/优化说明-Hero插画.md。整幅画做 plate，草皮仍从同一幅画的底边重建。
 HOME_BG = Path(
-    r"C:\Users\26329\Desktop\斐思同行\项目主体\frontend_hand\演示图\首页背景-双人聊天版-人物缩小.png"
+    r"C:\Users\26329\Desktop\斐思同行\项目主体\frontend_hand\演示图\首页背景-双人聊天版-优化后.png"
 )
 
 # (source root, source relative path, output name, longest side in px, trim to ink)
@@ -219,20 +221,22 @@ def build_ground(band: int = 140) -> str:
     return f"{'field-ground.webp':26s} {tile.size[0]:>5}x{tile.size[1]:<5} {dest.stat().st_size / 1024:7.1f} KB"
 
 
-def build_home_field(plate_width: int = 2730, band: int = 160) -> list[str]:
-    """The homepage's own two layers, cut from the client's 双人聊天版 painting.
+def build_home_field(plate_width: int = 2896, band: int = 151) -> list[str]:
+    """The homepage's own two layers, cut from the client's 双人聊天版 · 优化后 painting.
 
-    The painting already contains the two people, so the homepage no longer draws them on
-    top of a separate illustration: the picture *is* the first band, and the ground below it
-    is cut from the painting's own bottom edge (levelled, then mirrored into a seamless tile)
-    so the band and the ground below it meet without a colour step — the same construction
-    the first version used, but the two layers now come out of one image.
+    The painting already contains the two people, so the homepage does not draw them on top
+    of a separate illustration: the picture *is* the first band, and the ground below it is
+    cut from the painting's own bottom edge (levelled, then mirrored into a seamless tile) so
+    the band and the ground below it meet without a colour step — the same construction the
+    earlier versions used, but the two layers now come out of the optimized image.
 
-    Neither layer is stretched. The plate keeps the painting's aspect (1.6) and is only ever
-    scaled *down* to `plate_width`; the default is now the source's own 2590 px, so nothing is
-    resampled at all: the page paints the first band at 100% of the window width, and the
-    picture the client handed over is the picture that ships. The tile is scaled to the same
-    width.
+    Neither layer is stretched. The plate keeps the painting's own aspect (2896 : 1448 = 2 : 1)
+    and is only ever scaled *down* to `plate_width`; the default is the source's own 2896 px,
+    so nothing is resampled at all: the page paints the first band at 100% of the window width,
+    and the picture the client handed over is the picture that ships. The tile is cut from the
+    same width of the same painting, and `band` keeps the share of the height the earlier
+    version took (160 of 1536 → 151 of 1448), so the strip of grass the notes stand on reads
+    the same.
     """
     src = Image.open(HOME_BG).convert("RGB")
     w, h = src.size

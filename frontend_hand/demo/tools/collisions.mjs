@@ -61,11 +61,11 @@ const PAGES_PAIRS = [
   ['.ground', '.footer', 'the ground runs into the footer'],
 ]
 
-/* 首页背景（首页背景-双人聊天版-人物缩小）里两个人所在的位置，按画面比例量出来的：
-   横向 55%–66%、纵向 70%–82%（缩小之后人更小，框也跟着收紧了一点）。
-   首屏的盒子就是这幅画本身（比例 2730 : 1536），所以盒子多大、画就多大，
-   从盒子直接算出这个矩形，再逐个看有没有元素压在上面。 */
-const SUBJECT = { aspect: 2730 / 1536, left: 0.55, right: 0.66, top: 0.7, bottom: 0.82 }
+/* 首页背景（首页背景-双人聊天版-优化后）里两个人所在的位置（右边那只猫也算在内），
+   按画面比例量出来的：横向 53%–97%、纵向 28%–80%（优化后人物组缩小并左移，光晕之外
+   左上留白更大，所以框比上一版宽、也更靠上）。首屏的盒子就是这幅画本身（比例 2896 : 1448），
+   所以盒子多大、画就多大，从盒子直接算出这个矩形，再逐个看有没有元素压在上面。 */
+const SUBJECT = { aspect: 2896 / 1448, left: 0.53, right: 0.97, top: 0.28, bottom: 0.8 }
 const SUBJECT_GUARDS = ['.hero__copy', '.hero__entries']
 
 const PAIRS =
@@ -118,7 +118,7 @@ for (const width of WIDTHS) {
       if (ox > 2 && oy > 2) out.push(`${why}  (${Math.round(ox)}x${Math.round(oy)}px overlap)`)
     }
 
-    // 首屏那幅画里两个人所在的位置：背景按 1.6 铺满页宽、底边对齐，从首屏盒子反推
+    // 首屏那幅画里两个人所在的位置：首屏的盒子就是画本身（同比例），从盒子直接反推
     if (subject) {
       const hero = document.querySelector('.hero')
       if (hero) {

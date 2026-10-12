@@ -1,10 +1,10 @@
 /* 斐思同行 · 手绘风首页（web）
 
-   Layout law: 客户端给的这幅画（`演示图/首页背景-双人聊天版.png`，2590 × 1619）就是首页本身。
+   Layout law: 客户端给的这幅画（`演示图/首页背景-双人聊天版-优化后.png`，2896 × 1448）就是首页本身。
 
-   - **整幅。** 首屏的盒子按画自己的比例 2590 : 1619 定高（1440 窗口 → 1440 × 900，正好一屏），
+   - **整幅。** 首屏的盒子按画自己的比例 2896 : 1448（2 : 1）定高（1440 窗口 → 1440 × 720），
      背景照这个盒子铺：画不被裁掉一角，也不被拉长压扁 —— 没有缩小，也没有放大，只是跟着
-     窗口宽度等比走。两个人画在画里，页面不再叠插画。
+     窗口宽度等比走。两个人画在画里（优化后那版人更小、更靠左），页面不再叠插画。
    - **一条接缝。** 画的下沿就是接缝。画外的草皮取自这幅画自己的底边（按行归一再镜像），
      从接缝往下接着长，只留一小段 —— 给四张入口便签一个落地的边。
    - **快速使用。** 四张便签骑在这条接缝上：上大半压在画里的草地上，下沿探到画外的草皮。
@@ -40,8 +40,8 @@
 .hero {
   position: relative;
   /* the picture's own ratio: the band *is* the picture, so no sky is cropped off the top
-     and nothing is stretched — 1440 wide shows it at 1440 × 810（2730 : 1536，16:9） */
-  aspect-ratio: 2730 / 1536;
+     and nothing is stretched — 1440 wide shows it at 1440 × 720（2896 : 1448，2 : 1） */
+  aspect-ratio: 2896 / 1448;
   /* `cover` inside a box of the picture's own ratio is an exact fit, never a crop. If the
      ratio ever drifts it crops a sliver rather than distorting the art. */
   background: url('../assets/hero-plate.webp') center / cover no-repeat;
