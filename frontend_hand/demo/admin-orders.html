@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>订单 · 管理工作台 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 管理工作台：订单与退款。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-admin">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="admin.html">管理工作台</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">订单</h1>
+          <p class="plate__lede">钱进来、钱退回去，每一笔都对得上。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <nav class="keys atabs" aria-label="管理工作台模块">
+            <a class="key" href="admin.html">概览</a>
+            <a class="key" href="admin-users.html">用户</a>
+            <a class="key" href="admin-articles.html">内容</a>
+            <a class="key" href="admin-coach-audits.html">教练审核</a>
+            <a class="key is-current" href="admin-orders.html" aria-current="page">订单</a>
+            <a class="key" href="admin-crisis.html">危机</a>
+            <a class="key" href="admin-audit-logs.html">日志</a>
+            <a class="key" href="admin-system-configs.html">配置</a>
+          </nav>
+
+          <section class="panel" aria-labelledby="orders-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="orders-title">全部订单</h2>
+              <p class="panel__note">退款只对已支付的订单；退回去的是余额。</p>
+            </div>
+
+            <div class="filters">
+              <select class="select" name="status" aria-label="按状态筛">
+                <option value="">全部状态</option>
+                <option value="CREATED">待支付</option>
+                <option value="PAID">已支付</option>
+                <option value="CLOSED">已关闭</option>
+                <option value="REFUNDED">已退款</option>
+              </select>
+              <select class="select" name="type" aria-label="按类型筛">
+                <option value="">全部类型</option>
+                <option value="APPOINTMENT">教练预约</option>
+                <option value="TOPUP">钱包充值</option>
+              </select>
+              <button class="btn btn--small" type="button" data-apply>查询</button>
+              <button class="btn btn--paper btn--small" type="button" data-reset>重置</button>
+              <p class="filters__count" data-count aria-live="polite">示例数据 · 4 笔</p>
+            </div>
+
+            <p class="filters__count" data-status role="status" aria-live="polite" tabindex="-1"></p>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">订单号</th>
+                  <th scope="col">用户</th>
+                  <th scope="col">类型</th>
+                  <th scope="col" class="is-num">金额</th>
+                  <th scope="col">状态</th>
+                  <th scope="col">创建</th>
+                  <th scope="col">支付 / 退款</th>
+                  <th scope="col">操作</th>
+                </tr>
+              </thead>
+              <tbody data-rows>
+                <tr>
+                  <td class="tnum">OD2610124821</td>
+                  <td>小满 <span class="tnum">139****0002</span></td>
+                  <td>教练预约</td>
+                  <td class="is-num">¥300</td>
+                  <td><span class="chip chip--yellow">待支付</span></td>
+                  <td class="tnum">2026/10/12 21:30</td>
+                  <td class="tnum">—</td>
+                  <td><button class="act" type="button" disabled title="待支付的订单不能退款">退款</button></td>
+                </tr>
+                <tr>
+                  <td class="tnum">OD2610113077</td>
+                  <td>小满 <span class="tnum">139****0002</span></td>
+                  <td>教练预约</td>
+                  <td class="is-num">¥300</td>
+                  <td><span class="chip chip--green">已支付</span></td>
+                  <td class="tnum">2026/10/11 20:03</td>
+                  <td class="tnum">2026/10/11 20:05</td>
+                  <td><button class="act act--warn" type="button" data-refund="2">退款</button></td>
+                </tr>
+                <tr>
+                  <td class="tnum">OD2610091140</td>
+                  <td>阿禾 <span class="tnum">138****6621</span></td>
+                  <td>钱包充值</td>
+                  <td class="is-num">¥100</td>
+                  <td><span class="chip">已关闭</span></td>
+                  <td class="tnum">2026/10/09 11:40</td>
+                  <td class="tnum">—</td>
+                  <td><button class="act" type="button" disabled title="已关闭的订单不能退款">退款</button></td>
+                </tr>
+                <tr>
+                  <td class="tnum">OD2610080902</td>
+                  <td>苏木 <span class="tnum">137****3320</span></td>
+                  <td>教练预约</td>
+                  <td class="is-num">¥280</td>
+                  <td><span class="chip chip--lilac">已退款</span></td>
+                  <td class="tnum">2026/10/08 09:02</td>
+                  <td class="tnum">退款 2026/10/08 18:20</td>
+                  <td><button class="act" type="button" disabled title="已经退过了">退款</button></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="pager">
+              <p class="pager__count" data-pager-count aria-live="polite">示例数据 · 共 4 笔</p>
+              <div class="pager__steps">
+                <button class="btn btn--paper btn--small" type="button" data-prev disabled>上一页</button>
+                <button class="btn btn--paper btn--small" type="button" data-next disabled>下一页</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/admin-orders.js"></script>
+  </body>
+</html>

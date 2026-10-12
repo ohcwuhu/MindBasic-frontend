@@ -6,3 +6,9 @@ demo/.cache/
 
 # python build artifacts
 __pycache__/
+
+# 本地产物，不进版本库：
+#   demo/companion 是指向 assets/companion 的目录联接（原组件的素材路径是站内绝对路径）
+#   演示图/_字体修复前 是修字体之前的一版出图，留档用，代码里有新的那一版
+demo/companion
+演示图/_字体修复前/

@@ -22,7 +22,7 @@ body {
   /* 这一页自己的地：客户给的「纯水彩草地背景」——一整幅水彩草地，固定不动，
      内容从上面滑过去。（换回上一张只要把这行换成
      `url('../assets/emotion-journal-bg.webp')` + 底色 `#e8e3d5`。） */
-  background: #c0da8d url('../assets/field-grass.webp') center center / cover fixed no-repeat;
+  background: #e7eece url('../assets/field-grass.webp') center center / cover fixed no-repeat;
   /* 一屏三行：页头、通话台、页脚 —— 原版是把通话台钉在视口里（top:64px;bottom:0），
      这里换成页头与页脚之间的那一格，其余（16px 内边距、舞台 : 侧栏 = 其余 : 372px）不变 */
   display: grid;
@@ -70,8 +70,43 @@ body {
   margin: 0;
   padding: 40px 16px;
   font-family: var(--font-hand);
-  color: var(--ink-muted);
+  /* 这一行只在 Vue 包下载时露一下，底色是草地：用墨色，别用那档灰 */
+  color: var(--ink-body);
   text-align: center;
+}
+
+/* 顶上那张「去登录」的纸：一句话 + 一个动作，不做第二条说明 */
+.sc-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 10px;
+  padding: 12px 18px;
+}
+
+.sc-hint__text {
+  font-size: var(--fs-small);
+  color: var(--ink-body);
+}
+
+.sc-hint__action {
+  margin-inline-start: auto;
+}
+
+/* 页面右上那颗「历史记录」是本页唯一直接坐在草地上的字（其余文字都在纸面或舞台的深灰面上）。
+   这一页的草地也压过 62% 纸色之后，次要灰在上面是 4.8:1（够 AA）—— 但它是这一页唯一的入口，
+   再稳一档：用正文的墨色（≈10:1），层级交给字号和位置。 */
+#app .video-call-page > .flex.justify-end > a {
+  color: var(--ink-body);
+  font-weight: 600;
+}
+
+#app .video-call-page > .flex.justify-end > a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.3em;
 }
 
 /* =====================================================================================
@@ -162,14 +197,11 @@ body {
 /* 开场前（未开始）：角色站在光球位、标题、说明、三项授权、开始按钮，全在深灰面上。
    文字保持原版的浅色 —— 深底浅字，与 3D 角色同一套明暗关系。 */
 #app .stage-loading,
-#app .idle-desc,
-#app .stage-camoff,
-#app .camoff-desc {
+#app .idle-desc {
   color: #ded8d1;
 }
 
-#app .idle-title,
-#app .camoff-title {
+#app .idle-title {
   color: #fdfaf5;
 }
 
@@ -233,34 +265,56 @@ body {
 #app .start-call-btn:focus-visible,
 #app .ctrl-btn:focus-visible,
 #app .switch:focus-visible,
-#app .camoff-btn:focus-visible,
 #app .idle-keep-btn:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
-/* 摄像头关闭：语音模式下的舞台说明（与上面同一套灰面配色） */
-#app .stage-camoff {
-  color: #e6e0d8;
+/* 摄像头关闭 = 语音模式：主角是陪伴角色本身。
+   角色是照着深底画、照着深底抠的（抠像阈值 30 也是为黑底定的），所以它站在舞台正中，
+   下面一行只说状态，摄像头那颗按钮留在底部控制条里 —— 同一个动作不在两处出现。 */
+#app .stage-voice {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 420px;
+  padding: 20px;
+  text-align: center;
 }
 
-#app .camoff-desc {
-  color: #e6e0d8;
+#app .voice-companion {
+  width: 200px;
+  height: 302px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#app .camoff-btn {
-  padding: 9px 22px;
-  border: 2px solid var(--ink-line);
-  border-radius: 44px 36px 46px 34px / 36px 46px 34px 44px;
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-hand);
-  font-size: 1rem;
+#app .voice-companion .cs-root {
+  width: 100%;
+  height: 100%;
 }
 
-#app .camoff-btn:hover:not(:disabled) {
-  background: var(--green-soft);
-  border-color: var(--ink-line);
+/* 比 `#app .co-status` 高一档，语音状态那一行才守得住自己的字号 */
+#app .vc-stage .voice-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 8px 16px;
+  background: rgba(38, 35, 33, 0.84);
+  border: 1px solid rgba(253, 250, 245, 0.16);
+  border-radius: 999px;
+  font-size: var(--fs-h3);
+}
+
+#app .voice-note {
+  margin: 0;
+  font-size: var(--fs-label);
+  color: #ded8d1;
 }
 
 /* 舞台上的短提示：摄像头提示、长时间没说话、错误
@@ -320,6 +374,8 @@ body {
 #app .co-status {
   font-family: var(--font-hand);
   font-size: var(--fs-label);
+  /* 陪伴浮窗是暖黑的底，字得是浅色 —— 原来这里继承了正文的墨色，深底压深字几乎看不见 */
+  color: #fdfaf5;
 }
 
 #app .co-status.listening,

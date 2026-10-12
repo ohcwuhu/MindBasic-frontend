@@ -6,7 +6,89 @@
   'use strict'
 
   var api = window.FeisiAPI
-  if (!api || !api.live) return
+  if (!api) return
+  if (!api.live) {
+    demoWallet()
+    return
+  }
+
+  /* 静态演示（直接双击打开这个 .html）：页面里那份示例流水照旧，这一小段只把「余额」和
+     充值接上 —— 用的是订单页同一个本地演示账本（sessionStorage），
+     所以从订单点过来的「去钱包充值」不是一条死路。 */
+  function demoWallet() {
+    var KEY = 'feisi_demo_flow'
+    var balanceBox = document.querySelector('[data-balance]')
+    var balanceNote = document.querySelector('[data-balance-note]')
+    var topupNote = document.querySelector('[data-topup-note]')
+    var topupButton = document.querySelector('[data-topup]')
+    var amountInput = document.querySelector('#amount')
+    var pagerCount = document.querySelector('[data-pager-count]')
+    if (!balanceBox) return
+
+    function read() {
+      try {
+        return JSON.parse(window.sessionStorage.getItem(KEY) || 'null')
+      } catch (error) {
+        return null
+      }
+    }
+
+    function write(store) {
+      try {
+        window.sessionStorage.setItem(KEY, JSON.stringify(store))
+      } catch (error) {
+        /* 存不进去也不影响这一屏 */
+      }
+    }
+
+    var store = read()
+    balanceBox.textContent = api.money((store && store.balanceInCents) || 0)
+    if (balanceNote) {
+      balanceNote.textContent = store
+        ? '设计演示的本地余额 · 更新于 ' + new Date().toLocaleTimeString('zh-CN', { hour12: false })
+        : '设计演示：还没有本地余额，先去「我的订单」走一遍预约。'
+    }
+    if (pagerCount) pagerCount.textContent = '设计演示：下面是示例流水'
+    Array.prototype.forEach.call(document.querySelectorAll('[data-prev], [data-next]'), function (button) {
+      button.disabled = true
+    })
+
+    function topup(yuan) {
+      var cents = Math.round(Number(yuan) * 100)
+      if (!isFinite(cents) || cents < 100) {
+        if (topupNote) topupNote.innerHTML = api.note('单次最少充 1 元。', true)
+        if (amountInput) amountInput.focus()
+        return
+      }
+      var next = read() || { seeded: true, examples: true, orders: [], appointments: [], balanceInCents: 0 }
+      next.balanceInCents = Number(next.balanceInCents || 0) + cents
+      write(next)
+      balanceBox.textContent = api.money(next.balanceInCents)
+      if (topupNote) {
+        topupNote.innerHTML =
+          '已到账 ' + api.money(cents) + ' —— 设计演示里的本地余额，不经过任何支付渠道。'
+      }
+      if (amountInput) amountInput.value = ''
+    }
+
+    if (topupButton) {
+      topupButton.addEventListener('click', function () {
+        topup(amountInput ? amountInput.value : '')
+      })
+    }
+    if (amountInput) {
+      amountInput.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter') return
+        event.preventDefault()
+        topup(amountInput.value)
+      })
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-amount]'), function (button) {
+      button.addEventListener('click', function () {
+        topup(Number(button.getAttribute('data-amount')) / 100)
+      })
+    })
+  }
 
   var PAGE_SIZE = 20
   var KINDS = {

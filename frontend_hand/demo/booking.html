@@ -5,7 +5,7 @@
     <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
     <style data-first-paint>
       html {
-        background: #e7edc4;
+        background: #f6f5e3;
       }
     </style>
     <link rel="preload" as="image" href="assets/field-watercolour.webp" />
@@ -111,34 +111,39 @@
               <section class="panel" aria-labelledby="s2-title">
                 <div class="panel__head panel__head--row">
                   <h2 class="panel__title" id="s2-title">② 选时段</h2>
-                  <p class="panel__note">未来 14 天</p>
+                  <p class="panel__note" data-slots-note>未来 14 天</p>
                 </div>
-                <ul class="slots">
-                  <li><button class="slot is-picked" type="button"><time datetime="2026-10-10">10-10</time><span>20:00</span></button></li>
-                  <li><button class="slot" type="button"><time datetime="2026-10-11">10-11</time><span>10:00</span></button></li>
-                  <li><button class="slot" type="button"><time datetime="2026-10-11">10-11</time><span>15:30</span></button></li>
-                  <li><button class="slot" type="button"><time datetime="2026-10-12">10-12</time><span>19:00</span></button></li>
-                  <li><button class="slot slot--off" type="button" disabled><time datetime="2026-10-13">10-13</time><span>已约满</span></button></li>
-                  <li><button class="slot" type="button"><time datetime="2026-10-14">10-14</time><span>21:00</span></button></li>
+                <!-- 时段的日期由 scripts/booking.js 按「今天」算出来（示例数据不写死日期，
+                     隔几天再打开也不会变成过去的时段）；下面这份是没脚本时的兜底 -->
+                <ul class="slots" role="group" aria-label="可选时段">
+                  <li><button class="slot is-picked" type="button" aria-pressed="true" data-slot="demo-1"><time>明天</time><span>20:00</span></button></li>
+                  <li><button class="slot" type="button" aria-pressed="false" data-slot="demo-2"><time>后天</time><span>10:00</span></button></li>
+                  <li><button class="slot" type="button" aria-pressed="false" data-slot="demo-3"><time>后天</time><span>15:30</span></button></li>
+                  <li><button class="slot" type="button" aria-pressed="false" data-slot="demo-4"><time>三天内</time><span>19:00</span></button></li>
+                  <li><button class="slot slot--off" type="button" disabled><time>三天内</time><span>已约满</span></button></li>
+                  <li><button class="slot" type="button" aria-pressed="false" data-slot="demo-6"><time>一周内</time><span>21:00</span></button></li>
                 </ul>
+                <p class="field__error" data-slot-error role="alert" hidden></p>
               </section>
 
               <section class="panel" aria-labelledby="s3-title">
                 <div class="panel__head panel__head--row">
                   <h2 class="panel__title" id="s3-title">③ 写一句你的情况</h2>
-                  <p class="panel__note">选填，但教练会更好准备</p>
+                  <p class="panel__note">必填 · 最多 500 字</p>
                 </div>
-                <form class="form" action="profile.html" method="get">
+                <form class="form" id="booking-form" novalidate>
                   <div class="field">
                     <label class="field__label" for="need">想聊什么</label>
-                    <textarea class="textarea" id="need" name="need" placeholder="比如：下个月有场重要的考试，最近一想到就睡不着，白天也没什么力气…"></textarea>
-                    <p class="field__hint">你写的内容只有你和教练能看到。0 / 500</p>
+                    <textarea class="textarea" id="need" name="need" required maxlength="500" aria-describedby="need-counter" placeholder="比如：下个月有场重要的考试，最近一想到就睡不着，白天也没什么力气…"></textarea>
+                    <p class="field__hint" id="need-counter">你写的内容只有你和教练能看到。0 / 500</p>
+                    <p class="field__error" id="need-error" role="alert" hidden></p>
                   </div>
 
                   <label class="checkline">
-                    <input type="checkbox" name="agree" checked />
+                    <input type="checkbox" name="agree" id="agree" required />
                     <span>我已阅读并同意<a href="terms.html">《服务协议与免责声明》</a>，并了解本平台不提供心理咨询、治疗或医疗诊断服务。</span>
                   </label>
+                  <p class="field__error" id="agree-error" role="alert" hidden></p>
                 </form>
               </section>
             </div>
@@ -146,23 +151,23 @@
             <aside class="panel" aria-labelledby="sum-title">
               <div class="panel__head">
                 <h2 class="panel__title" id="sum-title">订单</h2>
-                <p class="panel__note">确认后生成待支付订单，30 分钟内有效。</p>
+                <p class="panel__note">确认后生成订单。支付截止时间以订单显示为准。</p>
               </div>
 
               <div class="kv">
                 <div class="kv__row">
                   <span class="kv__key">教练</span>
-                  <span class="kv__val">知夏</span>
+                  <span class="kv__val" data-sum-coach>知夏</span>
                   <span></span>
                 </div>
                 <div class="kv__row">
                   <span class="kv__key">服务</span>
-                  <span class="kv__val">单次咨询 · 50 分钟</span>
+                  <span class="kv__val" data-sum-service>单次咨询 · 50 分钟</span>
                   <span></span>
                 </div>
                 <div class="kv__row">
                   <span class="kv__key">时间</span>
-                  <span class="kv__val">10-10 20:00</span>
+                  <span class="kv__val" data-sum-slot>明天 20:00</span>
                   <span></span>
                 </div>
                 <div class="kv__row">
@@ -172,15 +177,16 @@
                 </div>
               </div>
 
-              <p class="sum__total"><span>合计</span><strong>¥300</strong></p>
+              <p class="sum__total"><span>合计</span><strong data-sum-total>¥300</strong></p>
 
-              <a class="btn btn--block" href="profile.html">
-                <span>提交订单</span>
+              <button class="btn btn--block" type="submit" form="booking-form" data-booking-submit>
+                <span data-submit-label>提交订单</span>
                 <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
-              </a>
+              </button>
 
+              <p class="panel__foot" data-booking-status role="status" aria-live="polite" aria-atomic="true"></p>
               <p class="panel__foot">
-                提前 24 小时可免费改期或取消。时段与价格为示例数据。
+                改期与取消规则以预约详情为准。当前为设计示例，登录后加载真实时段与价格。
               </p>
             </aside>
           </section>

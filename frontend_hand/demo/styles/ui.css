@@ -260,7 +260,7 @@
   position: relative;
   padding: var(--panel-pad);
   background: var(--surface);
-  border: 2px solid var(--ink-line);
+  border: 2px solid var(--ink-line-soft);
   border-radius: 20px 14px 22px 13px / 14px 22px 13px 20px;
 }
 

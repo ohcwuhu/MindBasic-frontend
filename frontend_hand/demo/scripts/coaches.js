@@ -35,8 +35,41 @@
       '<p class="coach-card__concept">' + api.esc(coach.serviceConcept || '') + '</p>' +
       '<p class="coach-card__score"><strong>' + rating + '</strong> 分 · ' +
       (coach.reviewCount || 0) + ' 条评价</p>' +
+      '<p class="coach-card__price" data-price="' + coach.id + '">正在读取价格…</p>' +
+      '<p class="coach-card__more"><a class="coach-card__link" href="coach-detail.html?id=' + coach.id +
+      '">查看服务与可约时段</a></p>' +
       '</li>'
     )
+  }
+
+  /* 列表接口目前只回评分与标签，价格与时长要去详情里拿 —— 这里逐个补上（一页几位教练，
+     请求量可以接受）。后端列表哪天直接带 `minPriceInCents` / `durationMin`，这段就能删。 */
+  function fillPrices(container, items) {
+    items.forEach(function (coach) {
+      var node = container.querySelector('[data-price="' + coach.id + '"]')
+      if (!node) return
+      api
+        .get('/coaches/' + coach.id)
+        .then(function (detail) {
+          var services = ((detail && detail.services) || []).slice().sort(function (a, b) {
+            return a.priceInCents - b.priceInCents
+          })
+          if (!services.length) {
+            node.textContent = '服务与价格见详情'
+            return
+          }
+          node.innerHTML =
+            api.esc(services[0].name) +
+            ' <strong>' +
+            api.money(services[0].priceInCents) +
+            '</strong> 起 · ' +
+            services[0].durationMin +
+            ' 分钟'
+        })
+        .catch(function () {
+          node.textContent = '服务与价格见详情'
+        })
+    })
   }
 
   function load() {
@@ -60,6 +93,7 @@
         else document.querySelector('.empty').outerHTML = '<ul class="cols cols--2">' + html + '</ul>'
         grid = document.querySelector('.dir__bar ~ ul.cols') || document.querySelector('ul.cols')
         if (countLine) countLine.textContent = items.length + ' 位教练 · 按评分排序'
+        if (grid) fillPrices(grid, items)
       })
       .catch(function (error) {
         api.fail(grid, error)

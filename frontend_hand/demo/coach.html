@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>预约管理 · 教练工作台 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 教练工作台：接单、确认、完成，以及取消。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-admin">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link is-current" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="coach.html">教练工作台</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <p class="crumbs" aria-label="位置"><span>教练工作台</span></p>
+          <h1 class="plate__title">预约管理</h1>
+          <p class="plate__lede">
+            接单、确认、完成，都在这里；取消要写一句原因，用户那边看得到。
+            <span class="chip chip--green" data-audit>已通过审核</span>
+          </p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <nav class="keys atabs" aria-label="教练工作台模块">
+            <a class="key is-current" href="coach.html" aria-current="page">预约</a>
+            <a class="key" href="coach-slots.html">时段与服务</a>
+            <a class="key" href="coach-clients.html">客户与案例</a>
+            <a class="key" href="coach-tools.html">话术与评价</a>
+            <a class="key" href="coach-profile.html">资料与入驻</a>
+          </nav>
+
+          <section class="panel" aria-labelledby="stat-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="stat-title">这一周</h2>
+              <p class="panel__note" data-updated aria-live="polite">示例数据</p>
+            </div>
+            <ul class="stats" data-stats>
+              <li class="stat"><strong>2</strong><span>待你确认</span></li>
+              <li class="stat"><strong>6</strong><span>本周预约</span></li>
+              <li class="stat"><strong>31</strong><span>累计服务次数</span></li>
+              <li class="stat"><strong>26.5</strong><span>累计服务时长（小时）</span></li>
+            </ul>
+          </section>
+
+          <section class="section panel" aria-labelledby="appts-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="appts-title">预约单</h2>
+              <p class="panel__note">按开始时间排；过期的会自己落到「已完成」或「未赴约」。</p>
+            </div>
+
+            <div class="filters">
+              <select class="select" name="status" aria-label="按状态筛">
+                <option value="">全部状态</option>
+                <option value="PENDING">待确认</option>
+                <option value="CONFIRMED">已确认</option>
+                <option value="COMPLETED">已完成</option>
+                <option value="CANCELLED">已取消</option>
+              </select>
+              <button class="btn btn--small" type="button" data-apply>查询</button>
+              <button class="btn btn--paper btn--small" type="button" data-reset>重置</button>
+              <p class="filters__count" data-count aria-live="polite">示例数据 · 4 单</p>
+            </div>
+
+            <p class="filters__count" data-status role="status" aria-live="polite" tabindex="-1"></p>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">用户</th>
+                  <th scope="col">服务</th>
+                  <th scope="col">时间</th>
+                  <th scope="col">想聊什么</th>
+                  <th scope="col">支付</th>
+                  <th scope="col">状态</th>
+                  <th scope="col">操作</th>
+                </tr>
+              </thead>
+              <tbody data-rows>
+                <tr data-appt="1">
+                  <td>小满 <span class="tnum">139****0002</span></td>
+                  <td>单次咨询 · 50 分钟</td>
+                  <td class="tnum">10/13 20:00</td>
+                  <td class="crisis-say">下个月有场重要的考试，最近一想到就睡不着。</td>
+                  <td><span class="chip chip--green">已支付</span></td>
+                  <td><span class="chip chip--yellow">待确认</span></td>
+                  <td>
+                    <button class="act" type="button" data-confirm="1">确认</button>
+                    <button class="act act--warn" type="button" data-cancel="1">取消</button>
+                  </td>
+                </tr>
+                <tr data-appt="2">
+                  <td>阿禾 <span class="tnum">138****6621</span></td>
+                  <td>首次了解 · 15 分钟</td>
+                  <td class="tnum">10/14 10:00</td>
+                  <td class="crisis-say">想做一次成长测评，不知道从哪开始。</td>
+                  <td><span class="chip">免费</span></td>
+                  <td><span class="chip chip--green">已确认</span></td>
+                  <td><button class="act" type="button" data-complete="2">标记完成</button></td>
+                </tr>
+                <tr data-appt="3">
+                  <td>苏木 <span class="tnum">137****3320</span></td>
+                  <td>单次咨询 · 50 分钟</td>
+                  <td class="tnum">10/08 19:00</td>
+                  <td class="crisis-say">和室友的关系有点僵，不知道该不该先开口。</td>
+                  <td><span class="chip chip--green">已支付</span></td>
+                  <td><span class="chip chip--lilac">已完成</span></td>
+                  <td><span class="anote">已评价 5 分</span></td>
+                </tr>
+                <tr data-appt="4">
+                  <td>晚风 <span class="tnum">136****8891</span></td>
+                  <td>四周陪伴套餐 · 50 分钟</td>
+                  <td class="tnum">10/05 15:30</td>
+                  <td class="crisis-say">—</td>
+                  <td><span class="chip chip--lilac">已退款</span></td>
+                  <td><span class="chip">已取消</span></td>
+                  <td><span class="anote">用户改期到下周</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/coach-desk.js"></script>
+  </body>
+</html>

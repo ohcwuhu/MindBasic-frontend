@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>这一次的记录 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 自我教练记录：四步写下的答案，和带走的那张行动卡。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link is-current" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="self-coaching-history.html">全部记录</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="self-coaching.html">自我教练</a>
+            <span aria-hidden="true">/</span>
+            <a href="self-coaching-history.html">全部记录</a>
+            <span aria-hidden="true">/</span>
+            <span>这一次</span>
+          </nav>
+          <h1 class="plate__title" data-record-title>「最近什么都不太想做」</h1>
+          <p class="plate__lede">
+            <span data-record-time>2026 年 10 月 8 日 12:04</span>
+            <span class="chip chip--green" data-record-status>已完成</span>
+          </p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <div class="reading">
+            <section class="panel" aria-labelledby="steps-title">
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="steps-title">四步写下的</h2>
+                <p class="panel__note">问句来自这次的模板；答案是当时写的，没有改过。</p>
+              </div>
+              <div class="steps" data-steps>
+                <section class="step">
+                  <h3 class="step__name">现状</h3>
+                  <p class="step__q">此刻发生了什么？你注意到了什么？</p>
+                  <p class="step__a">最近什么都不太想做。课照上，作业照交，但心里像隔着一层玻璃。晚上躺下会想很多，白天又提不起劲。</p>
+                </section>
+                <section class="step">
+                  <h3 class="step__name">理想</h3>
+                  <p class="step__q">如果好一点，那会是什么样子？</p>
+                  <p class="step__a">希望有一天早上醒来，是「想做点什么」，而不是「又得撑一天」。</p>
+                </section>
+                <section class="step">
+                  <h3 class="step__name">资源</h3>
+                  <p class="step__q">你身上有什么帮过你？谁在你身边？</p>
+                  <p class="step__a">写下来的时候会舒服一点。上周和室友一起吃了顿饭，那天好一些。以前跑过步，跑完心里会空出来一块。</p>
+                </section>
+                <section class="step">
+                  <h3 class="step__name">行动</h3>
+                  <p class="step__q">今天愿意试的一小步是什么？</p>
+                  <p class="step__a">今晚十一点前把手机放到桌上充电，不带进被窝。</p>
+                </section>
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="card-title" data-card-section>
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="card-title" data-card-title>今天的一小步</h2>
+                <button class="btn btn--paper btn--small" type="button" data-share>分享</button>
+              </div>
+              <div class="action-card">
+                <p class="action-card__body" data-card-body>今晚十一点前把手机放到桌上充电，不带进被窝。
+
+做到了，就在情绪日记里写一句「今天做到了」；没做到也不扣分，明天再来。</p>
+              </div>
+              <p class="panel__foot" data-share-status role="status" aria-live="polite"></p>
+            </section>
+
+            <p class="panel__foot">
+              <a class="link-quiet" href="self-coaching-history.html">回到全部记录</a>
+              <span aria-hidden="true"> · </span>
+              <a class="link-quiet" href="emotion-journal.html">去情绪日记写一句</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/self-coaching-record.js"></script>
+  </body>
+</html>

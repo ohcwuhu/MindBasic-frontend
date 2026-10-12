@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>私信 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 私信：和教练的会话，一次一次留在这里。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link is-current" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">我的成长</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="my-growth.html">我的成长</a>
+            <span aria-hidden="true">/</span>
+            <span>私信</span>
+          </nav>
+          <h1 class="plate__title">和教练的私信</h1>
+          <p class="plate__lede">见过面之后，还有小事想问，就在这里说。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="cols cols--aside">
+            <section class="panel" aria-labelledby="thread-title">
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="thread-title" data-peer>知夏</h2>
+                <p class="panel__note" data-thread-note>最近一次 2026/10/11 20:31</p>
+              </div>
+
+              <div class="convo" data-messages>
+                <div class="convo__msg convo__msg--they">
+                  <div class="convo__bubble">今天那一段里，你提到「一想到就心跳快」。下次可以试着在那半分钟里只管呼吸，不急着评价自己。</div>
+                  <div class="convo__meta"><span>10/11 20:31</span></div>
+                </div>
+                <div class="convo__msg convo__msg--mine">
+                  <div class="convo__bubble">好，我记下来了。今天试了两次，第二次没那么快。</div>
+                  <div class="convo__meta"><span>10/11 21:02</span></div>
+                </div>
+              </div>
+
+              <div class="limit-banner" data-limit hidden>
+                <p class="limit-text" data-limit-text></p>
+                <a class="link-quiet" href="coach-detail.html">看这位教练的服务</a>
+              </div>
+
+              <form class="form actrow" data-send novalidate>
+                <div class="field">
+                  <label class="field__label" for="say">说一句</label>
+                  <textarea class="textarea" id="say" name="content" rows="2" maxlength="500" placeholder="不用长，一句话就行…"></textarea>
+                </div>
+                <div class="field__row">
+                  <button class="btn" type="submit" data-send-submit>发送</button>
+                  <span class="anote">教练不一定马上回，看到了就会回你。</span>
+                </div>
+              </form>
+              <p class="field__error" data-send-error role="alert" hidden></p>
+              <p class="panel__foot" data-status role="status" aria-live="polite" tabindex="-1"></p>
+            </section>
+
+            <aside class="stack">
+              <section class="panel" aria-labelledby="conv-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="conv-title">会话</h2>
+                  <p class="panel__note" data-conv-count>2 位</p>
+                </div>
+                <ul class="rows" data-conversations>
+                  <li>
+                    <button class="row is-current" type="button" data-conv="1" aria-pressed="true">
+                      <img class="row__art" src="assets/sym-tea.webp" width="419" height="560" alt="" aria-hidden="true" />
+                      <span>
+                        <span class="row__title">知夏</span>
+                        <span class="row__meta">今天试了两次，第二次没那么快。</span>
+                      </span>
+                      <span class="row__side"><span class="cpost__meta">10/11 21:02</span></span>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="row" type="button" data-conv="2" aria-pressed="false">
+                      <img class="row__art" src="assets/sym-chair.webp" width="351" height="560" alt="" aria-hidden="true" />
+                      <span>
+                        <span class="row__title">林深</span>
+                        <span class="row__meta">那我们就约在下周二 10:00。</span>
+                      </span>
+                      <span class="row__side"><span class="chip chip--yellow">1</span></span>
+                    </button>
+                  </li>
+                </ul>
+                <p class="panel__foot">会话在这里是示例；接上后端后，教练回的每一句都会出现在上面。</p>
+              </section>
+            </aside>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/messages.js"></script>
+  </body>
+</html>

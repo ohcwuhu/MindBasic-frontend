@@ -23,20 +23,23 @@
    ===================================================================================== */
 
 /* 底色用**这张图自己的平均色**，不是随手一个草绿：图还没到的那一帧就是它，图到了只换纹理、
-   不换颜色 —— 否则整屏会从绿翻成暖，看着就是闪一下。（实测各图整体平均色：
-   水彩草地 #E7EDC4 · 带树 #F1EEDF · 木屋 #EFE7DB · 纯草地 #C0DA8D。） */
+   不换颜色 —— 否则整屏会从绿翻成暖，看着就是闪一下。
+   这一版四张草地都压了一层客户定稿的暖纸色（普通内页 62%、带树 / 木屋 45%，
+   见 tools/prepare_assets.py 的 VEIL），下面写的是**压完之后**的平均色：
+   水彩草地 #F6F5E3 · 带树 #F7F3E9 · 木屋 #F6F0E7 · 纯草地 #E7EECE。
+   （`tools/first-paint-check.py` 会拿重建后的图重算一遍平均色来核对。） */
 body {
-  background: #e7edc4 url('../assets/field-watercolour.webp') center center / cover fixed no-repeat;
+  background: #f6f5e3 url('../assets/field-watercolour.webp') center center / cover fixed no-repeat;
 }
 
 /* 科普中心：带树的那张 */
 body.field-tree {
-  background: #f1eedf url('../assets/field-tree.webp') center center / cover fixed no-repeat;
+  background: #f7f3e9 url('../assets/field-tree.webp') center center / cover fixed no-repeat;
 }
 
 /* 真人教练：木屋那张 */
 body.field-cabin {
-  background: #efe7db url('../assets/field-cabin.webp') center center / cover fixed no-repeat;
+  background: #f6f0e7 url('../assets/field-cabin.webp') center center / cover fixed no-repeat;
 }
 
 /* the masthead belongs to the document again — there is no picture band to float over */
@@ -119,6 +122,18 @@ body.field-cabin {
   display: grid;
   gap: 10px;
   padding: 20px;
+  /* 整张卡是一块可点的区域：卡片底部那个「查看服务与可约时段」用一层透明的
+     ::after 铺满卡片（见 .coach-card__link），比只让昵称可点清楚得多 */
+  position: relative;
+}
+
+.coach-card:hover {
+  border-color: var(--green-deep);
+}
+
+.coach-card:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
 }
 
 .coach-card__top {
@@ -184,6 +199,43 @@ body.field-cabin {
   font-size: 1.25rem;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* 单次服务的价格与时长：在列表上就能比，不用逐个点进详情 */
+.coach-card__price {
+  margin-top: -2px;
+  font-size: var(--fs-small);
+  color: var(--ink-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.coach-card__price strong {
+  font-family: var(--font-hand);
+  font-size: 1.125rem;
+  color: var(--ink);
+}
+
+.coach-card__more {
+  padding-top: 8px;
+  border-top: 1px dashed var(--hairline);
+  font-size: var(--fs-small);
+}
+
+.coach-card__link {
+  color: var(--green-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.3em;
+}
+
+.coach-card__link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.coach-card:hover .coach-card__link {
+  text-decoration-color: var(--green-deep);
 }
 
 .slots {
@@ -1157,6 +1209,13 @@ body.page-register .auth {
   background: var(--blush);
 }
 
+/* 红纸上的次要文字不要沿用纸色那档灰：#6f6459 落在 #f4d7de 上只有 4.3:1。
+   换成本文的墨色（≈12:1），层级交给字号和位置，不靠颜色再退一档 */
+.danger .panel__note,
+.danger .panel__foot {
+  color: var(--ink-body);
+}
+
 /* =====================================================================================
    10 · 管理工作台 — 概览 / 用户 / 内容 / 教练审核
 
@@ -1587,4 +1646,357 @@ body.page-register .auth {
   .badge-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* =====================================================================================
+   11 · 会话流 · 四步记录 · 帖子与评论（自我教练详情、AI 会话回看、私信、社群帖子详情）
+
+   三块都比较「平」：说话谁在说、走到哪一步、下面谁回了什么 —— 纸面上排开，不加装饰。
+   背景已经压过纸色（见 pages.css 开头），这几块的字就压在纸上，不需要再套卡片。
+   ===================================================================================== */
+
+/* ---- 会话流：用户靠右、AI 靠左，气泡本身就是纸 ---- */
+.convo {
+  display: grid;
+  gap: 16px;
+}
+
+.convo__msg {
+  display: grid;
+  gap: 5px;
+  max-width: 78%;
+}
+
+.convo__msg--mine {
+  justify-self: end;
+  justify-items: end;
+}
+
+.convo__bubble {
+  padding: 11px 16px;
+  border-radius: 18px 14px 18px 12px / 14px 18px 12px 18px;
+  font-size: var(--fs-small);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.convo__msg--they .convo__bubble {
+  background: var(--surface);
+  border: 1.5px solid var(--ink-line-soft);
+  color: var(--ink);
+}
+
+.convo__msg--mine .convo__bubble {
+  background: var(--green-soft);
+  border: 1.5px solid var(--green-deep);
+  color: var(--ink);
+}
+
+.convo__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 四步记录：每一步一句问、一段答 ---- */
+.steps {
+  display: grid;
+  gap: 0;
+}
+
+.step {
+  padding-block: 20px;
+}
+
+.step + .step {
+  border-top: 1px dashed var(--hairline);
+}
+
+.step__name {
+  font-family: var(--font-hand);
+  font-size: var(--fs-h3);
+  color: var(--ink);
+}
+
+.step__q {
+  margin-top: 4px;
+  font-size: var(--fs-small);
+  color: var(--ink-muted);
+}
+
+.step__a {
+  margin-top: 10px;
+  font-size: var(--fs-small);
+  line-height: 1.8;
+  color: var(--ink-body);
+  white-space: pre-wrap;
+}
+
+.step__a--empty {
+  color: var(--ink-muted);
+}
+
+/* 行动卡：这一页唯一一块「可以带走的东西」，站得比其它步高一点 */
+.action-card {
+  margin-top: 8px;
+  padding: 18px 20px;
+  background: var(--yellow-soft);
+  border: 1.5px solid var(--ink-line-soft);
+  border-radius: 18px 12px 20px 11px / 12px 20px 11px 18px;
+}
+
+.action-card__body {
+  margin-top: 8px;
+  font-size: var(--fs-small);
+  line-height: 1.85;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+/* ---- 帖子与评论（社群详情 / 帖子详情共用；帖子正文沿用上面的 `.post__body`）---- */
+.comments {
+  display: grid;
+  gap: 0;
+  margin-top: 6px;
+}
+
+.comment {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  padding-block: 16px;
+}
+
+.comment + .comment {
+  border-top: 1px dashed var(--hairline);
+}
+
+.comment__face {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink-line-soft);
+  border-radius: 50% 47% 53% 48% / 48% 53% 47% 50%;
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.comment__who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.comment__time {
+  font-size: var(--fs-label);
+  font-weight: 400;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.comment__text {
+  margin-top: 5px;
+  font-size: var(--fs-small);
+  line-height: 1.8;
+  color: var(--ink-body);
+  overflow-wrap: anywhere;
+}
+
+/* 一页里「帖子」这类阅读面比别的窄一点，读起来更稳 */
+.reading {
+  max-width: 46rem;
+}
+
+/* 一段内容下面的动作行（按钮 / 链接排一行，和上面的内容隔开一点） */
+.actrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* 收藏：一条是「一篇文章 + 它能做的动作」——这一行里有一个按钮，所以整行不做成链接 */
+.fav {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  /* 上下留白写长写：逻辑属性（padding-block）检测器读不到，会被当成没有内边距 */
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.fav + .fav {
+  border-top: 1px dashed var(--hairline);
+}
+
+.fav__art {
+  width: 56px;
+  height: auto;
+}
+
+.fav__title {
+  font-family: var(--font-hand);
+  font-size: var(--fs-h3);
+  color: var(--ink);
+}
+
+.fav__title:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 0.3em;
+}
+
+.fav__meta {
+  margin-top: 4px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.fav__acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: var(--fs-small);
+}
+
+/* 榜单：名次 / 人 / 天数 —— 数字一列右对齐，扫得快 */
+.board {
+  display: grid;
+  gap: 0;
+}
+
+.board__row {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
+  /* 同上：上下留白用长写 */
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-size: var(--fs-small);
+}
+
+.board__row + .board__row {
+  border-top: 1px dashed var(--hairline);
+}
+
+.board__rank {
+  font-family: var(--font-hand);
+  font-size: var(--fs-h3);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.board__row--top .board__rank {
+  color: var(--ink);
+}
+
+.board__who {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.board__row--me {
+  background: var(--yellow-soft);
+  /* 这一行有自己的底色：左右各让出一点，字不要贴着色块的边。
+     这里写左右长写（而不是 padding-inline）：`.board__row` 的上下已经是逻辑属性，
+     但左右必须能被检测器与后续维护者一眼读到具体数字。 */
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: 12px 9px 13px 8px / 9px 13px 8px 12px;
+}
+
+.board__count {
+  color: var(--ink-body);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 会话列表里当前打开的那一条 */
+.rows .row.is-current {
+  background: var(--paper);
+}
+
+/* 免费额度用完时的说明（原版 ChatView 里叫这两个名字，画风层跟着它） */
+.limit-banner {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: var(--yellow-soft);
+  border: 1.5px solid var(--ink-line-soft);
+  border-radius: 16px 12px 18px 11px / 12px 18px 11px 16px;
+  font-size: var(--fs-small);
+}
+
+.limit-text {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.8;
+}
+
+/* 表格里的就地表单（退款原因 / 跟进说明）：占一整行，不挤在窄窄的操作列里 */
+.rowedit td {
+  background: var(--paper);
+  padding: 14px 16px;
+}
+
+.rowedit form {
+  display: grid;
+  gap: 8px;
+  max-width: 34rem;
+}
+
+.rowedit__acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+/* 危机队列那条最紧急的说明：纸面上一条，不抢内容的位 */
+.crisis-band {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: var(--blush);
+  border: 1.5px solid var(--ink-line-soft);
+  border-radius: 16px 12px 18px 11px / 12px 18px 11px 16px;
+  font-size: var(--fs-small);
+  line-height: 1.8;
+  color: var(--ink-body);
+}
+
+.crisis-band strong {
+  color: var(--ink);
+}
+
+.crisis-say {
+  max-width: 24rem;
+  overflow-wrap: anywhere;
+}
+
+/* 审核状态那一行：芯片 + 一句备注 */
+.audit-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
 }

@@ -8,10 +8,12 @@ Two mascot poses (打招呼 / 思考 / 困了) were exported onto white in 素�
 poses exist with real alpha in 前端设计/素材库, so those are taken from there instead of
 keying a white background out by hand.
 
-Run:  python tools/prepare_assets.py
+Run:  python tools/prepare_assets.py                 （全部重建）
+      python tools/prepare_assets.py <名字> [<名字>…]  （只重建这几个，见 JOBS 里的输出名）
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PIL import Image
@@ -34,6 +36,25 @@ HAND = Path(r"C:\Users\26329\Desktop\斐思同行\项目主体\frontend_hand")
 HOME_BG = Path(
     r"C:\Users\26329\Desktop\斐思同行\项目主体\frontend_hand\演示图\首页背景-双人聊天版-优化后.png"
 )
+
+# ---------------------------------------------------------------------------------------------
+# 内页那片草地的「降噪」
+#
+# 首页保留整幅插画；内页里背景是配角，内容才是主角 —— 所以把客户定稿的暖纸色按比例压在
+# 草地上，纹理淡下去、纸感上来。口径来自客户端：**普通内页 62%**，画面更满的
+# 带树 / 木屋 **45%**。首页那两件（hero-plate / hero-ground）不压。
+#
+# 压在图里而不是用 CSS 叠一层：这样「首帧底色 = 这张图的平均色」这条不变量照旧成立
+# （tools/first-paint-check.py 会拿新图算平均色），页面也不用多一层背景。
+# 想换强度就改下面这两个数，然后重跑本脚本 + `python tools/first-paint-check.py`。
+# ---------------------------------------------------------------------------------------------
+VEIL_INK = (255, 250, 246)  # --surface：纸色
+VEIL = {
+    "field-watercolour.webp": 0.62,  # 内页默认那张（含情绪日记页）
+    "field-grass.webp": 0.62,  # 自我教练页自己那张
+    "field-tree.webp": 0.45,  # 科普中心
+    "field-cabin.webp": 0.45,  # 真人教练
+}
 
 # (source root, source relative path, output name, longest side in px, trim to ink)
 JOBS: list[tuple[Path, str, str, int, bool]] = [
@@ -136,12 +157,16 @@ def build(root: Path, rel: str, name: str, longest: int, trim: bool) -> str:
     scale = min(1.0, longest / max(w, h))
     if scale < 1.0:
         im = im.resize((max(1, round(w * scale)), max(1, round(h * scale))), Image.LANCZOS)
+    veil = VEIL.get(name)
+    if veil:
+        im = Image.alpha_composite(im, Image.new("RGBA", im.size, VEIL_INK + (round(255 * veil),)))
     dest = OUT / name
     if dest.suffix == ".webp":
         im.save(dest, "WEBP", quality=88, method=6)
     else:
         im.save(dest)
-    return f"{name:26s} {im.size[0]:>5}x{im.size[1]:<5} {dest.stat().st_size / 1024:7.1f} KB"
+    tag = f"  纸色 {round(veil * 100)}%" if veil else ""
+    return f"{name:26s} {im.size[0]:>5}x{im.size[1]:<5} {dest.stat().st_size / 1024:7.1f} KB{tag}"
 
 
 # The window both field layers are cut to. Measured on the plate's bottom band: the left third
@@ -274,18 +299,24 @@ def build_home_field(plate_width: int = 2896, band: int = 151) -> list[str]:
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
+    only = set(sys.argv[1:])
     total = 0
     for root, rel, name, longest, trim in JOBS:
+        if only and name not in only:
+            continue
         line = build(root, rel, name, longest, trim)
         print(line)
         total += (OUT / name).stat().st_size
     for name, builder in (("field-bg.webp", build_plate), ("field-ground.webp", build_ground)):
+        if only and name not in only:
+            continue
         print(builder())
         total += (OUT / name).stat().st_size
     # 首页那两件从客户端给的「双人聊天版」整幅画里出（见 build_home_field）
-    for line in build_home_field():
-        print(line)
-    total += sum((OUT / n).stat().st_size for n in ("hero-plate.webp", "hero-ground.webp"))
+    if not only or only & {"hero-plate.webp", "hero-ground.webp"}:
+        for line in build_home_field():
+            print(line)
+        total += sum((OUT / n).stat().st_size for n in ("hero-plate.webp", "hero-ground.webp"))
     print(f"{'TOTAL':26s} {total / 1024 / 1024:>22.2f} MB  ({len(JOBS)} files)")
 
 

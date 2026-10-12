@@ -218,3 +218,55 @@
     padding-top: var(--entries-reserve);
   }
 }
+
+/* =====================================================================================
+   6 · the one authored moment —— 四张便签「落纸」
+
+   这一页只有这一处入场：纸先到（整张淡入），纸上的东西随后落定（各自抬起 6px 再归位），
+   四张错开 70ms，指数型缓出 —— 到得早、停得稳。
+
+   动的只有**便签里面的东西**，便签本身的盒子一动不动：`verify.mjs` / `boxes.mjs` /
+   `collisions.mjs` 量的都是盒子的几何（接缝、骑缝、有没有压到画里的人），
+   入场动效不该让那几个数跟着抖。悬停那一下仍是原来的上浮，两者不打架。
+
+   动效不是读完这页必须看到的东西：`prefers-reduced-motion: reduce` 时**完全不发生**
+   （用 `no-preference` 包住，而不是给一套「更弱的动画」）。 */
+
+@keyframes entry-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes entry-settle {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .entry {
+    animation: entry-fade 280ms var(--ease-out) backwards;
+  }
+
+  .entry > * {
+    animation: entry-settle 460ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .entry:nth-child(1) > * {
+    animation-delay: 40ms;
+  }
+
+  .entry:nth-child(2) > * {
+    animation-delay: 110ms;
+  }
+
+  .entry:nth-child(3) > * {
+    animation-delay: 180ms;
+  }
+
+  .entry:nth-child(4) > * {
+    animation-delay: 250ms;
+  }
+}

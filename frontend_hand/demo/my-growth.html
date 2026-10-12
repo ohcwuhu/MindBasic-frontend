@@ -5,7 +5,7 @@
     <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
     <style data-first-paint>
       html {
-        background: #e7edc4;
+        background: #f6f5e3;
       }
     </style>
     <link rel="preload" as="image" href="assets/field-watercolour.webp" />
@@ -246,6 +246,8 @@
                 </div>
                 <ul class="stack">
                   <li><a class="btn btn--paper btn--block" href="profile.html">个人资料与隐私</a></li>
+                  <li><a class="btn btn--paper btn--block" href="check-ins.html">打卡与徽章</a></li>
+                  <li><a class="btn btn--paper btn--block" href="favorites.html">我的收藏</a></li>
                   <!-- 退出登录从页头挪到了这里；没登录（静态演示）时它是隐藏的，
                        由 session-nav.js 在确认已登录之后放出来并接上动作 -->
                   <li><button class="btn btn--paper btn--block" type="button" data-logout hidden>退出登录</button></li>

@@ -131,6 +131,11 @@
       '<span class="cpost__meta">' +
       (Number(post.commentCount) || 0) +
       ' 条回复</span>' +
+      '<a class="act" href="community-post.html?communityId=' +
+      communityId +
+      '&amp;postId=' +
+      post.id +
+      '">看这条</a>' +
       '</p>' +
       '</li>'
     )

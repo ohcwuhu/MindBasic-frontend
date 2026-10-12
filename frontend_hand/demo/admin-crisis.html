@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>危机跟进 · 管理工作台 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 管理工作台：危机预警队列与跟进留痕。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-admin">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="admin.html">管理工作台</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">危机跟进</h1>
+          <p class="plate__lede">这一队按最紧急处理：先接管，再跟进，最后留一句话结案。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <nav class="keys atabs" aria-label="管理工作台模块">
+            <a class="key" href="admin.html">概览</a>
+            <a class="key" href="admin-users.html">用户</a>
+            <a class="key" href="admin-articles.html">内容</a>
+            <a class="key" href="admin-coach-audits.html">教练审核</a>
+            <a class="key" href="admin-orders.html">订单</a>
+            <a class="key is-current" href="admin-crisis.html" aria-current="page">危机</a>
+            <a class="key" href="admin-audit-logs.html">日志</a>
+            <a class="key" href="admin-system-configs.html">配置</a>
+          </nav>
+
+          <section class="panel" aria-labelledby="crisis-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="crisis-title">危机预警队列</h2>
+              <p class="panel__note">按最紧急处理；每一次动作都会写进审计日志。</p>
+            </div>
+
+            <div class="crisis-band" role="note">
+              <strong>先看这里。</strong>队列里的每一条都来自当事人自己说的话；
+              接管之后请尽快跟进，结案前留一句处理说明。
+            </div>
+
+            <div class="filters">
+              <select class="select" name="status" aria-label="按状态筛">
+                <option value="">全部状态</option>
+                <option value="OPEN">待接管</option>
+                <option value="FOLLOWING">跟进中</option>
+                <option value="RESOLVED">已结案</option>
+              </select>
+              <button class="btn btn--small" type="button" data-apply>查询</button>
+              <button class="btn btn--paper btn--small" type="button" data-reset>重置</button>
+              <p class="filters__count" data-count aria-live="polite">示例数据 · 3 条</p>
+            </div>
+
+            <p class="filters__count" data-status role="status" aria-live="polite" tabindex="-1"></p>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">用户</th>
+                  <th scope="col">风险</th>
+                  <th scope="col">来源</th>
+                  <th scope="col">说的话</th>
+                  <th scope="col">状态</th>
+                  <th scope="col">接管人</th>
+                  <th scope="col">时间</th>
+                  <th scope="col">操作</th>
+                </tr>
+              </thead>
+              <tbody data-rows>
+                <tr data-crisis="1">
+                  <td>小满 <span class="tnum">139****0002</span></td>
+                  <td><span class="chip chip--lilac">高风险</span></td>
+                  <td>AI 对话</td>
+                  <td class="crisis-say">「凌晨两点那一段」里提到不想活下去</td>
+                  <td><span class="chip chip--yellow">待接管</span></td>
+                  <td>—</td>
+                  <td class="tnum">2026/10/12 02:07</td>
+                  <td><button class="act" type="button" data-assign="1">接管</button></td>
+                </tr>
+                <tr data-crisis="2">
+                  <td>阿禾 <span class="tnum">138****6621</span></td>
+                  <td><span class="chip chip--yellow">中风险</span></td>
+                  <td>情绪日记</td>
+                  <td class="crisis-say">连续三天写「撑不下去」</td>
+                  <td><span class="chip">跟进中</span></td>
+                  <td>管理员</td>
+                  <td class="tnum">2026/10/11 23:12</td>
+                  <td>
+                    <button class="act" type="button" data-follow="2">跟进记录</button>
+                    <button class="act act--warn" type="button" data-resolve="2">结案</button>
+                  </td>
+                </tr>
+                <tr data-crisis="3">
+                  <td>苏木 <span class="tnum">137****3320</span></td>
+                  <td><span class="chip">低风险</span></td>
+                  <td>社群发帖</td>
+                  <td class="crisis-say">帖子里提到「不想再麻烦任何人」</td>
+                  <td><span class="chip chip--green">已结案</span></td>
+                  <td>管理员</td>
+                  <td class="tnum">2026/10/09 20:40</td>
+                  <td><button class="act" type="button" disabled title="已经结案">结案</button></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="pager">
+              <p class="pager__count" data-pager-count aria-live="polite">示例数据 · 共 3 条</p>
+              <div class="pager__steps">
+                <button class="btn btn--paper btn--small" type="button" data-prev disabled>上一页</button>
+                <button class="btn btn--paper btn--small" type="button" data-next disabled>下一页</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/admin-crisis.js"></script>
+  </body>
+</html>

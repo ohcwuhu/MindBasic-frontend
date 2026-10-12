@@ -5,7 +5,7 @@
     <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
     <style data-first-paint>
       html {
-        background: #e7edc4;
+        background: #f6f5e3;
       }
     </style>
     <link rel="preload" as="image" href="assets/field-watercolour.webp" />
@@ -54,7 +54,7 @@
           <nav class="crumbs" aria-label="位置">
             <a href="index.html">首页</a>
             <span aria-hidden="true">/</span>
-            <a href="self-coaching.html">自我教练</a>
+          <a href="self-coaching.html">自我教练</a>
             <span aria-hidden="true">/</span>
             <span>历史记录</span>
           </nav>
@@ -81,7 +81,7 @@
 
               <ul class="rows">
                 <li>
-                  <a class="row" href="self-coaching.html">
+                  <a class="row" href="self-coaching-record.html?record=1">
                     <img class="row__art" src="assets/mascot-listen.webp" width="450" height="640" alt="" aria-hidden="true" />
                     <span>
                       <span class="row__title">「最近什么都不太想做」</span>
@@ -91,7 +91,7 @@
                   </a>
                 </li>
                 <li>
-                  <a class="row" href="self-coaching.html">
+                  <a class="row" href="self-coaching-record.html?record=2">
                     <img class="row__art" src="assets/mascot-think.webp" width="450" height="640" alt="" aria-hidden="true" />
                     <span>
                       <span class="row__title">「考前一想到就心跳很快」</span>
@@ -101,7 +101,7 @@
                   </a>
                 </li>
                 <li>
-                  <a class="row" href="self-coaching.html">
+                  <a class="row" href="self-coaching-record.html?record=3">
                     <img class="row__art" src="assets/mascot-comfort.webp" width="520" height="640" alt="" aria-hidden="true" />
                     <span>
                       <span class="row__title">「和室友吵架了，不知道谁对」</span>
@@ -111,7 +111,7 @@
                   </a>
                 </li>
                 <li>
-                  <a class="row" href="self-coaching.html">
+                  <a class="row" href="self-coaching-record.html?record=4">
                     <img class="row__art" src="assets/mascot-sleepy.webp" width="420" height="420" alt="" aria-hidden="true" />
                     <span>
                       <span class="row__title">凌晨两点的那一段</span>
@@ -121,7 +121,7 @@
                   </a>
                 </li>
                 <li>
-                  <a class="row" href="self-coaching.html">
+                  <a class="row" href="self-coaching-record.html?record=5">
                     <img class="row__art" src="assets/mascot-hello.webp" width="420" height="420" alt="" aria-hidden="true" />
                     <span>
                       <span class="row__title">第一次打开自我教练</span>
@@ -157,6 +157,18 @@
                   <li>资源：你手上已经有的东西</li>
                   <li>行动：接下来 24 小时能做的一件小事</li>
                 </ul>
+              </section>
+
+              <section class="panel">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title">AI 会话回看</h2>
+                  <p class="panel__note">聊过的话按轮次留着</p>
+                </div>
+                <ul class="ticks">
+                  <li><a class="link-quiet" href="ai-conversation.html?id=1">10 月 8 日 · 6 条消息</a></li>
+                  <li><a class="link-quiet" href="ai-conversation.html?id=2">10 月 5 日 · 9 条消息</a></li>
+                </ul>
+                <p class="panel__foot">每一句都能回看，也能总结成一条情绪日记。</p>
               </section>
             </aside>
           </section>

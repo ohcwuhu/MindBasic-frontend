@@ -41,7 +41,6 @@
   var passwordError = document.querySelector('[data-password-error]')
 
   var privacyMsg = document.querySelector('[data-privacy-msg]')
-  var ordersBox = document.querySelector('[data-orders]')
   var exportList = document.querySelector('[data-exports]')
   var exportButton = document.querySelector('[data-export]')
   var deactivateButton = document.querySelector('[data-deactivate]')
@@ -393,22 +392,6 @@
 
   loadExports()
 
-  /* 「我的订单」那一行：订单页还没做，所以这里只如实报个数（没有就不写有） */
-  api
-    .get('/orders?page=1&pageSize=50')
-    .then(function (data) {
-      if (!ordersBox) return
-      var orders = (data && data.items) || []
-      if (!orders.length) {
-        ordersBox.textContent = '还没有订单'
-        return
-      }
-      var pending = orders.filter(function (order) {
-        return order.status === 'CREATED'
-      }).length
-      ordersBox.textContent = '共 ' + orders.length + ' 笔' + (pending ? ' · ' + pending + ' 笔待支付' : '')
-    })
-    .catch(function () {
-      /* 取不到就留着页面里写的那一句 */
-    })
+  /* 「我的订单 / 我的预约」那两行归 `scripts/account-rows.js` 管（接后端时它也是这一份），
+     所以这里不再重复请求一次。 */
 })()

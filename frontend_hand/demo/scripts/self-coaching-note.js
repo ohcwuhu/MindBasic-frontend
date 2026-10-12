@@ -1,7 +1,9 @@
-/* 自我教练页的一张小提示：这一页的 socket 握手要登录凭证 ——
-   后端对没有 token 的连接会「拒绝未登录连接」（后端日志里的原话），
-   页面上只会显示一句「后端连接失败」，看不出该去干什么。这里在通话台上方贴一张纸，
-   直接给出登录入口；登录过（localStorage 里有 token）就什么都不做。 */
+/* 自我教练页顶上的一张小提示 —— 一句话，一个动作。
+
+   这一页要登录才真的起得来（后端的实时连接不带凭证会被拒），所以没登录时贴一张纸
+   「自我教练要登录才能开始」+ 一个「去登录」；连不上后端（双击打开的设计预览）时
+   换一句「这是设计预览」，别让人以为页面坏了。
+   通话一开始这张纸就收起来 —— 那时候它已经没用了，该让位置给通话台。 */
 ;(function () {
   'use strict'
 
@@ -17,15 +19,51 @@
   if (!host) return
 
   var note = document.createElement('div')
-  note.className = 'panel'
+  note.className = 'panel sc-hint'
   note.setAttribute('role', 'status')
-  note.style.cssText =
-    'display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;margin:0 0 2px'
   note.innerHTML =
     '<span class="chip chip--yellow">还没登录</span>' +
-    '<span style="font-size:var(--fs-small);color:var(--ink-body)">' +
-    '自我教练要和后端建立实时连接，这一步需要登录凭证 —— 没登录时后端会拒绝这次连接（页面上那句「服务未连接 / 后端连接失败」就是这个）。' +
-    '</span>' +
-    '<a class="btn btn--small" href="login.html" style="margin-left:auto"><span>去登录</span></a>'
+    '<span class="sc-hint__text">自我教练要登录才能开始：对话里说的话要存进你的账号。</span>' +
+    '<a class="btn btn--small sc-hint__action" href="login.html"><span>去登录</span></a>'
   host.insertBefore(note, host.firstChild)
+
+  function sayPreview() {
+    var text = note.querySelector('.sc-hint__text')
+    if (text) {
+      text.textContent = '这是设计预览 · 还没连后端，界面与状态都能看，真对话要接上后端再登录。'
+    }
+  }
+
+  /* 后端在不在：不在就说清楚这是设计预览。
+     `file://` 下一看就知道没有后端 —— 不去发那个注定失败的请求（控制台会白报一串 CORS）。 */
+  if (window.location.protocol === 'file:') {
+    sayPreview()
+  } else {
+    fetch('/api/v1/platform/config')
+      .then(function (response) {
+        if (!response.ok) throw new Error('offline')
+      })
+      .catch(sayPreview)
+  }
+
+  /* 通话开始后把这张纸收掉（Vue 挂载要等一会儿，所以带重试上限） */
+  ;(function watchCall(tries) {
+    var stage = document.querySelector('#app .vc-stage')
+    if (!stage) {
+      if (tries > 0) window.setTimeout(function () {
+        watchCall(tries - 1)
+      }, 300)
+      return
+    }
+    if (stage.classList.contains('active')) {
+      note.hidden = true
+      return
+    }
+    var observer = new MutationObserver(function () {
+      if (!stage.classList.contains('active')) return
+      observer.disconnect()
+      note.hidden = true
+    })
+    observer.observe(stage, { attributes: true, attributeFilter: ['class'] })
+  })(20)
 })()

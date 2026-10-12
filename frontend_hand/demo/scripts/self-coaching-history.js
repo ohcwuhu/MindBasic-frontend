@@ -29,7 +29,7 @@
 
       records.forEach(function (record, index) {
         rows.push(
-          '<li><a class="row" href="self-coaching.html">' +
+          '<li><a class="row" href="self-coaching-record.html?record=' + record.id + '">' +
             '<img class="row__art" src="' + art(index) + '" width="450" height="640" alt="" aria-hidden="true" />' +
             '<span><span class="row__title">' + api.esc(record.title || record.summary || '自我教练记录') + '</span>' +
             '<span class="row__meta">' + api.esc(api.dateTime(record.createdAt)) + '</span></span>' +
@@ -38,7 +38,7 @@
       })
       conversations.forEach(function (conversation, index) {
         rows.push(
-          '<li><a class="row" href="self-coaching.html">' +
+          '<li><a class="row" href="ai-conversation.html?id=' + conversation.id + '">' +
             '<img class="row__art" src="' + art(index + 1) + '" width="450" height="640" alt="" aria-hidden="true" />' +
             '<span><span class="row__title">' + api.esc(conversation.title || '自我教练对话') + '</span>' +
             '<span class="row__meta">' + api.esc(api.dateTime(conversation.createdAt)) + ' · ' +

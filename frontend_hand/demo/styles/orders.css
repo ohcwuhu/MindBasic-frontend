@@ -1,0 +1,165 @@
+/* =====================================================================================
+   我的订单 / 我的预约
+
+   两个板块（订单 · 预约）长得像一张账单：一行一笔，左边是它是什么，右边是现在能做什么。
+   数字用等宽数字（tabular-nums），金额右对齐，状态用同一套 chip —— 与全站的纸面、墨线一致。
+   ===================================================================================== */
+
+.orders-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.orders-demo {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--yellow-soft, #fdf1c8);
+  border: 1px dashed var(--ink-line, rgba(28, 24, 22, 0.82));
+  border-radius: 16px 12px 18px 11px / 12px 18px 11px 16px;
+  font-size: var(--fs-small, 0.875rem);
+  color: var(--ink-body, #241f1c);
+}
+
+.orders-demo__reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--green-ink, #3f6b3e);
+  text-decoration: underline;
+  text-decoration-color: var(--hairline, rgba(28, 24, 22, 0.16));
+  text-underline-offset: 0.3em;
+  cursor: pointer;
+}
+
+.orders-list {
+  margin-top: 8px;
+}
+
+.orders-list > .panel__note,
+.orders-list > .order:first-child {
+  margin-top: 16px;
+}
+
+.order {
+  padding-block: 22px;
+  border-bottom: 1px solid var(--hairline, rgba(28, 24, 22, 0.16));
+}
+
+.order:first-child {
+  padding-top: 8px;
+}
+
+.order:last-child {
+  border-bottom: 0;
+  padding-bottom: 6px;
+}
+
+.order:target {
+  outline: 2px solid var(--focus, #2f6b4f);
+  outline-offset: 6px;
+}
+
+.order__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+}
+
+.order__title {
+  margin: 0;
+  font-family: var(--font-hand, inherit);
+  font-size: var(--h3, 1.125rem);
+  color: var(--ink, #1c1816);
+  overflow-wrap: anywhere;
+}
+
+.order__amount {
+  margin-inline-start: auto;
+  font-family: var(--font-hand, inherit);
+  font-size: 1.25rem;
+  color: var(--ink, #1c1816);
+  font-variant-numeric: tabular-nums;
+}
+
+.order__meta {
+  display: grid;
+  gap: 4px 18px;
+  margin: 12px 0 0;
+  font-size: var(--fs-small, 0.875rem);
+  color: var(--ink-muted, #6f6459);
+}
+
+.order__meta > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.order__meta dt {
+  min-width: 5.5em;
+  color: var(--ink-muted, #6f6459);
+}
+
+.order__meta dd {
+  margin: 0;
+  color: var(--ink-body, #241f1c);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.order__count {
+  font-family: var(--font-hand, inherit);
+  font-size: 1.0625rem;
+  color: var(--ink, #1c1816);
+}
+
+.order__count.is-over {
+  color: var(--danger-ink, #a8503c);
+}
+
+.order__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin-top: 14px;
+}
+
+.order__confirm {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--paper, #feecdd);
+  border: 1px dashed var(--hairline, rgba(28, 24, 22, 0.16));
+  border-radius: 16px 12px 18px 11px / 12px 18px 11px 16px;
+  font-size: var(--fs-small, 0.875rem);
+}
+
+.order__confirm p {
+  margin: 0;
+}
+
+.order__confirm .order__actions {
+  margin-top: 12px;
+}
+
+.order__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.appointments-panel {
+  margin-top: var(--stack, 34px);
+  scroll-margin-top: 24px;
+}
+
+@media (max-width: 800px) {
+  .order__amount {
+    margin-inline-start: 0;
+  }
+}

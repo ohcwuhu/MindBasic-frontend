@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>审计日志 · 管理工作台 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 管理工作台：谁在什么时候动了什么，都留在这里。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-admin">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="admin.html">管理工作台</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">审计日志</h1>
+          <p class="plate__lede">谁在什么时候动了什么，都能翻回来看。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <nav class="keys atabs" aria-label="管理工作台模块">
+            <a class="key" href="admin.html">概览</a>
+            <a class="key" href="admin-users.html">用户</a>
+            <a class="key" href="admin-articles.html">内容</a>
+            <a class="key" href="admin-coach-audits.html">教练审核</a>
+            <a class="key" href="admin-orders.html">订单</a>
+            <a class="key" href="admin-crisis.html">危机</a>
+            <a class="key is-current" href="admin-audit-logs.html" aria-current="page">日志</a>
+            <a class="key" href="admin-system-configs.html">配置</a>
+          </nav>
+
+          <section class="panel" aria-labelledby="logs-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="logs-title">最近的动过手</h2>
+              <p class="panel__note">只读：这一页不提供修改与删除。</p>
+            </div>
+
+            <div class="filters">
+              <select class="select" name="action" aria-label="按动作筛">
+                <option value="">全部动作</option>
+                <option value="ADMIN_ORDER_REFUND">订单退款</option>
+                <option value="ADMIN_CRISIS_ASSIGN">危机接管</option>
+                <option value="ADMIN_CRISIS_RESOLVE">危机结案</option>
+                <option value="ADMIN_USER_STATUS">用户状态</option>
+                <option value="ADMIN_COACH_AUDIT">教练审核</option>
+                <option value="ADMIN_SYSTEM_CONFIG">系统配置</option>
+              </select>
+              <select class="select" name="targetType" aria-label="按对象筛">
+                <option value="">全部对象</option>
+                <option value="ORDER">订单</option>
+                <option value="CRISIS">危机预警</option>
+                <option value="USER">用户</option>
+                <option value="COACH">教练</option>
+                <option value="SYSTEM_CONFIG">系统配置</option>
+              </select>
+              <button class="btn btn--small" type="button" data-apply>查询</button>
+              <button class="btn btn--paper btn--small" type="button" data-reset>重置</button>
+              <p class="filters__count" data-count aria-live="polite">示例数据 · 5 条</p>
+            </div>
+
+            <p class="filters__count" data-status role="status" aria-live="polite" tabindex="-1"></p>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">时间</th>
+                  <th scope="col">操作人</th>
+                  <th scope="col">角色</th>
+                  <th scope="col">动作</th>
+                  <th scope="col">对象</th>
+                  <th scope="col">详情</th>
+                  <th scope="col">来源 IP</th>
+                </tr>
+              </thead>
+              <tbody data-rows>
+                <tr>
+                  <td class="tnum">2026/10/12 21:44</td>
+                  <td>管理员</td>
+                  <td>ADMIN</td>
+                  <td>订单退款</td>
+                  <td>订单 #2</td>
+                  <td class="tnum">OD2610113077 · ¥300</td>
+                  <td class="tnum">127.0.0.1</td>
+                </tr>
+                <tr>
+                  <td class="tnum">2026/10/12 09:12</td>
+                  <td>管理员</td>
+                  <td>ADMIN</td>
+                  <td>危机接管</td>
+                  <td>危机预警 #9</td>
+                  <td>—</td>
+                  <td class="tnum">127.0.0.1</td>
+                </tr>
+                <tr>
+                  <td class="tnum">2026/10/11 18:03</td>
+                  <td>管理员</td>
+                  <td>ADMIN</td>
+                  <td>教练审核</td>
+                  <td>教练 #12</td>
+                  <td class="tnum">approve</td>
+                  <td class="tnum">127.0.0.1</td>
+                </tr>
+                <tr>
+                  <td class="tnum">2026/10/11 15:27</td>
+                  <td>管理员</td>
+                  <td>ADMIN</td>
+                  <td>用户状态</td>
+                  <td>用户 #7</td>
+                  <td class="tnum">disable</td>
+                  <td class="tnum">127.0.0.1</td>
+                </tr>
+                <tr>
+                  <td class="tnum">2026/10/10 20:15</td>
+                  <td>管理员</td>
+                  <td>ADMIN</td>
+                  <td>系统配置</td>
+                  <td>系统配置</td>
+                  <td class="tnum">keys=2</td>
+                  <td class="tnum">127.0.0.1</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="pager">
+              <p class="pager__count" data-pager-count aria-live="polite">示例数据 · 共 5 条</p>
+              <div class="pager__steps">
+                <button class="btn btn--paper btn--small" type="button" data-prev disabled>上一页</button>
+                <button class="btn btn--paper btn--small" type="button" data-next disabled>下一页</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/admin-audit-logs.js"></script>
+  </body>
+</html>

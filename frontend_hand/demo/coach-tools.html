@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>话术与评价 · 教练工作台 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 教练工作台：我的话术库、公共话术与收到的评价。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-admin">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link is-current" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="coach.html">教练工作台</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">话术与评价</h1>
+          <p class="plate__lede">开口的那几句可以慢慢攒；别人怎么说的，也在这儿。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <nav class="keys atabs" aria-label="教练工作台模块">
+            <a class="key" href="coach.html">预约</a>
+            <a class="key" href="coach-slots.html">时段与服务</a>
+            <a class="key" href="coach-clients.html">客户与案例</a>
+            <a class="key is-current" href="coach-tools.html" aria-current="page">话术与评价</a>
+            <a class="key" href="coach-profile.html">资料与入驻</a>
+          </nav>
+
+          <section class="panel" aria-labelledby="phrases-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="phrases-title">我的话术库</h2>
+              <p class="panel__note" data-phrase-count aria-live="polite">4 条</p>
+            </div>
+            <p class="filters__count" data-phrase-status role="status" aria-live="polite" tabindex="-1"></p>
+
+            <ul class="rows" data-phrases>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">开</span>
+                  <span>
+                    <span class="row__title">开场</span>
+                    <span class="row__meta">今天想从哪一段说起都行，我们先不急着解决什么。</span>
+                  </span>
+                  <span class="row__side"><button class="act act--warn" type="button" data-remove-phrase="1">删除</button></span>
+                </div>
+              </li>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">资</span>
+                  <span>
+                    <span class="row__title">资源</span>
+                    <span class="row__meta">上一次那么难的时候，是什么帮你撑过来的？</span>
+                  </span>
+                  <span class="row__side"><button class="act act--warn" type="button" data-remove-phrase="2">删除</button></span>
+                </div>
+              </li>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">行</span>
+                  <span>
+                    <span class="row__title">行动</span>
+                    <span class="row__meta">如果只做五分钟的那一版，会是什么样子？</span>
+                  </span>
+                  <span class="row__side"><button class="act act--warn" type="button" data-remove-phrase="3">删除</button></span>
+                </div>
+              </li>
+            </ul>
+
+            <form class="form actrow" data-phrase-form novalidate>
+              <div class="field">
+                <label class="field__label" for="phrase-category">这一类放在</label>
+                <select class="select" id="phrase-category" name="category">
+                  <option value="OPENING">开场</option>
+                  <option value="RESOURCE">资源</option>
+                  <option value="FUTURE">未来</option>
+                  <option value="ACTION">行动</option>
+                  <option value="OTHER">其他</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field__label" for="phrase-content">话术</label>
+                <textarea class="textarea" id="phrase-content" name="content" rows="2" maxlength="500" placeholder="一句你真的会说的话，不用漂亮…"></textarea>
+              </div>
+              <p class="field__error" data-phrase-error role="alert" hidden></p>
+              <div class="field__row">
+                <button class="btn" type="submit" data-phrase-save>收进我的库</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="section panel" aria-labelledby="library-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="library-title">公共话术</h2>
+              <p class="panel__note">平台整理的；喜欢就收进自己的库。</p>
+            </div>
+            <p class="filters__count" data-library-status role="status" aria-live="polite" tabindex="-1"></p>
+            <ul class="rows" data-library>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">未</span>
+                  <span>
+                    <span class="row__title">未来</span>
+                    <span class="row__meta">如果三个月后的你回头看今天，会希望现在的你做什么？</span>
+                  </span>
+                  <span class="row__side"><button class="act" type="button" data-save-phrase="11">收进我的库</button></span>
+                </div>
+              </li>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">资</span>
+                  <span>
+                    <span class="row__title">资源</span>
+                    <span class="row__meta">有没有哪一次，你以为撑不过去，后来却过去了？</span>
+                  </span>
+                  <span class="row__side"><button class="act" type="button" data-save-phrase="12">收进我的库</button></span>
+                </div>
+              </li>
+            </ul>
+          </section>
+
+          <section class="section panel" aria-labelledby="reviews-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="reviews-title">收到的评价</h2>
+              <p class="panel__note" data-review-count aria-live="polite">3 条</p>
+            </div>
+            <ul class="rows" data-reviews>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">5★</span>
+                  <span>
+                    <span class="row__title">小满 · 单次咨询</span>
+                    <span class="row__meta">聊完心里松了一点，知道今晚可以先做什么。</span>
+                  </span>
+                  <span class="row__side">2026/10/08</span>
+                </div>
+              </li>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">5★</span>
+                  <span>
+                    <span class="row__title">苏木 · 单次咨询</span>
+                    <span class="row__meta">没有急着给建议，这一点让我放松。</span>
+                  </span>
+                  <span class="row__side">2026/10/02</span>
+                </div>
+              </li>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">4★</span>
+                  <span>
+                    <span class="row__title">阿禾 · 首次了解</span>
+                    <span class="row__meta">第一次聊，时间有点短，但知道下一步了。</span>
+                  </span>
+                  <span class="row__side">2026/09/28</span>
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/coach-tools.js"></script>
+  </body>
+</html>

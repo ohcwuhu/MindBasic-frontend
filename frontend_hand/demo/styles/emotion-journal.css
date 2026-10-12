@@ -21,8 +21,8 @@ body {
   /* 和真人教练那一页同一套：**固定背景**（`cover` + `fixed`）—— 按视口算尺寸，页面往下滚
      是那张纸在画上滑过去，画本身不动。用的图是客户端给的「纯水彩草地版」
      （2590×1619 的一张纯草地，没有人也没有道具），衬这张手账纸最干净。 */
-  /* 底色取这张图的平均色（#E7EDC4）：图到了只换纹理，不换颜色 */
-  background: #e7edc4 url('../assets/field-watercolour.webp') center center / cover fixed no-repeat;
+  /* 底色取这张图的平均色（#F6F5E3，已含 62% 纸色）：图到了只换纹理，不换颜色 */
+  background: #f6f5e3 url('../assets/field-watercolour.webp') center center / cover fixed no-repeat;
 }
 
 .masthead {

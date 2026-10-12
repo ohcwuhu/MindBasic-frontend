@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>打卡与徽章 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 打卡与徽章：连续记录、榜单与已经盖下的章。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link is-current" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">我的成长</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="my-growth.html">我的成长</a>
+            <span aria-hidden="true">/</span>
+            <span>打卡与徽章</span>
+          </nav>
+          <h1 class="plate__title">打卡与徽章</h1>
+          <p class="plate__lede">一天一次，把「我来过」记下来。断一天也没关系，接着数就好。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <!-- ===== 今天 ===== -->
+          <section class="panel" aria-labelledby="today-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="today-title">今天</h2>
+              <p class="panel__note" data-note>小满 · 这个月记了 12 天</p>
+            </div>
+
+            <div class="streak-head">
+              <p class="streak-head__count" data-streak><strong>5</strong> 天连续记录</p>
+              <ol class="week" aria-label="最近七天记录情况" data-week>
+                <li class="is-on" aria-label="已记录">一</li>
+                <li class="is-on" aria-label="已记录">二</li>
+                <li class="is-on" aria-label="已记录">三</li>
+                <li class="is-on" aria-label="已记录">四</li>
+                <li class="is-on is-today" aria-label="今天，已记录">五</li>
+                <li aria-label="未记录">六</li>
+                <li aria-label="未记录">日</li>
+              </ol>
+              <button class="btn btn--small" type="button" data-checkin>今天打个卡</button>
+            </div>
+
+            <ul class="stats streak-head__stats" data-stats>
+              <li class="stat"><strong>5</strong><span>天连续</span></li>
+              <li class="stat"><strong>12</strong><span>天本月</span></li>
+              <li class="stat"><strong>47</strong><span>天累计</span></li>
+            </ul>
+            <p class="panel__foot" data-status role="status" aria-live="polite" tabindex="-1"></p>
+          </section>
+
+          <!-- ===== 榜单 ===== -->
+          <section class="section panel" aria-labelledby="board-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="board-title">这一期的榜单</h2>
+              <p class="panel__note">只比打卡天数，不比谁更难。</p>
+            </div>
+
+            <ul class="keys" data-period aria-label="按时间段看">
+              <li><button class="key is-current" type="button" data-period-value="week" aria-pressed="true">本周</button></li>
+              <li><button class="key" type="button" data-period-value="month" aria-pressed="false">本月</button></li>
+            </ul>
+
+            <div class="board" data-board>
+              <div class="board__row board__row--top"><span class="board__rank">1</span><span class="board__who">晚风</span><span class="board__count">7 天</span></div>
+              <div class="board__row board__row--top"><span class="board__rank">2</span><span class="board__who">阿禾</span><span class="board__count">6 天</span></div>
+              <div class="board__row board__row--me"><span class="board__rank">3</span><span class="board__who">小满（你）</span><span class="board__count">5 天</span></div>
+              <div class="board__row"><span class="board__rank">4</span><span class="board__who">苏木</span><span class="board__count">4 天</span></div>
+              <div class="board__row"><span class="board__rank">5</span><span class="board__who">林深</span><span class="board__count">3 天</span></div>
+            </div>
+          </section>
+
+          <!-- ===== 徽章 ===== -->
+          <section class="section panel" aria-labelledby="badge-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="badge-title">已经盖下的章</h2>
+              <p class="panel__note" data-badge-count>4 / 6</p>
+            </div>
+            <ul class="badge-grid" data-badges>
+              <li class="badge"><img src="assets/badge-first-journal.webp" width="400" height="391" alt="" aria-hidden="true" /><span>第一篇日记</span></li>
+              <li class="badge"><img src="assets/badge-first-chat.webp" width="400" height="360" alt="" aria-hidden="true" /><span>首次对话</span></li>
+              <li class="badge"><img src="assets/badge-streak-7.webp" width="400" height="356" alt="" aria-hidden="true" /><span>连续 7 天</span></li>
+              <li class="badge"><img src="assets/badge-first-coach.webp" width="400" height="397" alt="" aria-hidden="true" /><span>教练首谈</span></li>
+              <li class="badge is-locked"><img src="assets/badge-night.webp" width="400" height="390" alt="" aria-hidden="true" /><span>深夜陪伴</span></li>
+              <li class="badge is-locked"><img src="assets/badge-streak-30.webp" width="400" height="390" alt="" aria-hidden="true" /><span>坚持 30 天</span></li>
+            </ul>
+            <p class="panel__foot">示例数据：连着来的天数够了，章会自己盖上。</p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/check-ins.js"></script>
+  </body>
+</html>

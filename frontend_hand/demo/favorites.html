@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>我的收藏 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 我的收藏：读过、想再读一遍的成长文章。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link is-current" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">我的成长</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="my-growth.html">我的成长</a>
+            <span aria-hidden="true">/</span>
+            <span>我的收藏</span>
+          </nav>
+          <h1 class="plate__title">我的收藏</h1>
+          <p class="plate__lede">读过、想再读一遍的，都留在这儿。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="panel" aria-labelledby="fav-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="fav-title">收藏的文章</h2>
+              <p class="panel__note" data-count>3 篇</p>
+            </div>
+            <p class="panel__note" data-status role="status" aria-live="polite" tabindex="-1"></p>
+
+            <ul data-list>
+              <li class="fav">
+                <img class="fav__art" src="assets/cat-emotion.webp" width="560" height="560" alt="" aria-hidden="true" />
+                <div>
+                  <a class="fav__title" href="article-detail.html">焦虑先到的时候，先做三件小事</a>
+                  <p class="fav__meta">情绪调节 · 2026/09/28</p>
+                  <p class="fav__acts">
+                    <a class="link-quiet" href="article-detail.html">再读一遍</a>
+                    <button class="act" type="button" data-unfavorite="1">取消收藏</button>
+                  </p>
+                </div>
+              </li>
+              <li class="fav">
+                <img class="fav__art" src="assets/cat-study.webp" width="560" height="560" alt="" aria-hidden="true" />
+                <div>
+                  <a class="fav__title" href="article-detail.html">把一件大事切成二十分钟一块</a>
+                  <p class="fav__meta">学习方法 · 2026/10/02</p>
+                  <p class="fav__acts">
+                    <a class="link-quiet" href="article-detail.html">再读一遍</a>
+                    <button class="act" type="button" data-unfavorite="2">取消收藏</button>
+                  </p>
+                </div>
+              </li>
+              <li class="fav">
+                <img class="fav__art" src="assets/cat-relation.webp" width="560" height="560" alt="" aria-hidden="true" />
+                <div>
+                  <a class="fav__title" href="article-detail.html">室友那件事，我是怎么开口的</a>
+                  <p class="fav__meta">人际关系 · 2026/09/19</p>
+                  <p class="fav__acts">
+                    <a class="link-quiet" href="article-detail.html">再读一遍</a>
+                    <button class="act" type="button" data-unfavorite="3">取消收藏</button>
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </section>
+
+          <p class="panel__foot">这里是示例数据；接上后端后，收藏与取消都会真的写进你的账号。</p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/favorites.js"></script>
+  </body>
+</html>

@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>时段与服务 · 教练工作台 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 教练工作台：可约时段与服务项目。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-admin">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link is-current" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="coach.html">教练工作台</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <h1 class="plate__title">时段与服务</h1>
+          <p class="plate__lede">你放出来的时段、摆出来的服务，就是别人能约到的东西。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <nav class="keys atabs" aria-label="教练工作台模块">
+            <a class="key" href="coach.html">预约</a>
+            <a class="key is-current" href="coach-slots.html" aria-current="page">时段与服务</a>
+            <a class="key" href="coach-clients.html">客户与案例</a>
+            <a class="key" href="coach-tools.html">话术与评价</a>
+            <a class="key" href="coach-profile.html">资料与入驻</a>
+          </nav>
+
+          <!-- ===== 可约时段 ===== -->
+          <section class="panel" aria-labelledby="slots-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="slots-title">可约时段</h2>
+              <p class="panel__note">一次放一个或一批；放出去之后用户那边就能约。</p>
+            </div>
+
+            <form class="filters" data-slot-form novalidate>
+              <label class="field" for="slot-date">
+                <span class="field__label">日期</span>
+                <input class="input" type="date" id="slot-date" name="date" required />
+              </label>
+              <label class="field" for="slot-start">
+                <span class="field__label">开始</span>
+                <input class="input" type="time" id="slot-start" name="start" value="20:00" required />
+              </label>
+              <label class="field" for="slot-end">
+                <span class="field__label">结束</span>
+                <input class="input" type="time" id="slot-end" name="end" value="20:50" required />
+              </label>
+              <button class="btn btn--small" type="submit" data-slot-save>放出去</button>
+            </form>
+            <p class="field__error" data-slot-error role="alert" hidden></p>
+            <p class="filters__count" data-slot-status role="status" aria-live="polite" tabindex="-1"></p>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">日期</th>
+                  <th scope="col">时间</th>
+                  <th scope="col">状态</th>
+                </tr>
+              </thead>
+              <tbody data-slots>
+                <tr><td class="tnum">2026-10-13</td><td class="tnum">20:00–20:50</td><td><span class="chip chip--green">可约</span></td></tr>
+                <tr><td class="tnum">2026-10-14</td><td class="tnum">10:00–10:50</td><td><span class="chip chip--green">可约</span></td></tr>
+                <tr><td class="tnum">2026-10-15</td><td class="tnum">19:00–19:50</td><td><span class="chip chip--yellow">已被约</span></td></tr>
+                <tr><td class="tnum">2026-10-16</td><td class="tnum">21:00–21:50</td><td><span class="chip">已关闭</span></td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- ===== 服务项目 ===== -->
+          <section class="section panel" aria-labelledby="services-title">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title" id="services-title">服务项目</h2>
+              <p class="panel__note">上架中的才会出现在你的详情页上。</p>
+            </div>
+
+            <ul class="rows" data-services>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">50 分</span>
+                  <span>
+                    <span class="row__title">单次咨询</span>
+                    <span class="row__meta">单次 · 50 分钟 · ¥300</span>
+                  </span>
+                  <span class="row__side"><span class="chip chip--green">已上架</span></span>
+                </div>
+              </li>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">4 次</span>
+                  <span>
+                    <span class="row__title">四周陪伴套餐</span>
+                    <span class="row__meta">套餐 · 50 分钟 · ¥1080</span>
+                  </span>
+                  <span class="row__side"><span class="chip chip--green">已上架</span></span>
+                </div>
+              </li>
+              <li>
+                <div class="row">
+                  <span class="row__art" aria-hidden="true">15 分</span>
+                  <span>
+                    <span class="row__title">首次了解</span>
+                    <span class="row__meta">单次 · 15 分钟 · ¥0</span>
+                  </span>
+                  <span class="row__side"><span class="chip">已下架</span></span>
+                </div>
+              </li>
+            </ul>
+
+            <form class="form actrow" data-service-form novalidate>
+              <div class="field">
+                <label class="field__label" for="svc-name">新服务名称</label>
+                <input class="input" id="svc-name" name="name" maxlength="64" placeholder="例如：考前冲刺陪跑" />
+              </div>
+              <div class="field__row">
+                <label class="field" for="svc-duration">
+                  <span class="field__label">时长（分钟）</span>
+                  <input class="input" type="number" id="svc-duration" name="duration" min="15" max="480" value="50" />
+                </label>
+                <label class="field" for="svc-price">
+                  <span class="field__label">价格（元）</span>
+                  <input class="input" type="number" id="svc-price" name="price" min="0" step="10" value="300" />
+                </label>
+              </div>
+              <p class="field__error" data-service-error role="alert" hidden></p>
+              <div class="field__row">
+                <button class="btn" type="submit" data-service-save>上架这个服务</button>
+              </div>
+              <p class="panel__foot" data-service-status role="status" aria-live="polite" tabindex="-1"></p>
+            </form>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/coach-slots.js"></script>
+  </body>
+</html>

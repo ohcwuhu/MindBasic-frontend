@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>帖子 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · 社群帖子：一条帖子与它下面的回应。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body class="page-community">
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="my-growth.html">个人中心</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="communities.html">社群</a>
+            <span aria-hidden="true">/</span>
+            <a href="community-detail.html">一起走过这段</a>
+            <span aria-hidden="true">/</span>
+            <span>帖子</span>
+          </nav>
+          <h1 class="plate__title">一条帖子</h1>
+          <p class="plate__lede">写下的话，和它下面的回应。</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <div class="reading">
+            <!-- ===== 原帖 ===== -->
+            <section class="panel" aria-labelledby="post-title">
+              <div class="post__head">
+                <span class="comment__face" aria-hidden="true">小</span>
+                <span class="post__who" id="post-title">小满</span>
+                <span class="comment__time" data-post-time>2026/10/10 21:14</span>
+                <span class="chip chip--green" data-post-pinned>置顶</span>
+              </div>
+              <p class="post__body" data-post-body>今天把一个能拖了三个月的表格交了。没有变厉害，只是把它切成了三块，每块二十分钟。</p>
+              <div class="post__foot">
+                <button class="post__act btn btn--paper btn--small" type="button" data-like aria-pressed="false">
+                  <span data-like-label>赞 3</span>
+                </button>
+                <span class="cpost__meta"><span data-comment-count>1</span> 条回复</span>
+                <span class="cpost__meta" data-post-status role="status" aria-live="polite"></span>
+              </div>
+            </section>
+
+            <!-- ===== 回应 ===== -->
+            <section class="panel" aria-labelledby="comments-title">
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="comments-title">回应</h2>
+                <p class="panel__note">先接住，再出主意。</p>
+              </div>
+
+              <ul class="comments" data-comments>
+                <li class="comment">
+                  <span class="comment__face" aria-hidden="true">禾</span>
+                  <div>
+                    <p class="comment__who">阿禾 <span class="comment__time">2026/10/10 22:02</span></p>
+                    <p class="comment__text">切成三块这个办法我记下了。二十分钟一段，我大概也能开始。</p>
+                  </div>
+                  <button class="act" type="button" data-remove-comment="1">删除</button>
+                </li>
+              </ul>
+
+              <form class="form" data-comment-form novalidate>
+                <div class="field">
+                  <label class="field__label" for="comment">写一句回应</label>
+                  <textarea class="textarea" id="comment" name="content" rows="3" maxlength="500" placeholder="不用想好怎么说，先写下来就好…"></textarea>
+                </div>
+                <p class="field__error" data-comment-error role="alert" hidden></p>
+                <div class="field__row">
+                  <button class="btn" type="submit" data-comment-submit>回应</button>
+                  <a class="btn btn--paper" href="community-detail.html">回社群</a>
+                </div>
+              </form>
+            </section>
+
+            <p class="panel__foot">帖子里的话只在这个小组里可见；接上后端后会换成真实的帖子与回应。</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/community-post.js"></script>
+  </body>
+</html>

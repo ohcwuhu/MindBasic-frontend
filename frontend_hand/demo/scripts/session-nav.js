@@ -97,12 +97,18 @@
     function show(name, role) {
       /* 管理员看到的不是普通用户那套「个人中心」，而是他的管理工作台 */
       var isAdmin = role === 'ADMIN'
+      /* 教练看到的是自己的工作台（原 IA 的 B 壳层入口） */
+      var isCoach = role === 'COACH'
+      var home = isAdmin ? 'admin.html' : isCoach ? 'coach.html' : 'my-growth.html'
+      var homeLabel = isAdmin ? '管理工作台' : isCoach ? '教练工作台' : '个人中心'
       actions.innerHTML =
+        '<a class="link-quiet" href="messages.html">私信</a>' +
         '<a class="link-quiet" href="notifications.html">通知<span class="chip chip--yellow" data-unread hidden></span></a>' +
         '<a class="link-quiet" href="wallet.html">钱包</a>' +
-        /* 页头不放昵称了（个人中心页里显示「现在是谁登录着」）：管理员这枚写「管理工作台」 */
-        '<a class="btn btn--paper btn--small" href="' + (isAdmin ? 'admin.html' : 'my-growth.html') + '">' +
-        (isAdmin ? '管理工作台' : '个人中心') +
+        /* 页头不放昵称了（个人中心页里显示「现在是谁登录着」）：
+           管理员这枚写「管理工作台」、教练写「教练工作台」，普通用户才是「个人中心」 */
+        '<a class="btn btn--paper btn--small" href="' + home + '">' +
+        homeLabel +
         '</a>'
 
       paintNote(name, role, '')

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>那一次聊过什么 · 斐思同行</title>
+    <meta name="description" content="斐思同行 · AI 会话回看：那一次聊过的话，与当时认出的情绪。" />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link is-current" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="self-coaching-history.html">全部记录</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="self-coaching.html">自我教练</a>
+            <span aria-hidden="true">/</span>
+            <a href="self-coaching-history.html">全部记录</a>
+            <span aria-hidden="true">/</span>
+            <span>这次会话</span>
+          </nav>
+          <h1 class="plate__title" data-convo-title>「最近什么都不太想做」</h1>
+          <p class="plate__lede" data-convo-meta>2026 年 10 月 8 日 12:04 · 6 条消息</p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <div class="reading">
+            <section class="panel" aria-labelledby="convo-title">
+              <div class="panel__head panel__head--row">
+                <h2 class="panel__title" id="convo-title">当时说的话</h2>
+                <p class="panel__note">左边是 AI，右边是你；情绪是当时从语气和用词里认出来的。</p>
+              </div>
+
+              <div class="convo" data-messages>
+                <div class="convo__msg convo__msg--they">
+                  <div class="convo__bubble">听起来这几天很像隔着一层玻璃：事照做，心里却没什么动静。愿意先说说，最近最难的是哪一段吗？</div>
+                  <div class="convo__meta"><span class="chip chip--green">AI 生成</span><span>12:04</span></div>
+                </div>
+                <div class="convo__msg convo__msg--mine">
+                  <div class="convo__bubble">早上起不来，起来也不想动。晚上躺下又开始想很多。</div>
+                  <div class="convo__meta"><span>低落</span><span>12:05</span></div>
+                </div>
+                <div class="convo__msg convo__msg--they">
+                  <div class="convo__bubble">晚上想很多、白天没力气，这两件常常一起出现。上周有没有哪天稍微轻一点？那天发生了什么？</div>
+                  <div class="convo__meta"><span class="chip chip--green">AI 生成</span><span>12:06</span></div>
+                </div>
+              </div>
+
+              <div class="actrow">
+                <button class="btn" type="button" data-summary>总结并加入情绪日记</button>
+                <a class="btn btn--paper" href="self-coaching-history.html">回到全部记录</a>
+              </div>
+              <p class="field__error" data-summary-error role="alert" hidden></p>
+              <p class="panel__foot" data-summary-status role="status" aria-live="polite"></p>
+            </section>
+
+            <p class="panel__foot">回看是为了看见变化，不是给自己打分；接上后端后会换成真实对话。</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+      </div>
+    </footer>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/ai-conversation.js"></script>
+  </body>
+</html>
