@@ -218,7 +218,7 @@ onMounted(load)
       <header class="ej-header">
         <p class="ej-label">情绪日记</p>
         <h1 class="ej-title">把此刻写下来</h1>
-        <p class="ej-subtitle">选一个表情，写一句话。我们会回你一句资源导向的回应，不评判，也不定义。</p>
+        <p class="ej-subtitle">选一个表情，写一句话。我们会陪你看看此刻的感受，也找找能支持你的力量。</p>
       </header>
 
       <ErrorBanner v-if="error" :message="error" class="mt-6" />
@@ -264,8 +264,11 @@ onMounted(load)
 
         <!-- 输入区 -->
         <div class="ej-input-wrap">
+          <label for="journal-feeling" class="ej-feeling-label">此刻的感受</label>
           <textarea
+            id="journal-feeling"
             v-model="content"
+            maxlength="500"
             rows="3"
             placeholder="用一句话描述此刻的感受…"
             class="ej-textarea"

@@ -34,15 +34,12 @@
       <!-- 眨眼 SVG 覆盖层（代码绘制，叠在视频/图上方） -->
       <transition name="cs-blink-fade">
         <div v-if="blinkVisible" class="cs-blink-overlay">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" class="cs-blink-svg">
-            <template v-if="gender === 'girl'">
-              <path d="M21 37 Q29 33 37 37" class="cs-eye-curve" />
-              <path d="M59 37 Q67 33 75 37" class="cs-eye-curve" />
-            </template>
-            <template v-if="gender === 'boy'">
-              <path d="M23 39 Q31 35 39 39" class="cs-eye-curve" />
-              <path d="M57 39 Q65 35 73 39" class="cs-eye-curve" />
-            </template>
+          <svg
+            :viewBox="`0 0 ${SPRITE_W} ${SPRITE_H}`"
+            preserveAspectRatio="xMidYMid meet"
+            class="cs-blink-svg"
+          >
+            <path v-for="(d, i) in eyeArcs" :key="i" :d="d" class="cs-eye-curve" />
           </svg>
         </div>
       </transition>
@@ -194,6 +191,48 @@ const blinkVisible = ref(false)
 let blinkTimerId: ReturnType<typeof setTimeout> | null = null
 let blinkHideTimerId: ReturnType<typeof setTimeout> | null = null
 
+// ────────────────────────────────────────────────────────────────
+//  眨眼覆盖层的坐标系统
+//  · 单位＝素材自身的像素（原图 625×947），viewBox 与之对齐，
+//    因此无论容器多大／多窄，覆盖层都随角色一起等比缩放，不再像
+//    之前那样用 100×100 方框 + meet 居中，导致眼睛落点随尺寸漂移。
+//  · 眼位是逐个状态实测出来的（对状态视频逐帧做模板匹配取中位，
+//    脚本见 tools/companion-eyes/measure_eyes.py）。角色在每个 loop 里头部会小幅移动，
+//    所以“呼吸/思考/说话”三种姿态分别用各自的中位眼位。
+// ────────────────────────────────────────────────────────────────
+const SPRITE_W = 625
+const SPRITE_H = 947
+
+type EyePair = [[number, number], [number, number]]
+
+const EYE_ANCHORS: Record<'girl' | 'boy', Record<string, EyePair>> = {
+  girl: {
+    idle:      [[241, 369], [437, 362]],
+    listening: [[241, 369], [437, 362]],
+    thinking:  [[291, 373], [437, 422]],
+    speaking:  [[286, 433], [452, 363]],
+  },
+  boy: {
+    idle:      [[233, 363], [403, 353]],
+    listening: [[233, 363], [403, 353]],
+    thinking:  [[233, 406], [402, 376]],
+    speaking:  [[233, 374], [418, 379]],
+  },
+}
+
+/** 眼睛的水平半径（素材像素），决定闭眼弧线的宽度 */
+const EYE_HALF_WIDTH: Record<'girl' | 'boy', number> = { girl: 44, boy: 38 }
+
+const eyeArcs = computed(() => {
+  const g: 'girl' | 'boy' = props.gender === 'boy' ? 'boy' : 'girl'
+  const s = props.state && EYE_ANCHORS[g][props.state] ? props.state : 'idle'
+  const hw = EYE_HALF_WIDTH[g]
+  const lift = Math.round(hw * 0.5)
+  return EYE_ANCHORS[g][s].map(
+    ([cx, cy]) => `M${cx - hw} ${cy} Q${cx} ${cy - lift} ${cx + hw} ${cy}`,
+  )
+})
+
 const BLINK_INTERVAL_MIN = 4000
 const BLINK_INTERVAL_MAX = 8000
 const BLINK_SHOW_MS = 160
@@ -318,7 +357,8 @@ onBeforeUnmount(() => {
 .cs-eye-curve {
   fill: none;
   stroke: #5a3a32;
-  stroke-width: 1.8;
+  /* viewBox 单位＝素材像素(625 宽)，11 ≈ 120px 宽头像上的 2.1px */
+  stroke-width: 11;
   stroke-linecap: round;
   opacity: 0.82;
 }
