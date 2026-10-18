@@ -34,6 +34,7 @@ const APPS = {
 const app = APPS[process.env.FEISI_APP] ?? APPS.coach
 
 export default defineConfig({
+  publicDir: false,
   plugins: [vue()],
   /* 页面侧没有 Node 的 process，把依赖里那几个环境判断钉成生产值 */
   define: {
