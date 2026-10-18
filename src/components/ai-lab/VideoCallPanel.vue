@@ -51,7 +51,8 @@ const API_BASE_URL = ''
 type CallState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 const STATE_TEXT: Record<string, string> = {
-  idle: '未开始',
+  /* 通话已经起来、还没听到你说话时的那一档：说「未开始」会和「通话中」打架 */
+  idle: '等你开口…',
   listening: '聆听中…',
   thinking: '思考中…',
   speaking: '回复中…'
@@ -183,6 +184,7 @@ const cameraNotice = ref('')
 
 // TTS 音频播放（按句子级完整收集后再入播放队列，避免一句话被切成半段）
 let currentAudio: HTMLAudioElement | null = null
+let discardTTS = false
 let currentSentenceChunks: ArrayBuffer[] = []  // 正在接收的"当前句"的所有分片（vc_tts_start → vc_tts_done 之间累积）
 const sentencePlayQueue: Blob[] = []           // 句子级播放队列：每项是一句完整的 MP3 Blob
 const isPlayingTTS = ref(false)
@@ -277,13 +279,14 @@ const connectSocket = () => {
 
   socket.value.on('connect_error', (err: Error) => {
     socketStatus.value = 'disconnected'
-    errorMsg.value = `后端连接失败：${err.message}`
+    errorMsg.value = '暂时无法连接。请检查网络；若尚未登录，请先登录后再试。'
   })
 
   // ── 接收后端事件 ──
 
   // 状态变更
   socket.value.on('vc_state_change', (data: { state: string }) => {
+    if (data.state === 'thinking') discardTTS = false
     callState.value = data.state as CallState
     ensureIdleWatch()  // 兜底：通话中但计时器没起来时补上（见函数注释）
     if (data.state === 'listening') {
@@ -378,6 +381,7 @@ const connectSocket = () => {
 
   // TTS 开始（一句）：重置"当前句分片缓冲"
   socket.value.on('vc_tts_start', (_data: { text: string }) => {
+    if (discardTTS || isPaused.value || !isDeviceActive.value) return
     currentSentenceChunks = []
     // 记录 TTS 启动时间，用于启动后 700ms 内的"回音保护期"（防止打断误触发）
     ttsLastStartedAt = Date.now()
@@ -386,6 +390,7 @@ const connectSocket = () => {
 
   // TTS 音频分片：累积到"当前句缓冲"
   socket.value.on('vc_tts_chunk', (data: { data: string; format: string }) => {
+    if (discardTTS || isPaused.value || !isDeviceActive.value) return
     if (data.format === 'mp3') ttsMimeType = 'audio/mp3'
     const raw = atob(data.data)
     const buf = new ArrayBuffer(raw.length)
@@ -396,6 +401,7 @@ const connectSocket = () => {
 
   // TTS 完成（一句）：把"当前句所有分片"合并为完整 Blob，推入句子播放队列
   socket.value.on('vc_tts_done', (_data: { text: string }) => {
+    if (discardTTS || isPaused.value || !isDeviceActive.value) return
     if (currentSentenceChunks.length === 0) return
     // 合并当前句的所有分片 → 得到一句完整的 MP3 Blob
     const sentenceBlob = new Blob(currentSentenceChunks, { type: ttsMimeType })
@@ -426,6 +432,8 @@ const connectSocket = () => {
   socket.value.on('vc_error', (data: { stage: string; message: string }) => {
     console.error('[VC] Error:', data)
     errorMsg.value = `[${data.stage}] ${data.message}`
+    // 语音失败不代表文字管线结束，仍由服务端 listening 事件收尾。
+    if (data.stage === 'tts') { currentSentenceChunks = []; return }
     // 出错时也要重置状态，恢复录音
     isProcessing = false
     callState.value = 'listening'
@@ -505,6 +513,7 @@ const playNextSentence = () => {
 }
 
 const stopTTSPlayback = () => {
+  discardTTS = true
   // 清空：正在接收的句子分片 + 句子播放队列 + 当前播放中的 Audio
   currentSentenceChunks = []
   // 清空数组（不改变引用，保持响应式）
@@ -579,6 +588,7 @@ const onVideoReady = () => {
   isLoading.value = false
   isDeviceActive.value = true
   callEstablished = true
+  discardTTS = false
   // 通知后端开始通话，并如实声明本次采集的授权范围
   // （摄像头默认关闭，只有用户主动开启后才会申请设备权限）
   socket.value?.emit('vc_start', {
@@ -1057,7 +1067,7 @@ const drawVolume = () => {
 
 const triggerAudioEnd = (fromManual = false) => {
   if (!socket.value?.connected) {
-    if (fromManual) errorMsg.value = '后端未连接，请刷新页面'
+    if (fromManual) errorMsg.value = '暂时无法连接，请检查网络并刷新页面后再试'
     return
   }
   // 如果正在结束通话，不再触发
@@ -1486,7 +1496,7 @@ const displayMessages = computed(() => {
     <!-- ===== 顶栏：连接状态 / 通话状态 / 统计 ===== -->
     <div class="vc-topbar">
       <div class="vc-topbar-left">
-        <span class="socket-chip" :class="socketStatus">
+        <span v-if="isDeviceActive" class="socket-chip" :class="socketStatus">
           <span class="socket-dot" aria-hidden="true"></span>
           {{
             socketStatus === 'connected' ? '服务已连接'
@@ -1511,7 +1521,7 @@ const displayMessages = computed(() => {
 
     <!-- ===== 主区：通话舞台 + 对话侧栏 ===== -->
     <div class="vc-main">
-      <section class="vc-stage" :class="{ active: isDeviceActive }">
+      <section class="vc-stage" :class="{ active: isDeviceActive, 'voice-mode': isDeviceActive && !consentCamera }">
         <!-- 摄像头画面为主画面（大屏显示自己） -->
         <video
           ref="videoRef"
@@ -1524,19 +1534,17 @@ const displayMessages = computed(() => {
         <canvas ref="canvasRef" class="stage-canvas"></canvas>
         <span v-if="isDeviceActive && consentCamera" class="self-tag">我</span>
 
-        <!-- 摄像头关闭：如实说明当前处于语音模式，并给出重新开启的入口 -->
-        <div v-if="isDeviceActive && !consentCamera" class="stage-camoff">
-          <PhVideoCameraSlash :size="26" weight="duotone" aria-hidden="true" />
-          <p class="camoff-title">摄像头已关闭</p>
-          <p class="camoff-desc">只用语音也能继续，AI 仍然听得见你</p>
-          <button
-            type="button"
-            class="camoff-btn"
-            :disabled="cameraStarting"
-            @click="toggleCamera"
-          >
-            {{ cameraStarting ? '正在开启…' : '开启摄像头' }}
-          </button>
+        <!-- 摄像头关闭 = 语音模式。这一屏的主角是陪伴角色本身（它就是在听你说话的那个），
+             状态写在角色下面一行；摄像头是次级控制，放在下面控制条里，这里不再放第二个按钮。 -->
+        <div v-if="isDeviceActive && !consentCamera" class="stage-voice">
+          <div class="voice-companion">
+            <CompanionSprite :gender="gender" :state="callState" :empathy="isDistressed" />
+          </div>
+          <p class="co-status voice-state" :class="callState" role="status">
+            <span class="co-dot" :class="callState" aria-hidden="true"></span>
+            {{ isPaused ? '已暂停，准备好再继续' : STATE_TEXT[callState] }}
+          </p>
+          <p class="voice-note">语音陪伴中 · 摄像头关着，需要时在下面打开</p>
         </div>
 
         <div v-if="isLoading" class="stage-loading">
@@ -1569,7 +1577,7 @@ const displayMessages = computed(() => {
             <li class="consent-item">
               <PhEye :size="16" weight="duotone" aria-hidden="true" />
               <span class="consent-text">
-                <span class="consent-name">多模态线索</span>
+              <span class="consent-name">语气与表情</span>
                 <span class="consent-note">用语调与表情补充情境，可随时关闭</span>
               </span>
               <button
@@ -1577,7 +1585,7 @@ const displayMessages = computed(() => {
                 class="switch"
                 role="switch"
                 :aria-checked="consentMultimodal"
-                aria-label="多模态线索"
+                aria-label="语气与表情"
                 @click="consentMultimodal = !consentMultimodal"
               >
                 <span class="switch-track" :class="{ on: consentMultimodal }">
@@ -1614,14 +1622,15 @@ const displayMessages = computed(() => {
 
         <!-- 通话中：AI 教练卡通小人（右下角）随状态切换形态 -->
         <template v-if="isDeviceActive && !isLoading">
-          <div class="call-overlay">
+          <!-- 摄像头开着时，角色留在右下角；语音模式里它已经站到舞台中间，这里不再重复一次 -->
+          <div v-if="consentCamera" class="call-overlay">
             <div class="co-avatar">
               <CompanionSprite :gender="gender" :state="callState" :empathy="isDistressed" />
             </div>
             <div class="co-info">
-              <p class="co-status" :class="callState">
+              <p class="co-status" :class="callState" role="status">
                 <span class="co-dot" :class="callState"></span>
-                {{ STATE_TEXT[callState] }}
+                {{ isPaused ? '已暂停，准备好再继续' : STATE_TEXT[callState] }}
               </p>
             </div>
           </div>
@@ -1643,10 +1652,14 @@ const displayMessages = computed(() => {
           :class="idlePhase"
           role="status"
         >
-          <template v-if="idlePhase === 'nudge'">我在听，慢慢来，不着急</template>
+          <template v-if="idlePhase === 'nudge'">
+            <span>我在听，慢慢来，不着急。想好了再说，也可以按一下让计时重新起算。</span>
+            <button type="button" class="idle-keep-btn" @click="markUserActivity">我还在思考</button>
+          </template>
           <template v-else>
             <span>{{ idleElapsedSeconds }} 秒没有听到你的声音了，{{ idleCountdownLeft }} 秒后将自动结束通话</span>
-            <button type="button" class="idle-keep-btn" @click="markUserActivity">继续通话</button>
+            <button type="button" class="idle-keep-btn" @click="markUserActivity">我还在思考</button>
+            <button type="button" class="idle-keep-btn" @click="togglePause">先暂停一下</button>
           </template>
         </p>
 
@@ -1669,13 +1682,13 @@ const displayMessages = computed(() => {
         <!-- 多模态线索：开关 + 本轮线索（关闭后不再展示语调 / 表情 / 融合结果） -->
         <div v-if="isDeviceActive" class="signal-panel">
           <div class="signal-head">
-            <span class="signal-title">多模态线索</span>
+            <span class="signal-title">语气与表情</span>
             <button
               type="button"
               class="switch"
               role="switch"
               :aria-checked="consentMultimodal"
-              aria-label="多模态线索"
+              aria-label="语气与表情"
               @click="toggleMultimodal"
             >
               <span class="switch-track" :class="{ on: consentMultimodal }">

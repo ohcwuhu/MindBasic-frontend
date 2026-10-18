@@ -47,6 +47,9 @@ let refreshing: Promise<string | null> | null = null
 
 async function refreshAccessToken(): Promise<string | null> {
   try {
+    const shared = (window as Window & { FeisiAPI?: { refreshAccessToken: () => Promise<string> } }).FeisiAPI
+    if (shared) return await shared.refreshAccessToken()
+
     const resp = await axios.post<ApiEnvelope<{ accessToken: string }>>(
       '/api/v1/auth/refresh',
       {},
