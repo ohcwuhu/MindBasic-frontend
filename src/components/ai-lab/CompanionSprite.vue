@@ -16,9 +16,11 @@
           loop
           playsinline
           preload="auto"
-          @loadedmetadata="onVideoReady"
-          @canplaythrough="startVideoRender"
+          @loadeddata="startVideoRender"
+          @canplay="startVideoRender"
+          @error="onVideoError"
         />
+        <img v-if="!hasVideoFrame" :src="staticImageSrc" class="cs-frame active" draggable="false" alt="" />
         <canvas ref="canvasRef" class="cs-canvas" />
       </template>
 
@@ -72,32 +74,35 @@ const isVideoState = computed(() => {
 })
 
 // ====== 资源路径 ======
+const COMPANION_BASE = import.meta.env.VITE_COMPANION_BASE || '/companion'
 const videoSrc = computed(() => {
   const g = props.gender || 'girl'
   const s = props.state || 'listening'
-  if (s === 'thinking') return `/companion/${g}-thinking.mp4`
-  if (s === 'speaking') return `/companion/${g}-speaking.mp4`
+  if (s === 'thinking') return `${COMPANION_BASE}/${g}-thinking.mp4`
+  if (s === 'speaking') return `${COMPANION_BASE}/${g}-speaking.mp4`
   // idle / listening → 呼吸视频
-  return `/companion/${g}-breath.mp4`
+  return `${COMPANION_BASE}/${g}-breath.mp4`
 })
 
 function stateImage(g: string, s: string): string | null {
-  if (s === 'thinking') return `/companion/${g}-thinking.png`
-  if (s === 'speaking') return `/companion/${g}-speaking.png`
-  if (s === 'empathy') return `/companion/${g}-empathy.png`
+  if (s === 'thinking') return `${COMPANION_BASE}/${g}-thinking.png`
+  if (s === 'speaking') return `${COMPANION_BASE}/${g}-speaking.png`
+  if (s === 'empathy') return `${COMPANION_BASE}/${g}-empathy.png`
   return null
 }
 const staticImageSrc = computed(() => {
   const g = props.gender || 'girl'
   const s = props.state || 'listening'
   const img = stateImage(g, s)
-  return img || `/companion/${g}.png` // fallback
+  return img || `${COMPANION_BASE}/${g}.png` // fallback
 })
 
 // ====== 视频源引用 ======
 const videoRef = ref<HTMLVideoElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
+const hasVideoFrame = ref(false)
+let resizeObserver: ResizeObserver | null = null
 let animId: number | null = null
 let ctx: CanvasRenderingContext2D | null = null
 let canvasW = 0
@@ -110,7 +115,7 @@ const BLACK_THRESHOLD = 30
 function startVideoRender() {
   const video = videoRef.value
   const cvs = canvasRef.value
-  if (!video || !cvs) return
+  if (!video || !cvs || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
 
   // 设置 canvas 尺寸为容器实际大小
   const rect = cvs.parentElement?.getBoundingClientRect()
@@ -125,12 +130,18 @@ function startVideoRender() {
   if (!ctx) return
 
   // 播放视频
-  video.play().catch(() => {})
+  video.muted = true
+  video.play().catch((error: unknown) => {
+    // 切换素材会取消旧的 play 请求，不应影响新素材。
+    if (video !== videoRef.value) return
+    console.warn('陪伴角色视频未能播放，保留静态角色', error)
+    hasVideoFrame.value = false
+  })
 
   // 开始 rAF 渲染循环
   function render() {
     if (!video || !cvs || !ctx) return
-    if (!video.paused && !video.ended && ctx && cvs.width > 0) {
+    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && !video.ended && cvs.width > 0 && cvs.height > 0) {
       // 0. 透明清屏（黑边在抠像后变透明）
       ctx.clearRect(0, 0, canvasW, canvasH)
 
@@ -154,6 +165,7 @@ function startVideoRender() {
         }
       }
       ctx.putImageData(imageData, 0, 0)
+      hasVideoFrame.value = true
     }
     animId = requestAnimationFrame(render)
   }
@@ -168,12 +180,16 @@ function stopVideoRender() {
   videoRef.value?.pause()
 }
 
-function onVideoReady() {
-  startVideoRender()
+function onVideoError() {
+  stopVideoRender()
+  hasVideoFrame.value = false
+  console.warn('陪伴角色视频加载失败', videoRef.value?.error)
 }
 
 // 监听视频源变化（idle↔thinking↔speaking 切换时重启渲染）
 watch(videoSrc, () => {
+  hasVideoFrame.value = false
+  canvasRef.value?.getContext('2d')?.clearRect(0, 0, canvasW, canvasH)
   stopVideoRender()
 })
 
@@ -254,16 +270,15 @@ import { nextTick } from 'vue'
 
 onMounted(() => {
   scheduleBlink()
-  // 如果初始状态是视频状态，等 DOM 更新后启动渲染
-  if (isVideoState.value) {
-    nextTick(() => {
-      // 给 video 一点时间加载
-      setTimeout(startVideoRender, 200)
-    })
-  }
+  // 面板初始隐藏或尺寸变化后，重新按实际尺寸绘制。
+  resizeObserver = new ResizeObserver(() => startVideoRender())
+  const container = canvasRef.value?.parentElement
+  if (container) resizeObserver.observe(container)
+  startVideoRender()
 })
 
 onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
   stopVideoRender()
   if (blinkTimerId !== null) clearTimeout(blinkTimerId)
   if (blinkHideTimerId !== null) clearTimeout(blinkHideTimerId)
@@ -320,11 +335,16 @@ onBeforeUnmount(() => {
 
 /* ── 隐藏的视频源元素 ── */
 .cs-video-src {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ── Canvas 画布（视频渲染输出） ── */
 .cs-canvas {
+  position: relative;
   width: 100%;
   height: 100%;
   display: block;

@@ -184,6 +184,7 @@ const cameraNotice = ref('')
 
 // TTS 音频播放（按句子级完整收集后再入播放队列，避免一句话被切成半段）
 let currentAudio: HTMLAudioElement | null = null
+let discardTTS = false
 let currentSentenceChunks: ArrayBuffer[] = []  // 正在接收的"当前句"的所有分片（vc_tts_start → vc_tts_done 之间累积）
 const sentencePlayQueue: Blob[] = []           // 句子级播放队列：每项是一句完整的 MP3 Blob
 const isPlayingTTS = ref(false)
@@ -285,6 +286,7 @@ const connectSocket = () => {
 
   // 状态变更
   socket.value.on('vc_state_change', (data: { state: string }) => {
+    if (data.state === 'thinking') discardTTS = false
     callState.value = data.state as CallState
     ensureIdleWatch()  // 兜底：通话中但计时器没起来时补上（见函数注释）
     if (data.state === 'listening') {
@@ -379,6 +381,7 @@ const connectSocket = () => {
 
   // TTS 开始（一句）：重置"当前句分片缓冲"
   socket.value.on('vc_tts_start', (_data: { text: string }) => {
+    if (discardTTS || isPaused.value || !isDeviceActive.value) return
     currentSentenceChunks = []
     // 记录 TTS 启动时间，用于启动后 700ms 内的"回音保护期"（防止打断误触发）
     ttsLastStartedAt = Date.now()
@@ -387,6 +390,7 @@ const connectSocket = () => {
 
   // TTS 音频分片：累积到"当前句缓冲"
   socket.value.on('vc_tts_chunk', (data: { data: string; format: string }) => {
+    if (discardTTS || isPaused.value || !isDeviceActive.value) return
     if (data.format === 'mp3') ttsMimeType = 'audio/mp3'
     const raw = atob(data.data)
     const buf = new ArrayBuffer(raw.length)
@@ -397,6 +401,7 @@ const connectSocket = () => {
 
   // TTS 完成（一句）：把"当前句所有分片"合并为完整 Blob，推入句子播放队列
   socket.value.on('vc_tts_done', (_data: { text: string }) => {
+    if (discardTTS || isPaused.value || !isDeviceActive.value) return
     if (currentSentenceChunks.length === 0) return
     // 合并当前句的所有分片 → 得到一句完整的 MP3 Blob
     const sentenceBlob = new Blob(currentSentenceChunks, { type: ttsMimeType })
@@ -427,6 +432,8 @@ const connectSocket = () => {
   socket.value.on('vc_error', (data: { stage: string; message: string }) => {
     console.error('[VC] Error:', data)
     errorMsg.value = `[${data.stage}] ${data.message}`
+    // 语音失败不代表文字管线结束，仍由服务端 listening 事件收尾。
+    if (data.stage === 'tts') { currentSentenceChunks = []; return }
     // 出错时也要重置状态，恢复录音
     isProcessing = false
     callState.value = 'listening'
@@ -506,6 +513,7 @@ const playNextSentence = () => {
 }
 
 const stopTTSPlayback = () => {
+  discardTTS = true
   // 清空：正在接收的句子分片 + 句子播放队列 + 当前播放中的 Audio
   currentSentenceChunks = []
   // 清空数组（不改变引用，保持响应式）
@@ -580,6 +588,7 @@ const onVideoReady = () => {
   isLoading.value = false
   isDeviceActive.value = true
   callEstablished = true
+  discardTTS = false
   // 通知后端开始通话，并如实声明本次采集的授权范围
   // （摄像头默认关闭，只有用户主动开启后才会申请设备权限）
   socket.value?.emit('vc_start', {
