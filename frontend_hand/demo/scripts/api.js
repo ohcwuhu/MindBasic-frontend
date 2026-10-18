@@ -48,7 +48,24 @@
     window.location.replace('login.html?next=' + encodeURIComponent(here + window.location.search))
   }
 
-  function request(method, path, body) {
+  var refreshing = null
+  function refreshAccessToken() {
+    if (!refreshing) {
+      refreshing = fetch('/api/v1/auth/refresh', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }, body: '{}',
+      }).then(function (response) {
+        return response.json().then(function (payload) {
+          if (!response.ok || payload.code !== 'OK' || !payload.data.accessToken) throw new Error('登录续期失败')
+          window.localStorage.setItem('mb_access_token', payload.data.accessToken)
+          return payload.data.accessToken
+        })
+      }).then(function (value) { refreshing = null; return value }, function (error) { refreshing = null; throw error })
+    }
+    return refreshing
+  }
+
+  function request(method, path, body, retried) {
     var headers = { 'Content-Type': 'application/json' }
     var accessToken = token()
     if (accessToken) headers.Authorization = 'Bearer ' + accessToken
@@ -65,6 +82,15 @@
         })
         .then(function (payload) {
           if (!response.ok || (payload && payload.code && payload.code !== 'OK')) {
+            if (response.status === 401 && payload.code === 'TOKEN_EXPIRED' && !retried) {
+              var renewal = token() && token() !== accessToken ? Promise.resolve(token()) : refreshAccessToken()
+              return renewal.then(function () {
+                return request(method, path, body, true)
+              }, function (error) {
+                sessionExpired()
+                throw error
+              })
+            }
             var message = (payload && payload.message) || '请求失败（' + response.status + '）'
             /* 把状态码与后端的错误码一起带上：调用方要能分辨 401 / 403
                （例如管理工作台对非管理员要请回首页，而不是只显示一句文案） */
@@ -181,6 +207,7 @@
 
   window.FeisiAPI = {
     live: live,
+    refreshAccessToken: refreshAccessToken,
     get: function (path) {
       return request('GET', path)
     },

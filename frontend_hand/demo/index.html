@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="styles/home.css" />
   </head>
   <body>
+    <script src="scripts/api.js"></script>
     <script src="scripts/auth-guard.js"></script>
     <script src="scripts/session-nav.js"></script>
     <a class="skip-link" href="#main">跳到主要内容</a>
@@ -76,11 +77,17 @@
                 <span>开始聊聊</span>
                 <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
               </a>
-              <a class="link-more" href="articles.html">
+              <a class="link-more" href="how-to-use.html">
                 先看看怎么用
                 <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
               </a>
             </div>
+            <!-- 进门之前先说清楚要用到什么：麦克风是必需的，摄像头可选；
+                 不方便出声的人，旁边就是写字的那扇门。 -->
+            <p class="hero__need">
+              「开始聊聊」是语音陪伴：需要麦克风，摄像头可选，通话里随时能关。
+              不方便说话？<a class="link-quiet" href="emotion-journal.html">写下此刻就好 →</a>
+            </p>
             <ul class="hero__chips">
               <li>不用注册也能先逛</li>
               <li>AI 教练 7×24 在线</li>
@@ -108,7 +115,7 @@
               <img class="entry__art" src="assets/mood-calm.webp" width="300" height="269" alt="表情：平静" />
               <div class="entry__text">
                 <h2 class="entry__title">情绪日记</h2>
-                <p class="entry__desc">记下今天的心情，会收到一句接住你的话。</p>
+                <p class="entry__desc">不方便说话？写下此刻。今天的心情，会收到一句接住你的话。</p>
               </div>
               <a class="entry__go" href="emotion-journal.html" aria-label="进入情绪日记">
                 <img class="arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />

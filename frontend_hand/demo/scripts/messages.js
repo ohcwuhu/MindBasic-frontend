@@ -7,7 +7,7 @@
      · `POST /chat/conversations/{id}/messages` { content }
      · `POST /chat/conversations/{id}/read` —— 打开会话时标已读
    原前端还挂着 socket（`chat:join` / `chat:send` / `chat:message`）做实时；
-   演示站这一页先走 POST + 刷新，实时那一层接回原前端时用它自己的实现。
+   本页每 3 秒自动读取新消息，保留已加载的历史；页面隐藏时暂停刷新。
    没有后端：页面里写好的示例，发送在页内生效。 */
 ;(function () {
   'use strict'
@@ -33,6 +33,14 @@
   var activeId = 0
   var messages = []
   var busy = false
+  var generation = 0, loading = false, polling = false
+  var olderButton = document.querySelector('[data-load-older]')
+  var olderBusy = false
+  function mergeMessages(rows) {
+    var known = new Map(messages.map(function (item) { return [String(item.id), item] }))
+    rows.forEach(function (item) { known.set(String(item.id), item) })
+    messages = Array.from(known.values()).sort(function (a, b) { return Number(a.id) - Number(b.id) })
+  }
 
   function say(text) {
     if (statusLine) statusLine.textContent = text || ''
@@ -91,7 +99,7 @@
       limitText.textContent = '这一轮的免费咨询已经用完（教练回了 ' + conv.coachReplyCount + ' 条）。' +
         '想继续聊，可以看这位教练的服务与可约时段。'
     }
-    if (submit) submit.disabled = !!blocked || busy
+    if (submit) submit.disabled = !!blocked || busy || loading
   }
 
   function drawConversations() {
@@ -117,33 +125,77 @@
 
   function open(id) {
     activeId = Number(id)
+    var idAtOpen = activeId, version = ++generation
+    olderBusy = false
+    if (olderButton) olderButton.disabled = false
     if (!live) {
       messages = examples[activeId] || []
-      drawConversations()
-      drawThread()
-      say('设计演示：这两位教练的会话是示例，发送会在页内生效。')
+      drawConversations(); drawThread()
+      say('设计演示：会话是示例，发送会在页内生效。')
       return
     }
-    messages = []
-    drawThread()
+    messages = []; loading = true
+    if (olderButton) olderButton.hidden = true
+    drawConversations(); drawThread()
     say('正在读取这一位的消息…')
-    api
-      .get('/chat/conversations/' + activeId + '/messages')
-      .then(function (data) {
-        messages = (data && data.items) || []
-        drawThread()
-        say('')
-        return api.post('/chat/conversations/' + activeId + '/read').catch(function () {
-          /* 已读失败不算事 */
-        })
-      })
-      .catch(function (error) {
-        say((error && error.message) || '消息没读出来。')
-      })
+    api.get('/chat/conversations/' + idAtOpen + '/messages').then(function (data) {
+      if (version !== generation) return
+      mergeMessages((data && data.items) || [])
+      loading = false; drawThread(); say('')
+      if (olderButton) olderButton.hidden = messages.length < 50
+      return markRead(idAtOpen)
+    }).catch(function (error) {
+      if (version !== generation) return
+      loading = false; drawThread(); say(error.message || '消息没读出来。')
+    })
+  }
+
+  function markRead(id) {
+    return api.post('/chat/conversations/' + id + '/read').then(function () {
+      var conv = conversations.find(function (item) { return Number(item.id) === id })
+      if (conv) conv.unreadCount = 0
+      drawConversations()
+    }).catch(function () {})
+  }
+
+  if (olderButton) olderButton.addEventListener('click', function () {
+    if (!live || olderBusy || !messages.length) return
+    var id = activeId, version = generation
+    olderBusy = true; olderButton.disabled = true
+    api.get('/chat/conversations/' + id + '/messages?beforeId=' + messages[0].id).then(function (data) {
+      if (version !== generation) return
+      var rows = (data && data.items) || []
+      mergeMessages(rows); drawThread(); olderButton.hidden = rows.length < 50
+    }).catch(function (error) { if (version === generation) say(error.message) }).then(function () {
+      if (version === generation) { olderBusy = false; olderButton.disabled = false }
+    })
+  })
+
+  function refreshMessages() {
+    if (!live || polling || loading || document.hidden || !activeId) return
+    var id = activeId, version = generation
+    polling = true
+    Promise.all([api.get('/chat/conversations'), api.get('/chat/conversations/' + id + '/messages')]).then(function (data) {
+      if (version !== generation) return
+      conversations = Array.isArray(data[0]) ? data[0] : data[0].items || []
+      mergeMessages(data[1].items || []); drawConversations(); drawThread()
+      say('消息已更新。')
+      return markRead(id)
+    }).catch(function (error) { if (version === generation) say('自动更新失败：' + error.message) })
+      .then(function () { polling = false })
+  }
+  if (live) {
+    var refreshTimer = setInterval(refreshMessages, 3000)
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshMessages() })
+    window.addEventListener('pagehide', function () { clearInterval(refreshTimer) })
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) { refreshTimer = setInterval(refreshMessages, 3000); refreshMessages() }
+    })
   }
 
   function send(content) {
-    if (busy || !activeId) return
+    if (busy || loading || !activeId) return
+    var sendingId = activeId, sendVersion = generation
     var conv = active()
     if (conv && !conv.unlocked && Number(conv.coachReplyCount) >= Number(conv.freeLimit)) {
       fail('这一轮的免费咨询已经用完，先去教练档案看看服务。')
@@ -159,26 +211,28 @@
       createdAt: new Date().toISOString(),
     }
     var request = live
-      ? api.post('/chat/conversations/' + activeId + '/messages', { content: content })
+      ? api.post('/chat/conversations/' + sendingId + '/messages', { content: content })
       : Promise.resolve(optimistic)
     request
       .then(function (message) {
-        messages = messages.concat([message || optimistic])
+        if (sendVersion === generation) {
+          mergeMessages([message || optimistic])
+          if (form.elements.content.value.trim() === content) form.reset()
+          drawThread()
+          say('发出去了。新回复会自动更新。')
+        }
         if (conv) {
           conv.lastMessagePreview = content
           conv.lastMessageAt = (message || optimistic).createdAt
         }
-        form.reset()
-        drawThread()
         drawConversations()
-        say('发出去了。教练回你之后会出现在这里。')
       })
       .catch(function (error) {
-        fail((error && error.message) || '没发出去，再试一次。')
+        if (sendVersion === generation) fail((error && error.message) || '没发出去，再试一次。')
       })
       .then(function () {
         busy = false
-        if (submit) submit.disabled = false
+        drawThread()
       })
   }
 

@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="styles/pages.css" />
   </head>
   <body>
+    <script src="scripts/api.js"></script>
     <script src="scripts/auth-guard.js"></script>
     <script src="scripts/session-nav.js"></script>
     <a class="skip-link" href="#main">跳到主要内容</a>
@@ -69,6 +70,7 @@
                 <p class="panel__note" data-thread-note>最近一次 2026/10/11 20:31</p>
               </div>
 
+              <button class="link-quiet" type="button" data-load-older hidden>加载更早消息</button>
               <div class="convo" data-messages>
                 <div class="convo__msg convo__msg--they">
                   <div class="convo__bubble">今天那一段里，你提到「一想到就心跳快」。下次可以试着在那半分钟里只管呼吸，不急着评价自己。</div>
@@ -149,7 +151,6 @@
         </nav>
       </div>
     </footer>
-    <script src="scripts/api.js"></script>
     <script src="scripts/messages.js"></script>
   </body>
 </html>

@@ -32,15 +32,6 @@
     }
   }
 
-  function clearToken() {
-    try {
-      window.localStorage.removeItem('mb_access_token')
-      window.localStorage.removeItem('feisi_backend')
-    } catch (error) {
-      /* 忽略 */
-    }
-  }
-
   function goLogin() {
     var next = here + window.location.search
     window.location.replace('login.html?next=' + encodeURIComponent(next))
@@ -65,18 +56,10 @@
     return
   }
 
-  /* 有 token：顺手验一下是否还有效（失效就清掉、回登录页） */
-  fetch('/api/v1/users/me', {
-    headers: { Authorization: 'Bearer ' + accessToken },
-    credentials: 'include',
-  })
-    .then(function (response) {
-      if (response.status === 401) {
-        clearToken()
-        goLogin()
-      }
+  /* 与页面共享同一次刷新请求，避免守卫抢先清掉仍可续期的登录。 */
+  if (window.FeisiAPI) {
+    window.FeisiAPI.get('/users/me').catch(function () {
+      /* 401 的恢复与跳转由数据层处理；网络失败不阻止查看页面。 */
     })
-    .catch(function () {
-      /* 后端暂时不可达就当没这回事，别把人挡在外面 */
-    })
+  }
 })()

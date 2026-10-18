@@ -1,0 +1,23 @@
+{
+  "name": "feisi-tongxing-frontend-hand",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config demo/vite.config.mjs",
+    "preview": "vite --config demo/vite.config.mjs",
+    "preview:static": "python -m http.server 5179 --bind 127.0.0.1 --directory demo",
+    "build": "node demo/vue/build.mjs"
+  },
+  "devDependencies": {
+    "vite": "^6.4.4",
+    "@vitejs/plugin-vue": "^5.2.1"
+  },
+  "dependencies": {
+    "vue": "^3.5.13",
+    "@phosphor-icons/vue": "^2.1.7",
+    "axios": "^1.7.9",
+    "pinia": "^2.3.1",
+    "socket.io-client": "^4.8.3",
+    "html-to-image": "^1.11.13"
+  }
+}

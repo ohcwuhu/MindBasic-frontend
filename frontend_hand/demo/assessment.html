@@ -11,7 +11,7 @@
     <link rel="preload" as="image" href="assets/field-watercolour.webp" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>成长测评 · 斐思同行</title>
-    <meta name="description" content="斐思同行 · 成长测评：情绪、投入、关系、意义、行动五维自评，十个问题，一份可以对照着看的成长报告。" />
+    <meta name="description" content="斐思同行 · 成长测评：按真实量表完成成长自评，保存结果并回看自己的变化。" />
     <meta name="theme-color" content="#FFFAF6" />
     <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
     <link rel="stylesheet" href="styles/tokens.css" />
@@ -19,8 +19,16 @@
     <link rel="stylesheet" href="styles/ui.css" />
     <link rel="stylesheet" href="styles/base.css" />
     <link rel="stylesheet" href="styles/pages.css" />
+    <script>
+      try {
+        if (new URLSearchParams(location.search).has('live') || localStorage.getItem('feisi_backend') === 'live')
+          document.documentElement.setAttribute('data-live-pending', '');
+      } catch (error) { /* 静态预览仍可查看 */ }
+    </script>
+    <style>html[data-live-pending] .ground { visibility: hidden; }</style>
   </head>
   <body>
+    <script src="scripts/api.js"></script>
     <script src="scripts/auth-guard.js"></script>
     <script src="scripts/session-nav.js"></script>
     <a class="skip-link" href="#main">跳到主要内容</a>
@@ -59,20 +67,21 @@
             <span>成长测评</span>
           </nav>
           <h1 class="plate__title">五维成长自评</h1>
-          <p class="plate__lede">十个问题，按最近两周真实的感受选。没有对错，也不打分给你看。</p>
+          <p class="plate__lede">十个问题，按最近两周真实的感受选。没有对错，结果只用于自我回顾。</p>
         </div>
       </section>
 
       <div class="ground">
         <div class="wrap">
+          <p class="panel__note data-mode" data-data-mode role="status">设计演示 · 以下内容为示例</p>
           <section class="cols cols--aside">
             <section class="panel" aria-labelledby="quiz-title">
               <div class="panel__head panel__head--row">
                 <h2 class="panel__title" id="quiz-title">按最近两周选</h2>
-                <p class="panel__note">已答 3 / 10</p>
+                <p class="panel__note" data-quiz-status>设计演示 · 示例作答</p>
               </div>
 
-              <span class="meter" style="--meter-colour: var(--green-deep)"><i style="width: 30%"></i></span>
+              <span class="meter" data-answer-progress role="progressbar" aria-label="作答进度" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" style="--meter-colour: var(--green-deep)"><i style="width: 0%"></i></span>
 
               <div class="quiz">
                 <div class="q">
@@ -246,46 +255,24 @@
                 </div>
               </div>
 
-              <p class="scale__legend">
+              <p class="scale__legend" data-scale-legend>
                 <span>1 · 完全不符合</span>
                 <span>3 · 说不上来</span>
                 <span>5 · 完全符合</span>
               </p>
 
-              <p class="panel__foot">
-                十个问题为示例题目，接入后来自平台测评模板（`GET /growth-assessments/template`）。
+              <p class="panel__foot" data-template-note>
+                设计演示题目；登录并接入服务后使用真实量表。
               </p>
             </section>
 
             <aside class="stack">
               <section class="panel" aria-labelledby="last-title">
                 <div class="panel__head panel__head--row">
-                  <h2 class="panel__title" id="last-title">上一次的结果</h2>
-                  <p class="panel__note">2026-10-05</p>
+                  <h2 class="panel__title" id="last-title" data-result-title>上一次的结果</h2>
                 </div>
-                <ul class="dims">
-                  <li class="dim" style="--meter-colour: #e0a9bd">
-                    <img src="assets/dim-emotion.webp" width="400" height="381" alt="" aria-hidden="true" />
-                    <div>
-                      <p class="dim__label"><strong>情绪</strong><em>68</em></p>
-                      <span class="meter"><i style="width: 68%"></i></span>
-                    </div>
-                  </li>
-                  <li class="dim" style="--meter-colour: #e7a86a">
-                    <img src="assets/dim-engagement.webp" width="400" height="373" alt="" aria-hidden="true" />
-                    <div>
-                      <p class="dim__label"><strong>投入</strong><em>54</em></p>
-                      <span class="meter"><i style="width: 54%"></i></span>
-                    </div>
-                  </li>
-                  <li class="dim" style="--meter-colour: #93c0d6">
-                    <img src="assets/dim-relation.webp" width="400" height="307" alt="" aria-hidden="true" />
-                    <div>
-                      <p class="dim__label"><strong>关系</strong><em>61</em></p>
-                      <span class="meter"><i style="width: 61%"></i></span>
-                    </div>
-                  </li>
-                </ul>
+                <p class="panel__note" data-result-note>设计演示结果</p>
+                <ul class="dims" data-assessment-result><li class="panel__note">设计演示 · 结果仅作示例</li></ul>
                 <p class="panel__foot"><a class="link-quiet" href="my-growth.html">看完整报告</a></p>
               </section>
 
@@ -294,13 +281,13 @@
                   <h2 class="panel__title">这份自评是什么</h2>
                 </div>
                 <p class="prose">
-                  它是一面镜子，不是一张诊断书：只看你最近两周的状态，帮你找到最想先动的那一维。
+                  它是一面镜子，不是一张诊断书：回顾量表所描述的状态，帮你找到最想先动的那一维。
                   分数高低不代表好坏，变化的方向才有意义。
                 </p>
-                <a class="btn btn--block" href="my-growth.html">
+                <button class="btn btn--block" type="button" data-assessment-submit disabled>
                   <span>提交，看结果</span>
                   <img class="btn__arrow" src="assets/prop-arrow.webp" width="320" height="156" alt="" aria-hidden="true" />
-                </a>
+                </button>
                 <p class="panel__foot">
                   如果最近常有伤害自己的念头，请先拨打 <a href="tel:12356">12356</a>，或前往就近医院急诊。
                 </p>
@@ -326,7 +313,7 @@
         <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：题目与分数为示例内容</p>
       </div>
     </footer>
-    <script src="scripts/api.js"></script>
+    <script src="scripts/assessment-results.js"></script>
     <script src="scripts/assessment.js"></script>
   </body>
 </html>

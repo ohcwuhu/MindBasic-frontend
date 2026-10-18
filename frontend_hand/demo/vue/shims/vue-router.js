@@ -11,6 +11,7 @@ const PAGES = {
   '/self-coaching': 'self-coaching.html',
   '/self-coaching/history': 'self-coaching-history.html',
   '/emotion-journal': 'emotion-journal.html',
+  '/my': 'my-growth.html',
   '/coaches': 'coaches.html',
   '/terms': 'terms.html',
 }

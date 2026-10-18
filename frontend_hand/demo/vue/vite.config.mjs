@@ -14,17 +14,16 @@
    另外 shims/audio-upload.js 把「上传录音」这个接口在页内接住。
 
    两个入口（IIFE 不支持多入口，所以跑两遍）：
-     自我教练   node node_modules/vite/bin/vite.js build
-                → ../scripts/self-coaching-app.js（IIFE，双击 file:// 也能跑）+ 同名 .css
-     情绪日记   $env:FEISI_APP="journal"; node node_modules/vite/bin/vite.js build
-                → ../scripts/emotion-journal-app.js + 同名 .css */
+     在 frontend_hand 根目录执行 npm run build，同时生成两个入口与角色素材。
+     → demo/scripts/self-coaching-app.js / emotion-journal-app.js + 同名 .css */
 
 import { fileURLToPath, URL } from 'node:url'
 
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
+import { originalRoot } from './source-root.mjs'
 
-const ORIGINAL = fileURLToPath(new URL('../../../项目代码/MindBasic-frontend', import.meta.url))
+const ORIGINAL = fileURLToPath(originalRoot)
 const SHIMS = fileURLToPath(new URL('./shims', import.meta.url))
 
 /** 两个页面各自一个入口，各自一份 IIFE 产物 */
@@ -37,16 +36,21 @@ const app = APPS[process.env.FEISI_APP] ?? APPS.coach
 export default defineConfig({
   plugins: [vue()],
   /* 页面侧没有 Node 的 process，把依赖里那几个环境判断钉成生产值 */
-  define: { 'process.env.NODE_ENV': JSON.stringify('production') },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+    'import.meta.env.VITE_COMPANION_BASE': JSON.stringify('/assets/characters'),
+  },
   resolve: {
+    dedupe: ['vue', 'pinia', 'axios', 'socket.io-client', '@phosphor-icons/vue', 'html-to-image'],
     alias: [
+      { find: '@original-api-client', replacement: `${ORIGINAL}/src/api/client.ts` },
       { find: '@/api/client', replacement: `${SHIMS}/api-client.js` },
       { find: 'vue-router', replacement: `${SHIMS}/vue-router.js` },
       { find: '@/', replacement: `${ORIGINAL}/src/` },
     ],
   },
   build: {
-    outDir: '../scripts',
+    outDir: fileURLToPath(new URL('../scripts', import.meta.url)),
     emptyOutDir: false,
     cssCodeSplit: false,
     lib: {

@@ -19,8 +19,16 @@
     <link rel="stylesheet" href="styles/ui.css" />
     <link rel="stylesheet" href="styles/base.css" />
     <link rel="stylesheet" href="styles/pages.css" />
+    <script>
+      try {
+        if (new URLSearchParams(location.search).has('live') || localStorage.getItem('feisi_backend') === 'live')
+          document.documentElement.setAttribute('data-live-pending', '');
+      } catch (error) { /* 静态预览仍可查看 */ }
+    </script>
+    <style>html[data-live-pending] .ground { visibility: hidden; }</style>
   </head>
-  <body>
+  <body class="page-growth">
+    <script src="scripts/api.js"></script>
     <script src="scripts/auth-guard.js"></script>
     <script src="scripts/session-nav.js"></script>
     <a class="skip-link" href="#main">跳到主要内容</a>
@@ -43,7 +51,8 @@
         </nav>
 
         <div class="masthead__actions">
-          <a class="link-quiet" href="profile.html">个人资料</a>
+          <!-- 「我的成长」就是这一页；账户设置另开一个入口，别混在一起 -->
+          <a class="link-quiet" href="profile.html">账户设置</a>
         </div>
       </div>
     </header>
@@ -63,31 +72,48 @@
 
       <div class="ground">
         <div class="wrap">
-          <section class="panel" aria-labelledby="streak-title">
+          <p class="panel__note data-mode" data-data-mode role="status">设计演示 · 以下内容为示例</p>
+          <!-- 成长先给「下一步做什么」和「上一次做得怎么样」，次数与徽章放到后面 -->
+          <section class="panel panel--action" aria-labelledby="next-action-title" data-action-panel>
             <div class="panel__head panel__head--row">
-              <h2 class="panel__title" id="streak-title">这一周</h2>
-              <p class="panel__note">再记两天，解锁「连续 7 天」徽章。</p>
+              <h2 class="panel__title" id="next-action-title">下一步行动</h2>
+              <p class="panel__note" data-action-note>设计演示 · 示例行动</p>
             </div>
 
-            <div class="streak-head">
-              <p class="streak-head__count"><strong>5</strong> 天连续记录</p>
-              <ol class="week" aria-label="最近七天记录情况">
-                <li class="is-on" aria-label="已记录">一</li>
-                <li class="is-on" aria-label="已记录">二</li>
-                <li class="is-on" aria-label="已记录">三</li>
-                <li class="is-on" aria-label="已记录">四</li>
-                <li class="is-on is-today" aria-label="今天，已记录">五</li>
-                <li aria-label="未记录">六</li>
-                <li aria-label="未记录">日</li>
-              </ol>
-              <a class="link-quiet" href="emotion-journal.html">写今天这一条</a>
+            <div class="action-card" data-action-card>
+              <p class="action-card__text" data-action-text>今晚先列出论文的三个待办。</p>
+              <dl class="action-card__meta">
+                <dt>什么时候做</dt>
+                <dd data-action-when>今晚睡前</dd>
+                <dt>怎么算完成</dt>
+                <dd data-action-condition>三个待办都写在纸上，拍照存下来</dd>
+              </dl>
+              <p class="panel__note" data-action-source>
+                来自 10 月 8 日那次对话的收束 · <a class="link-quiet" href="ai-conversation.html?id=1">看那次对话</a>
+              </p>
             </div>
 
-            <ul class="stats streak-head__stats">
-              <li class="stat"><strong>24</strong><span>条情绪日记</span></li>
-              <li class="stat"><strong>9</strong><span>次 AI 对话</span></li>
-              <li class="stat"><strong>2</strong><span>次成长测评</span></li>
-            </ul>
+            <div class="action-review" data-action-review>
+              <p class="action-review__ask">这一步做得怎么样了？</p>
+              <div class="action-review__buttons">
+                <button class="btn btn--paper btn--small" type="button" data-review="DONE">做完了</button>
+                <button class="btn btn--paper btn--small" type="button" data-review="PARTIAL">做了一部分</button>
+                <button class="btn btn--paper btn--small" type="button" data-review="NOT_YET">还没开始</button>
+              </div>
+              <p class="panel__note" role="status" data-review-status>
+                回答会记进今天的打卡，成为这条成长线上的一次反馈。一天记一条。
+              </p>
+              <div class="action-adjust" data-action-adjust hidden>
+                <label class="action-adjust__field">
+                  <span>把这一步改小一点</span>
+                  <input class="input" maxlength="60" data-action-smaller placeholder="例如：只列一个待办" />
+                </label>
+                <button class="btn btn--paper btn--small" type="button" data-action-save-small>
+                  记下这个小一点的版本
+                </button>
+                  <button class="link-quiet" type="button" data-action-save-not-yet>只记录还没开始</button>
+              </div>
+            </div>
           </section>
 
           <section class="section cols cols--aside">
@@ -203,6 +229,33 @@
                 <p class="panel__foot">测评分数为示例数据。</p>
               </section>
 
+              <section class="panel" aria-labelledby="streak-title">
+                <div class="panel__head panel__head--row">
+                  <h2 class="panel__title" id="streak-title">这一周</h2>
+                  <p class="panel__note">再记两天，解锁「连续 7 天」徽章。</p>
+                </div>
+
+                <div class="streak-head">
+                  <p class="streak-head__count"><strong>5</strong> 天连续记录</p>
+                  <ol class="week" aria-label="最近七天记录情况">
+                    <li class="is-on" aria-label="已记录">一</li>
+                    <li class="is-on" aria-label="已记录">二</li>
+                    <li class="is-on" aria-label="已记录">三</li>
+                    <li class="is-on" aria-label="已记录">四</li>
+                    <li class="is-on is-today" aria-label="今天，已记录">五</li>
+                    <li aria-label="未记录">六</li>
+                    <li aria-label="未记录">日</li>
+                  </ol>
+                  <a class="link-quiet" href="emotion-journal.html">写今天这一条</a>
+                </div>
+
+                <ul class="stats streak-head__stats">
+                  <li class="stat"><strong>24</strong><span>条情绪日记</span></li>
+                  <li class="stat"><strong>9</strong><span>次 AI 对话</span></li>
+                  <li class="stat"><strong>2</strong><span>次成长测评</span></li>
+                </ul>
+              </section>
+
               <section class="panel" aria-labelledby="badge-title">
                 <div class="panel__head panel__head--row">
                   <h2 class="panel__title" id="badge-title">已经盖下的章</h2>
@@ -275,7 +328,7 @@
         <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：记录与分数为示例内容</p>
       </div>
     </footer>
-    <script src="scripts/api.js"></script>
+    <script src="scripts/assessment-results.js"></script>
     <script src="scripts/my-growth.js"></script>
   </body>
 </html>

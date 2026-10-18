@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <!-- 首帧底色 + 预取背景图：样式表还没到时画布不该先白一下（data-first-paint） -->
+    <style data-first-paint>
+      html {
+        background: #f6f5e3;
+      }
+    </style>
+    <link rel="preload" as="image" href="assets/field-watercolour.webp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>怎么用 · 斐思同行</title>
+    <meta
+      name="description"
+      content="斐思同行 · 怎么用：三步走完一次陪伴——说出来、聊完收个尾、明天回来看一眼。语音需要麦克风，摄像头可选，不想说话也可以只写日记。"
+    />
+    <meta name="theme-color" content="#FFFAF6" />
+    <link rel="icon" href="assets/logo-sprout.png" type="image/png" />
+    <link rel="stylesheet" href="styles/tokens.css" />
+    <link rel="stylesheet" href="styles/fonts.css" />
+    <link rel="stylesheet" href="styles/ui.css" />
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/pages.css" />
+  </head>
+  <body>
+    <script src="scripts/api.js"></script>
+    <script src="scripts/auth-guard.js"></script>
+    <script src="scripts/session-nav.js"></script>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="index.html" aria-label="斐思同行 首页">
+          <img class="brand__mark" src="assets/logo-sprout.png" width="106" height="100" alt="" aria-hidden="true" />
+          <span class="brand__name">斐思同行</span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          <ul class="nav__list">
+            <li><a class="nav__link" href="index.html">首页</a></li>
+            <li><a class="nav__link" href="self-coaching.html">自我教练</a></li>
+            <li><a class="nav__link" href="emotion-journal.html">情绪日记</a></li>
+            <li><a class="nav__link" href="coaches.html">真人教练</a></li>
+            <li><a class="nav__link" href="articles.html">科普中心</a></li>
+          </ul>
+        </nav>
+
+        <div class="masthead__actions">
+          <a class="link-quiet" href="register.html">注册</a>
+          <a class="btn btn--yellow" href="login.html">
+            <span class="btn__label" data-session-label>开始登录</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="plate">
+        <div class="wrap plate__inner">
+          <nav class="crumbs" aria-label="位置">
+            <a href="index.html">首页</a>
+            <span aria-hidden="true">/</span>
+            <span>怎么用</span>
+          </nav>
+          <h1 class="plate__title">三步，走完一次陪伴</h1>
+          <p class="plate__lede">
+            一次陪伴就是三步：说出来、聊完收个尾、明天回来看一眼。全程大约十来分钟，中途想停随时可以停。
+          </p>
+        </div>
+      </section>
+
+      <div class="ground">
+        <div class="wrap">
+          <section class="cols cols--3">
+            <section class="panel">
+              <div class="panel__head">
+                <h2 class="panel__title">① 说出来</h2>
+              </div>
+              <p class="prose">
+                点「开始聊聊」，像打电话一样把这段时间的事说出来。这一页是<b>语音陪伴：需要麦克风</b>；
+                摄像头可选，开着只是让语调和表情也一起被理解，不想开随时能关。
+              </p>
+              <p class="prose">
+                第一次进来会先看到一句 AI 说明，点「我已知晓」就可以开始。若浏览器问要不要用麦克风，
+                选「允许」；不小心点了「拒绝」，在地址栏左侧的权限图标里改回来就行。
+              </p>
+              <p class="panel__foot"><a class="btn btn--block" href="self-coaching.html">开始聊聊</a></p>
+            </section>
+
+            <section class="panel">
+              <div class="panel__head">
+                <h2 class="panel__title">② 聊完收个尾</h2>
+              </div>
+              <p class="prose">
+                通话结束会弹出一张收束卡，四行初稿都取自你刚才自己说过的话：<b>这次谈到的事</b>、
+                <b>你希望的变化</b>、<b>你已经有的</b>，以及<b>我的一小步</b>——这一步还带着「什么时候做」和「怎么算完成」。
+              </p>
+              <p class="prose">
+                四行都能改，改到你认，再点确认。AI 只替你整理，不替你下结论。确认后这一条会记进你的情绪日记。
+              </p>
+              <p class="panel__foot"><a class="link-quiet" href="emotion-journal.html">看看情绪日记长什么样</a></p>
+            </section>
+
+            <section class="panel">
+              <div class="panel__head">
+                <h2 class="panel__title">③ 明天回来看一眼</h2>
+              </div>
+              <p class="prose">
+                「我的一小步」会留在「我的成长 → 下一步行动」里。第二天回来点一下：<b>做完了</b>、
+                <b>做了一部分</b>、还是<b>还没开始</b>。这一次回答会记进今天的打卡，成为这条成长线上的一次反馈。
+              </p>
+              <p class="prose">
+                没做也没关系——可以把这一步改小一点再记。这里的一天只记一条，不必攒着。
+              </p>
+              <p class="panel__foot"><a class="link-quiet" href="my-growth.html">我的成长</a></p>
+            </section>
+          </section>
+
+          <section class="panel">
+            <div class="panel__head panel__head--row">
+              <h2 class="panel__title">不想说话的时候</h2>
+              <p class="panel__note">不出声也能用</p>
+            </div>
+            <ul class="rows">
+              <li>
+                <a class="row" href="emotion-journal.html">
+                  <img class="row__art" src="assets/mood-calm.webp" width="300" height="269" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="row__title">写下此刻</span>
+                    <span class="row__meta">挑一个心情，写一句话，会收到一句接住你的话</span>
+                  </span>
+                  <span class="row__side"><span class="chip chip--green">不需要麦克风</span></span>
+                </a>
+              </li>
+              <li>
+                <a class="row" href="assessment.html">
+                  <img class="row__art" src="assets/dim-emotion.webp" width="400" height="381" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="row__title">做一次五维成长自评</span>
+                    <span class="row__meta">十来道题，看看自己现在最想先动的那一维</span>
+                  </span>
+                  <span class="row__side"><span class="chip">约 3 分钟</span></span>
+                </a>
+              </li>
+              <li>
+                <a class="row" href="articles.html">
+                  <img class="row__art" src="assets/sym-book.webp" width="480" height="384" alt="" aria-hidden="true" />
+                  <span>
+                    <span class="row__title">先读一篇</span>
+                    <span class="row__meta">成长技巧、常见困惑、教练故事，都在科普中心</span>
+                  </span>
+                  <span class="row__side"><span class="chip">只看不聊</span></span>
+                </a>
+              </li>
+            </ul>
+          </section>
+
+          <section class="panel">
+            <div class="panel__head">
+              <h2 class="panel__title">还有两句要说清楚</h2>
+            </div>
+            <p class="prose">
+              AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。你写下的、说过的，都在自己的账号里，
+              可以在<a class="link-quiet" href="profile.html">账户设置</a>里导出或删除。
+            </p>
+            <p class="prose">
+              如果最近常有伤害自己的念头，请先拨打心理援助热线 <a href="tel:12356">12356</a>，
+              或前往就近医院急诊——这件事比使用本产品重要得多。
+            </p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer__inner">
+        <p class="footer__hotline">
+          心理援助热线 <a href="tel:12356">12356</a>
+          <span class="footer__hint">如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。</span>
+        </p>
+        <p class="footer__note">AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。</p>
+        <nav class="footer__links" aria-label="法务信息">
+          <a href="terms.html">服务条款</a>
+          <span aria-hidden="true">·</span>
+          <a href="terms.html">隐私政策</a>
+        </nav>
+        <p class="footer__note footer__note--demo">© 2026 斐思同行 · 设计演示稿：页面内容为示例</p>
+      </div>
+    </footer>
+  </body>
+</html>

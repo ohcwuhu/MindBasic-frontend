@@ -2000,3 +2000,69 @@ body.page-register .auth {
   gap: 12px;
   margin: 0;
 }
+
+/* 测评与成长的数据模式和独立状态。 */
+.data-mode { margin-bottom: 16px; color: var(--green-ink); }
+.page-growth .stats { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.dim__label { flex-wrap: wrap; }
+.dim .panel__note { margin-top: 4px; }
+
+/* 下一步行动：收束卡里的「我的一小步」+ 回访 */
+.action-card {
+  border: 2px solid var(--ink-line-soft);
+  border-radius: 14px 10px 16px 9px / 10px 16px 9px 14px;
+  background: var(--surface);
+  padding: 14px 16px;
+}
+.action-card__text {
+  margin: 0;
+  font-family: var(--font-hand);
+  font-size: var(--fs-h3);
+  line-height: 1.62;
+}
+.action-card__meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 10px;
+  margin: 10px 0 0;
+}
+.action-card__meta dt {
+  margin: 0;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+.action-card__meta dd {
+  margin: 0;
+  font-size: var(--fs-small);
+}
+.action-card .panel__note { margin-top: 10px; }
+.action-review { margin-top: 14px; }
+.action-review[hidden] { display: none; }
+.action-review__ask { margin: 0 0 8px; font-weight: 600; }
+.action-review__buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.action-adjust {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  margin-top: 10px;
+}
+.action-adjust[hidden] { display: none; }
+.action-adjust__field {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-label);
+  color: var(--ink-muted);
+}
+
+.scale button { display: flex; flex-direction: column; align-items: center; height: auto; }
+.scale-option-label { font-size: var(--fs-label); font-weight: 400; line-height: 1.4; }
+
+.scale:has(.scale-option-label) button { width: 64px; min-height: 64px; padding: 6px 4px; }
+.scale__legend[hidden] { display: none; }
+@media (max-width: 760px) {
+  .q:has(.scale-option-label) { grid-template-columns: minmax(0, 1fr); }
+  .scale:has(.scale-option-label) { flex-wrap: wrap; }
+}

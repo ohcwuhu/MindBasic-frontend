@@ -16,7 +16,7 @@
      del('/emotion-journals/{id}')               → 删除一条
    记录数据放在内存里（提交、删除真的会生效，刷新回到示例）。 */
 
-import * as realClient from '../../../../项目代码/MindBasic-frontend/src/api/client'
+import * as realClient from '@original-api-client'
 
 /** 是否走真后端：URL 带 ?live=1，或本机记着上次登录过 */
 export const isLive = (() => {
