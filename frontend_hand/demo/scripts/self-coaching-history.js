@@ -7,7 +7,16 @@
 
   var list = document.querySelector('.rows')
   var note = document.querySelector('.panel__note')
+  var pager = document.querySelector('[data-pager]')
+  var pagerCount = document.querySelector('[data-pager-count]')
+  var prevButton = document.querySelector('[data-prev]')
+  var nextButton = document.querySelector('[data-next]')
   if (!list) return
+
+  var PAGE_SIZE = 20
+  var query = new URLSearchParams(window.location.search)
+  var state = { page: Math.max(1, Number(query.get('page')) || 1) }
+  var lastPages = 1
 
   function art(index) {
     var pool = ['mascot-listen', 'mascot-think', 'mascot-comfort', 'mascot-happy']
@@ -20,17 +29,40 @@
       .get(path)
       .then(function (data) {
         if (!data || !Array.isArray(data.items)) throw new Error('列表数据不完整')
-        return { items: data.items }
+        return { items: data.items, pagination: data.pagination || {} }
       })
       .catch(function (error) {
         return { failed: true, message: (error && error.message) || '读取失败' }
       })
   }
 
-  Promise.all([load('/self-coaching/records?page=1&pageSize=50'), load('/ai-conversations?page=1&pageSize=20')])
+  function syncUrl() {
+    try {
+      var params = new URLSearchParams()
+      if (new URLSearchParams(window.location.search).has('live')) params.set('live', '1')
+      if (state.page > 1) params.set('page', String(state.page))
+      var search = params.toString()
+      window.history.replaceState(null, '', 'self-coaching-history.html' + (search ? '?' + search : ''))
+    } catch (error) {
+      /* file:// 下不改地址栏 */
+    }
+  }
+
+  function loadPage(page) {
+    if (page !== undefined) state.page = page
+    list.innerHTML = '<li aria-hidden="true"><span class="skl" style="--skl-w:68%"></span></li>'
+    if (pagerCount) pagerCount.textContent = '正在读取第 ' + state.page + ' 页…'
+    if (prevButton) prevButton.disabled = true
+    if (nextButton) nextButton.disabled = true
+    Promise.all([
+      load('/self-coaching/records?page=' + state.page + '&pageSize=' + PAGE_SIZE),
+      load('/ai-conversations?page=' + state.page + '&pageSize=' + PAGE_SIZE),
+    ])
     .then(function (results) {
       var records = (results[0] && results[0].items) || []
       var conversations = (results[1] && results[1].items) || []
+      var recordPagination = (results[0] && results[0].pagination) || {}
+      var conversationPagination = (results[1] && results[1].pagination) || {}
       var incomplete = []
       if (results[0].failed) incomplete.push('自我教练记录')
       if (results[1].failed) incomplete.push('AI 对话')
@@ -74,12 +106,49 @@
       }
       list.innerHTML = rows.join('')
       if (note) {
+        var recordTotal = Number(recordPagination.totalItems)
+        var conversationTotal = Number(conversationPagination.totalItems)
         note.textContent =
-          records.length + ' 份记录 · ' + conversations.length + ' 次对话' +
+          (Number.isFinite(recordTotal) ? recordTotal : records.length) + ' 份记录 · ' +
+          (Number.isFinite(conversationTotal) ? conversationTotal : conversations.length) + ' 次对话' +
           (incomplete.length ? '（' + incomplete.join('、') + '还没读到）' : '')
+      }
+      if (pager) {
+        pager.hidden = false
+        var pages = Math.max(
+          1,
+          Number(recordPagination.totalPages) || 1,
+          Number(conversationPagination.totalPages) || 1,
+        )
+        lastPages = pages
+        pagerCount.textContent = '第 ' + state.page + ' / ' + pages + ' 页 · 每页最多 ' + PAGE_SIZE + ' 项'
+        prevButton.disabled = state.page <= 1
+        nextButton.disabled = state.page >= pages
       }
     })
     .catch(function (error) {
       api.fail(list, error)
+      if (pagerCount) pagerCount.textContent = '读取失败'
     })
+  }
+
+  if (prevButton) {
+    prevButton.addEventListener('click', function () {
+      if (state.page <= 1) return
+      state.page -= 1
+      syncUrl()
+      loadPage()
+    })
+  }
+  if (nextButton) {
+    nextButton.addEventListener('click', function () {
+      if (state.page >= lastPages) return
+      state.page += 1
+      syncUrl()
+      loadPage()
+    })
+  }
+
+  syncUrl()
+  loadPage()
 })()

@@ -30,6 +30,7 @@ const SHIMS = fileURLToPath(new URL('./shims', import.meta.url))
 const APPS = {
   coach: { entry: './main.js', file: 'self-coaching-app.js', name: 'FeisiSelfCoaching' },
   journal: { entry: './journal-main.js', file: 'emotion-journal-app.js', name: 'FeisiEmotionJournal' },
+  journalFormat: { entry: './journal-action-entry.js', file: 'journal-action.js', name: 'FeisiJournalActionBundle' },
 }
 const app = APPS[process.env.FEISI_APP] ?? APPS.coach
 

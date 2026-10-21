@@ -11,6 +11,8 @@
   if (!groups && !posts) return
 
   var COVERS = ['cat-emotion', 'cat-study', 'cat-relation', 'cat-growth', 'cat-crisis', 'cat-story']
+  if (groups) groups.innerHTML = '<li class="panel__note" role="status">正在读取社群…</li>'
+  if (posts) posts.innerHTML = '<p class="panel__note" role="status">正在读取帖子…</p>'
 
   function groupCard(group, index) {
     return (
@@ -39,24 +41,34 @@
     )
   }
 
-  Promise.all([
+  Promise.allSettled([
     api.get('/communities?page=1&pageSize=20'),
-    api.get('/communities/mine').catch(function () {
-      return { items: [] }
-    }),
+    api.get('/communities/mine'),
   ])
     .then(function (results) {
-      var all = (results[0] && results[0].items) || []
-      var mine = (results[1] && results[1].items) || []
+      var allResult = results[0]
+      var mineResult = results[1]
+      var all = allResult.status === 'fulfilled' ? (allResult.value && allResult.value.items) || [] : []
+      var mine = mineResult.status === 'fulfilled' ? (mineResult.value && mineResult.value.items) || [] : null
 
       if (groups) {
-        var shown = mine.length ? mine : all
-        groups.innerHTML = shown.length
-          ? shown.map(groupCard).join('')
-          : api.empty('还没有加入社群', '平台上暂时也没有开放的社群。')
+        if (mineResult.status === 'rejected') {
+          api.fail(groups, mineResult.reason)
+        } else if (allResult.status === 'fulfilled') {
+          var shown = mine.length ? mine : all
+          groups.innerHTML = shown.length
+            ? shown.map(groupCard).join('')
+            : api.empty('还没有加入社群', '平台上暂时也没有开放的社群。')
+        } else {
+          api.fail(groups, allResult.reason)
+        }
       }
 
       if (posts) {
+        if (mineResult.status === 'rejected') {
+          api.fail(posts, mineResult.reason)
+          return
+        }
         /* 帖子接口要求是社群成员（非成员会 403），所以只取「我加入的」里的第一个 */
         var target = mine[0] || null
         if (!target) {
@@ -78,5 +90,6 @@
     })
     .catch(function (error) {
       api.fail(groups || posts, error)
+      if (groups && posts) api.fail(posts, error)
     })
 })()

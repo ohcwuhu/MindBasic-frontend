@@ -115,7 +115,11 @@
 
   function syncUrl() {
     try {
-      window.history.replaceState(null, '', 'wallet.html' + (state.page > 1 ? '?page=' + state.page : ''))
+      var params = new URLSearchParams()
+      if (new URLSearchParams(window.location.search).has('live')) params.set('live', '1')
+      if (state.page > 1) params.set('page', String(state.page))
+      var search = params.toString()
+      window.history.replaceState(null, '', 'wallet.html' + (search ? '?' + search : ''))
     } catch (error) {
       /* file:// 下不允许改地址栏 */
     }

@@ -11,6 +11,66 @@
 
   var params = new URLSearchParams(window.location.search)
   var wanted = Number(params.get('id') || 0)
+  var favoriteButton = document.querySelector('[data-favorite]')
+  var favoriteNote = document.querySelector('[data-favorite-note]')
+  var currentArticleId = 0
+  var favoriteBusy = false
+
+  function hasToken() {
+    try {
+      return Boolean(window.localStorage.getItem('mb_access_token'))
+    } catch (error) {
+      return false
+    }
+  }
+
+  function setFavoriteState(isFavorite) {
+    if (!favoriteButton) return
+    favoriteButton.dataset.favorite = isFavorite ? '1' : '0'
+    favoriteButton.setAttribute('aria-pressed', isFavorite ? 'true' : 'false')
+    favoriteButton.textContent = isFavorite ? '已收藏' : '加入收藏'
+  }
+
+  function prepareFavorite() {
+    if (!favoriteButton) return
+    if (!hasToken()) {
+      favoriteButton.hidden = true
+      if (favoriteNote) {
+        favoriteNote.innerHTML =
+          '<a href="' + api.esc(api.url('login.html', { next: 'article-detail.html?id=' + wanted })) + '">登录后收藏</a>'
+      }
+      return
+    }
+    favoriteButton.hidden = false
+    if (favoriteNote) favoriteNote.textContent = '正在读取收藏状态…'
+  }
+
+  if (favoriteButton) {
+    favoriteButton.addEventListener('click', function () {
+      if (!currentArticleId || favoriteBusy) return
+      favoriteBusy = true
+      favoriteButton.disabled = true
+      var before = favoriteButton.dataset.favorite === '1'
+      if (favoriteNote) favoriteNote.textContent = '正在更新收藏…'
+      api
+        .post('/articles/' + currentArticleId + '/favorite')
+        .then(function (data) {
+          var isFavorite = Boolean(data && data.isFavorite)
+          setFavoriteState(isFavorite)
+          if (favoriteNote) favoriteNote.textContent = isFavorite ? '已加入收藏。' : '已取消收藏。'
+        })
+        .catch(function (error) {
+          setFavoriteState(before)
+          if (favoriteNote) favoriteNote.textContent = (error && error.message) || '收藏没更新，请重试。'
+        })
+        .then(function () {
+          favoriteBusy = false
+          favoriteButton.disabled = false
+        })
+    })
+  }
+
+  prepareFavorite()
 
   function pickArticleId() {
     if (wanted) return Promise.resolve(wanted)
@@ -27,6 +87,7 @@
         return
       }
       return api.get('/articles/' + articleId).then(function (article) {
+        currentArticleId = Number(article.id) || articleId
         document.title = article.title + ' · 斐思同行'
         var plateTitle = document.querySelector('.plate__title')
         if (plateTitle) plateTitle.textContent = article.title
@@ -40,6 +101,11 @@
         }
         /* 后端正文是平台自己编排的 HTML，直接放进来 */
         prose.innerHTML = article.content || ''
+        if (favoriteButton && hasToken()) {
+          setFavoriteState(Boolean(article.isFavorite))
+          favoriteButton.hidden = false
+          if (favoriteNote) favoriteNote.textContent = article.isFavorite ? '这篇文章已经在你的收藏里。' : ''
+        }
       })
     })
     .catch(function (error) {

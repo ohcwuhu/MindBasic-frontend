@@ -239,6 +239,7 @@
   }
 
   function loadExports() {
+    exportList.innerHTML = '<li class="panel__note" role="status">正在读取导出记录…</li>'
     return api
       .get('/users/me/data-exports?page=1&pageSize=10')
       .then(function (data) {
@@ -247,43 +248,27 @@
           ? items.map(exportRow).join('')
           : api.emptyItem('还没有导出过', '点上面那颗按钮，会当场打包一个 JSON 给你。')
       })
-      .catch(function () {
-        exportList.innerHTML = ''
+      .catch(function (error) {
+        exportList.innerHTML =
+          '<li class="panel__note" role="alert">导出记录没有读取成功：' +
+          api.esc(error && error.message ? error.message : '请稍后重试') +
+          ' <button class="link-quiet" type="button" data-export-retry>重试</button></li>'
       })
   }
 
   /* 下载要带 Bearer，`<a href>` 送不出去 —— 取回 Blob 再点一下临时 `<a>` */
   exportList.addEventListener('click', function (event) {
+    if (event.target.closest('[data-export-retry]')) {
+      loadExports()
+      return
+    }
     var button = event.target.closest('[data-download]')
     if (!button) return
     var row = button.closest('[data-export-id]')
     var id = row ? row.getAttribute('data-export-id') : ''
-    var token = ''
-    try {
-      token = window.localStorage.getItem('mb_access_token') || ''
-    } catch (error) {
-      token = ''
-    }
     button.disabled = true
     button.textContent = '打包中…'
-    fetch('/api/v1/users/me/data-exports/' + id + '/download', {
-      headers: { Authorization: 'Bearer ' + token },
-      credentials: 'include',
-    })
-      .then(function (response) {
-        if (!response.ok) throw new Error('下载失败（' + response.status + '）')
-        return response.blob()
-      })
-      .then(function (blob) {
-        var url = URL.createObjectURL(blob)
-        var link = document.createElement('a')
-        link.href = url
-        link.download = 'mindbasic-data-export-' + id + '.json'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-      })
+    api.download('/users/me/data-exports/' + id + '/download', 'mindbasic-data-export-' + id + '.json')
       .catch(function (error) {
         say(privacyMsg, error.message, true)
       })

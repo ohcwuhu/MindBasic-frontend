@@ -42,11 +42,11 @@
     timeline.innerHTML = events.slice(0,12).map(function (e) {
       /* 每一条都能点回它自己的那一页：对话回看 / 记录详情 / 情绪日记 / 打卡 / 那一次测评 */
       var href =
-        e.key === 'records' ? 'self-coaching-record.html?record=' + e.id :
-        e.key === 'conversations' ? 'ai-conversation.html?id=' + e.id :
-        e.key === 'journals' ? 'emotion-journal.html' :
-        e.key === 'checkins' ? 'check-ins.html' :
-        e.key === 'assessments' ? 'my-growth.html?assessment=' + e.id + '&live=1' : null
+        e.key === 'records' ? api.url('self-coaching-record.html', { record: e.id }) :
+        e.key === 'conversations' ? api.url('ai-conversation.html', { id: e.id }) :
+        e.key === 'journals' ? api.url('emotion-journal.html', { journalId: e.id }) :
+        e.key === 'checkins' ? api.url('check-ins.html') :
+        e.key === 'assessments' ? api.url('my-growth.html', { assessment: e.id }) : null
       return '<li class="tl"><time>' + api.esc(api.dateTime(e.at)) + '</time><div class="tl__body"><div><p class="tl__title">' + api.esc(e.tag) + '</p><p class="tl__text">' + api.esc(e.text.slice(0,100)) + '</p>' +
         (href ? '<a class="link-quiet" href="' + api.esc(href) + '">查看记录</a>' : '') + '</div></div></li>'
     }).join('')
@@ -130,32 +130,11 @@
   var REVIEW_TEXT = { DONE: '做完了', PARTIAL: '做了一部分', NOT_YET: '还没开始' }
   var currentAction = null, reviewBusy = false, adjustedActions = {}
 
-  /** 从日记正文里取「我的一小步」那一行；取不到就返回 null（不猜、不编） */
+  /** 正文格式由编译后的共享模块维护；旧记录的分行行动也不会被截断。 */
   function parseAction(data) {
     var items = (data && data.items) || []
-    for (var index = 0; index < items.length; index += 1) {
-      var lines = String(items[index].content || '').split('\n')
-      var line = null
-      for (var row = 0; row < lines.length; row += 1) {
-        if (/^\s*我的一小步[：:]/.test(lines[row])) line = lines[row]
-      }
-      if (!line) continue
-      var rest = line.replace(/^\s*我的一小步[：:]\s*/, '').trim()
-      var when = '', condition = ''
-      var paren = rest.match(/[（(]([^）)]*)[）)]\s*$/)
-      if (paren) {
-        rest = rest.slice(0, paren.index).trim()
-        paren[1].split(/[；;]/).forEach(function (part) {
-          var piece = part.trim()
-          if (!piece) return
-          if (/^完成条件[：:]/.test(piece)) condition = piece.replace(/^完成条件[：:]\s*/, '')
-          else when = piece
-        })
-      }
-      if (!rest) continue
-      return { text: rest, when: when, condition: condition, item: items[index] }
-    }
-    return null
+    if (!window.FeisiJournalAction) throw new Error('行动格式模块未加载')
+    return window.FeisiJournalAction.parseLatestJournalAction(items)
   }
 
   function reviewRows() {
@@ -200,7 +179,7 @@
       (found.condition ? '<dt>怎么算完成</dt><dd>' + api.esc(found.condition) + '</dd>' : '') +
       '</dl>' +
       '<p class="panel__note">写在 ' + api.esc(source || '这条日记') + ' 的收束里 · ' +
-      '<a class="link-quiet" href="emotion-journal.html">看这条日记</a></p>'
+      '<a class="link-quiet" href="' + api.url('emotion-journal.html', { journalId: found.item.id }) + '">看这条日记</a></p>'
     actionReview.hidden = false
     var rows = reviewRows()
     reviewStatus.textContent = rows.length

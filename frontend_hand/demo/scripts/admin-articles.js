@@ -55,6 +55,7 @@
   function syncUrl() {
     try {
       var params = new URLSearchParams()
+      if (new URLSearchParams(window.location.search).has('live')) params.set('live', '1')
       if (state.keyword) params.set('keyword', state.keyword)
       if (state.status) params.set('status', state.status)
       if (state.categoryId) params.set('categoryId', state.categoryId)

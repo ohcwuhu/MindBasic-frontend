@@ -7,3 +7,7 @@ import EmotionJournalView from '@/views/EmotionJournalView.vue'
 import RouterStandIn from './shims/vue-router.js'
 
 createApp(EmotionJournalView).use(RouterStandIn).mount('#app')
+
+window.addEventListener('mb:logout', function () {
+  if (window.FeisiAPI && window.FeisiAPI.expireSession) window.FeisiAPI.expireSession()
+})

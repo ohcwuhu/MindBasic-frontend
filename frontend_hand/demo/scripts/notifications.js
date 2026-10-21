@@ -32,10 +32,13 @@
   }
   var items = []
   var lastPagination = {}
+  var accountUnread = null
+  var unreadGeneration = 0
 
   function syncUrl() {
     try {
       var params = new URLSearchParams()
+      if (new URLSearchParams(window.location.search).has('live')) params.set('live', '1')
       if (state.only) params.set('only', '1')
       if (state.page > 1) params.set('page', String(state.page))
       var search = params.toString()
@@ -101,15 +104,33 @@
     var unread = items.filter(function (entry) {
       return !entry.isRead
     }).length
-    count.textContent = state.only ? '共 ' + total + ' 条未读' : '共 ' + total + ' 条 · 本页 ' + unread + ' 条未读'
+    var allUnread = accountUnread === null ? '全账号未读数读取中' : '全账号 ' + accountUnread + ' 条未读'
+    count.textContent = state.only ? '共 ' + total + ' 条未读 · ' + allUnread : '共 ' + total + ' 条 · ' + allUnread + ' · 本页 ' + unread + ' 条未读'
     pagerCount.textContent = '第 ' + state.page + ' / ' + pages + ' 页 · 每页 ' + PAGE_SIZE + ' 条'
     prevButton.disabled = state.page <= 1
     nextButton.disabled = state.page >= pages
-    readAllButton.disabled = unread === 0
+    readAllButton.disabled = accountUnread === 0
 
     Array.prototype.forEach.call(keys.querySelectorAll('[data-only]'), function (key) {
       key.classList.toggle('is-current', (key.getAttribute('data-only') === '1') === state.only)
     })
+  }
+
+  function refreshUnread() {
+    var generation = ++unreadGeneration
+    return api
+      .get('/notifications/unread-count')
+      .then(function (data) {
+        if (generation !== unreadGeneration) return
+        accountUnread = Math.max(0, Number(data && data.count) || 0)
+        updateMeta()
+      })
+      .catch(function () {
+        if (generation === unreadGeneration) {
+          accountUnread = null
+          updateMeta()
+        }
+      })
   }
 
   function load() {
@@ -120,7 +141,7 @@
     pagerCount.textContent = ''
     prevButton.disabled = true
     nextButton.disabled = true
-    readAllButton.disabled = true
+    readAllButton.disabled = false
 
     return api
       .get('/notifications?page=' + state.page + '&pageSize=' + PAGE_SIZE + (state.only ? '&unreadOnly=true' : ''))
@@ -134,11 +155,13 @@
           return load()
         }
         draw((data && data.items) || [], pagination)
+        refreshUnread()
       })
       .catch(function (error) {
         items = []
         list.innerHTML = '<li>' + api.note(error.message) + '</li>'
         count.textContent = '读取失败'
+        refreshUnread()
       })
   }
 
@@ -156,6 +179,7 @@
       .then(function () {
         if (entry) entry.isRead = true
         if (window.FeisiNav) window.FeisiNav.refreshUnread()
+        refreshUnread()
         if (state.only) {
           /* 「只看未读」里读掉的那条应该离开列表；焦点交给下一条，别掉回 body */
           var sibling = row.nextElementSibling
@@ -195,10 +219,13 @@
       .post('/notifications/read-all', {})
       .then(function () {
         if (window.FeisiNav) window.FeisiNav.refreshUnread()
+        accountUnread = 0
+        updateMeta()
         return load()
       })
       .catch(function (error) {
         count.textContent = error.message
+        refreshUnread()
       })
       .then(function () {
         readAllButton.textContent = '全部标为已读'

@@ -14,3 +14,7 @@ window.process = window.process || { env: { NODE_ENV: 'production' } }
 installAudioUploadStandIn()
 
 createApp(VideoCallView).use(RouterStandIn).mount('#app')
+
+window.addEventListener('mb:logout', function () {
+  if (window.FeisiAPI && window.FeisiAPI.expireSession) window.FeisiAPI.expireSession()
+})

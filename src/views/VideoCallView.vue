@@ -4,6 +4,7 @@ import { PhChatCircleDots as ChatDots, PhWarningCircle as WarningCircle } from '
 import { get, post } from '@/api/client'
 import type { PublicPlatformConfig } from '@/api/types'
 import VideoCallPanel from '@/components/ai-lab/VideoCallPanel.vue'
+import { composeClosingJournal } from '@/utils/journalAction'
 
 const AI_ACK_KEY = 'mb_ai_ack_v1'
 
@@ -71,11 +72,7 @@ const canSave = computed(() => {
 
 /** 送给后端的日记正文：用户确认过的四行，行动那行带时间与完成条件 */
 function composeJournal(c: ClosingCard): string {
-  const lines = [`这次谈到的事：${c.status.trim()}`]
-  if (c.ideal.trim()) lines.push(`你希望的变化：${c.ideal.trim()}`)
-  if (c.resources.trim()) lines.push(`你已经有的：${c.resources.trim()}`)
-  lines.push(`我的一小步：${c.action.trim()}（${c.when.trim()}；完成条件：${c.condition.trim()}）`)
-  return lines.join('\n').slice(0, 500)
+  return composeClosingJournal(c)
 }
 
 function restoreBackground() {
@@ -256,7 +253,7 @@ async function confirmJournal() {
                 去我的成长
               </RouterLink>
               <RouterLink
-                to="/emotion-journal"
+                :to="{ path: '/emotion-journal', query: { journalId: savedJournalId } }"
                 class="h-10 px-5 rounded-full bg-pine text-card text-sm font-medium pressable closing-card__link"
               >
                 看这条日记
@@ -314,6 +311,7 @@ async function confirmJournal() {
                   class="closing-card__input"
                   placeholder="小到今晚就能做完的那种"
                 ></textarea>
+                <span class="closing-card__hint">用一句话描述；换行会在保存时合并，时间和完成条件不会丢。</span>
               </label>
 
               <div class="closing-card__row">
@@ -473,6 +471,11 @@ async function confirmJournal() {
 .closing-card__name {
   font-size: 12px;
   font-weight: 600;
+  color: var(--color-ink-soft);
+}
+.closing-card__hint {
+  font-size: 11px;
+  line-height: 1.5;
   color: var(--color-ink-soft);
 }
 .closing-card__input {

@@ -21,6 +21,23 @@
   var params = new URLSearchParams(window.location.search)
   var wanted = Number(params.get('id') || 0)
 
+  /* 真数据模式下先把页面里的示例身份与分区移走，避免接口慢时把示例当成这位教练的资料。 */
+  nameEl.textContent = '正在读取教练资料…'
+  if (metaEl) metaEl.textContent = ''
+  if (tagsEl) tagsEl.innerHTML = ''
+  if (scoreEl) scoreEl.textContent = ''
+  if (conceptPanel) {
+    Array.prototype.forEach.call(conceptPanel.querySelectorAll('.prose'), function (node) {
+      node.textContent = ''
+    })
+  }
+  if (servicesEl) servicesEl.innerHTML = '<p class="panel__note" role="status">正在读取服务项目…</p>'
+  if (slotsEl) slotsEl.innerHTML = '<li class="panel__note" role="status">正在读取可约时段…</li>'
+  if (reviewPanel) {
+    var initialReviews = reviewPanel.querySelector('.reviews')
+    if (initialReviews) initialReviews.innerHTML = '<div class="panel__note" role="status">正在读取评价…</div>'
+  }
+
   function pickCoachId() {
     if (wanted) return Promise.resolve(wanted)
     return api.get('/coaches?page=1&pageSize=1').then(function (data) {
@@ -96,7 +113,7 @@
   function renderSlots(slots, coachId) {
     if (!slotsEl) return
     if (!slots.length) {
-      slotsEl.innerHTML = api.empty('暂时没有可约时段', '教练还没放出未来 14 天的空档，过几天再来看看。')
+      slotsEl.innerHTML = api.emptyItem('暂时没有可约时段', '教练还没放出未来 14 天的空档，过几天再来看看。')
       return
     }
     slotsEl.innerHTML = slots
@@ -140,6 +157,49 @@
       .join('')
   }
 
+  function renderSectionFailure(container, message, retry) {
+    if (!container) return
+    var inner =
+      '<div class="empty" role="alert"><p class="empty__title">这一部分没有读取成功</p>' +
+      '<p class="empty__body">' + api.esc(message || '请稍后重试。') + '</p>' +
+      '<p><button class="link-quiet" type="button" data-section-retry>重试</button></p></div>'
+    container.innerHTML = container.tagName === 'UL' ? '<li>' + inner + '</li>' : inner
+    var button = container.querySelector('[data-section-retry]')
+    if (button) button.addEventListener('click', retry)
+  }
+
+  function loadSlots(coachId) {
+    if (slotsEl) slotsEl.innerHTML = '<li class="panel__note" role="status">正在读取可约时段…</li>'
+    return api
+      .get('/coaches/' + coachId + '/slots')
+      .then(function (data) {
+        renderSlots((data && data.items) || [], coachId)
+      })
+      .catch(function (error) {
+        renderSectionFailure(slotsEl, error && error.message, function () {
+          loadSlots(coachId)
+        })
+      })
+  }
+
+  function loadReviews(coachId) {
+    if (reviewPanel) {
+      var list = reviewPanel.querySelector('.reviews')
+      if (list) list.innerHTML = '<div class="panel__note" role="status">正在读取评价…</div>'
+    }
+    return api
+      .get('/coaches/' + coachId + '/reviews')
+      .then(function (data) {
+        renderReviews((data && data.items) || [])
+      })
+      .catch(function (error) {
+        var list = reviewPanel && reviewPanel.querySelector('.reviews')
+        renderSectionFailure(list, error && error.message, function () {
+          loadReviews(coachId)
+        })
+      })
+  }
+
   pickCoachId().then(function (coachId) {
     if (!coachId) {
       api.fail(document.querySelector('.profile') || document.body, new Error('平台上还没有可展示的教练。'))
@@ -150,17 +210,7 @@
       .then(function (coach) {
         renderProfile(coach)
         renderServices(coach.services || [])
-        return Promise.all([
-          api.get('/coaches/' + coachId + '/slots').catch(function () {
-            return { items: [] }
-          }),
-          api.get('/coaches/' + coachId + '/reviews').catch(function () {
-            return { items: [] }
-          }),
-        ]).then(function (results) {
-          renderSlots((results[0] && results[0].items) || [], coachId)
-          renderReviews((results[1] && results[1].items) || [])
-        })
+        return Promise.all([loadSlots(coachId), loadReviews(coachId)])
       })
       .catch(function (error) {
         api.fail(document.querySelector('.profile') || document.body, error)

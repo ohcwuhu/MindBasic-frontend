@@ -6,7 +6,16 @@ const source = readFileSync(new URL('../scripts/api.js', import.meta.url), 'utf8
 function client(refreshOK = true) {
   const storage = new Map([['mb_access_token', 'old'], ['feisi_backend', 'live']])
   const calls = [], redirects = []
-  const window = { localStorage: { getItem: k => storage.get(k), setItem: (k,v) => storage.set(k,v), removeItem: k => storage.delete(k) }, location: { pathname: '/my-growth.html', search: '', replace: u => redirects.push(u) } }
+  const window = {
+    localStorage: {
+      getItem: k => storage.get(k),
+      setItem: (k, v) => storage.set(k, v),
+      removeItem: k => storage.delete(k),
+    },
+    location: { pathname: '/my-growth.html', search: '', replace: u => redirects.push(u) },
+    setTimeout,
+    clearTimeout,
+  }
   const fetch = async (url, options) => {
     calls.push(url)
     if (url.endsWith('/auth/refresh')) {

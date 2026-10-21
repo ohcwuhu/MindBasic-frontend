@@ -33,9 +33,12 @@
 
   /* 登录页 / 注册页 / 找回密码页自己就在门口：这几页上收到 401 不再往登录页送，免得绕圈 */
   var DOOR_PAGES = ['login.html', 'register.html', 'forgot-password.html']
+  var expiring = false
 
   /** 401：这份 token 已经不作数了 —— 清掉本地凭证，把人送回登录页并带上要回的那一页 */
   function sessionExpired() {
+    if (expiring) return
+    expiring = true
     var here = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase()
     try {
       ;['mb_access_token', 'feisi_backend', 'feisi_nickname', 'feisi_role'].forEach(function (key) {
@@ -47,6 +50,40 @@
     if (DOOR_PAGES.indexOf(here) >= 0) return
     window.location.replace('login.html?next=' + encodeURIComponent(here + window.location.search))
   }
+
+  /** 用当前地址栏作为底稿生成站内链接：只保留跨页真正需要延续的参数。 */
+  function siteUrl(path, params) {
+    var search = new URLSearchParams()
+    try {
+      if (new URLSearchParams(window.location.search).has('live')) search.set('live', '1')
+    } catch (error) {
+      /* 地址栏不可读时就不追加参数 */
+    }
+    if (params) {
+      Object.keys(params).forEach(function (key) {
+        var value = params[key]
+        if (value === null || value === undefined || value === '') search.delete(key)
+        else search.set(key, String(value))
+      })
+    }
+    var query = search.toString()
+    return path + (query ? '?' + query : '')
+  }
+
+  /* 只用 `?live=1` 联调、没有写模式缓存时，普通站内链接也要把 live 带过去。 */
+  if (typeof document !== 'undefined') document.addEventListener('click', function (event) {
+    if (!live) return
+    var anchor = event.target && event.target.closest ? event.target.closest('a[href]') : null
+    if (!anchor || anchor.target || anchor.hasAttribute('download')) return
+    try {
+      var url = new URL(anchor.getAttribute('href'), window.location.href)
+      if (url.origin !== window.location.origin || !/\.html$/i.test(url.pathname)) return
+      if (!url.searchParams.has('live')) url.searchParams.set('live', '1')
+      anchor.setAttribute('href', url.pathname.split('/').pop() + url.search + url.hash)
+    } catch (error) {
+      /* 不合法链接交给浏览器原样处理 */
+    }
+  })
 
   var refreshing = null
   function refreshAccessToken() {
@@ -69,10 +106,15 @@
     var headers = { 'Content-Type': 'application/json' }
     var accessToken = token()
     if (accessToken) headers.Authorization = 'Bearer ' + accessToken
+    var controller = typeof AbortController === 'function' ? new AbortController() : null
+    var timeout = window.setTimeout(function () {
+      if (controller) controller.abort()
+    }, 15000)
     return fetch('/api/v1' + path, {
       method: method,
       headers: headers,
       credentials: 'include',
+      signal: controller ? controller.signal : undefined,
       body: body === undefined ? undefined : JSON.stringify(body),
     }).then(function (response) {
       return response
@@ -106,6 +148,61 @@
           }
           return payload.data
         })
+    })
+      .catch(function (error) {
+        if (error && error.name === 'AbortError') {
+          var timeoutError = new Error('请求超时，请检查网络后重试。')
+          timeoutError.code = 'NETWORK_TIMEOUT'
+          throw timeoutError
+        }
+        throw error
+      })
+      .finally(function () {
+        window.clearTimeout(timeout)
+      })
+  }
+
+  /** 下载也要走同一份 token 与续期逻辑，避免长期打开的页面拿着过期 token 重登录。 */
+  function download(path, filename, retried) {
+    var accessToken = token()
+    return fetch('/api/v1' + path, {
+      headers: accessToken ? { Authorization: 'Bearer ' + accessToken } : {},
+      credentials: 'include',
+    }).then(function (response) {
+      if (response.ok) return response.blob()
+      return response
+        .json()
+        .catch(function () {
+          return {}
+        })
+        .then(function (payload) {
+          if (response.status === 401 && payload.code === 'TOKEN_EXPIRED' && !retried) {
+            var renewal = token() && token() !== accessToken ? Promise.resolve(token()) : refreshAccessToken()
+            return renewal.then(function () {
+              return download(path, filename, true)
+            }, function (error) {
+              sessionExpired()
+              throw error
+            })
+          }
+          var failure = new Error((payload && payload.message) || '下载失败（' + response.status + '）')
+          failure.status = response.status
+          failure.code = (payload && payload.code) || ''
+          if (response.status === 401) sessionExpired()
+          throw failure
+        })
+    }).then(function (blob) {
+      var url = URL.createObjectURL(blob)
+      var link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.setTimeout(function () {
+        URL.revokeObjectURL(url)
+      }, 0)
+      return blob
     })
   }
 
@@ -208,6 +305,8 @@
   window.FeisiAPI = {
     live: live,
     refreshAccessToken: refreshAccessToken,
+    expireSession: sessionExpired,
+    url: siteUrl,
     get: function (path) {
       return request('GET', path)
     },
@@ -223,6 +322,7 @@
     del: function (path) {
       return request('DELETE', path)
     },
+    download: download,
     esc: esc,
     symbol: symbol,
     dateTime: dateTime,

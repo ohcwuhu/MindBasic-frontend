@@ -5,8 +5,8 @@
 
     <!-- 角色渲染区 -->
     <div class="cs-char">
-      <!-- ===== 视频：idle/listening 状态用 canvas 黑幕抠像 ===== -->
-      <template v-if="isVideoState">
+      <!-- 视频状态：先保留当前帧，新素材可绘制后再交接 -->
+      <template v-if="shouldUseVideo">
         <video
           ref="videoRef"
           class="cs-video-src"
@@ -24,7 +24,7 @@
         <canvas ref="canvasRef" class="cs-canvas" />
       </template>
 
-      <!-- ===== 静态图片：thinking/speaking/empathy 状态 ===== -->
+      <!-- 非视频状态使用静态图片 -->
       <img
         v-else
         :src="staticImageSrc"
@@ -32,19 +32,6 @@
         draggable="false"
         alt=""
       />
-
-      <!-- 眨眼 SVG 覆盖层（代码绘制，叠在视频/图上方） -->
-      <transition name="cs-blink-fade">
-        <div v-if="blinkVisible" class="cs-blink-overlay">
-          <svg
-            :viewBox="`0 0 ${SPRITE_W} ${SPRITE_H}`"
-            preserveAspectRatio="xMidYMid meet"
-            class="cs-blink-svg"
-          >
-            <path v-for="(d, i) in eyeArcs" :key="i" :d="d" class="cs-eye-curve" />
-          </svg>
-        </div>
-      </transition>
     </div>
 
     <!-- 共情心形 -->
@@ -53,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
 type CompanionState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'empathy'
 
@@ -72,6 +59,9 @@ const isVideoState = computed(() => {
   const s = props.state || 'listening'
   return VIDEO_STATES.has(s)
 })
+const reduceMotion = ref(false)
+const shouldUseVideo = computed(() => isVideoState.value && !reduceMotion.value)
+let motionQuery: MediaQueryList | null = null
 
 // ====== 资源路径 ======
 const COMPANION_BASE = import.meta.env.VITE_COMPANION_BASE || '/companion'
@@ -113,6 +103,7 @@ const BLACK_THRESHOLD = 30
 
 /** 启动视频渲染循环 */
 function startVideoRender() {
+  if (reduceMotion.value) return
   const video = videoRef.value
   const cvs = canvasRef.value
   if (!video || !cvs || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
@@ -186,90 +177,36 @@ function onVideoError() {
   console.warn('陪伴角色视频加载失败', videoRef.value?.error)
 }
 
-// 监听视频源变化（idle↔thinking↔speaking 切换时重启渲染）
+// 监听视频源变化（idle↔thinking↔speaking 切换时重启渲染）。
+// 旧画布内容先保留；新视频绘制出首帧后会直接覆盖，避免插回不匹配的静态图。
 watch(videoSrc, () => {
-  hasVideoFrame.value = false
-  canvasRef.value?.getContext('2d')?.clearRect(0, 0, canvasW, canvasH)
   stopVideoRender()
 })
 
 // 监听状态变化：在视频/静态之间切换时重启/停止渲染
-watch(isVideoState, (useVideo) => {
+watch(shouldUseVideo, (useVideo) => {
   if (useVideo) {
     nextTick(() => startVideoRender())
   } else {
     stopVideoRender()
+    hasVideoFrame.value = false
   }
 })
 
-// ====== 眨眼逻辑（不变） ======
-const blinkVisible = ref(false)
-let blinkTimerId: ReturnType<typeof setTimeout> | null = null
-let blinkHideTimerId: ReturnType<typeof setTimeout> | null = null
-
-// ────────────────────────────────────────────────────────────────
-//  眨眼覆盖层的坐标系统
-//  · 单位＝素材自身的像素（原图 625×947），viewBox 与之对齐，
-//    因此无论容器多大／多窄，覆盖层都随角色一起等比缩放，不再像
-//    之前那样用 100×100 方框 + meet 居中，导致眼睛落点随尺寸漂移。
-//  · 眼位是逐个状态实测出来的（对状态视频逐帧做模板匹配取中位，
-//    脚本见 tools/companion-eyes/measure_eyes.py）。角色在每个 loop 里头部会小幅移动，
-//    所以“呼吸/思考/说话”三种姿态分别用各自的中位眼位。
-// ────────────────────────────────────────────────────────────────
-const SPRITE_W = 625
-const SPRITE_H = 947
-
-type EyePair = [[number, number], [number, number]]
-
-const EYE_ANCHORS: Record<'girl' | 'boy', Record<string, EyePair>> = {
-  girl: {
-    idle:      [[241, 369], [437, 362]],
-    listening: [[241, 369], [437, 362]],
-    thinking:  [[291, 373], [437, 422]],
-    speaking:  [[286, 433], [452, 363]],
-  },
-  boy: {
-    idle:      [[233, 363], [403, 353]],
-    listening: [[233, 363], [403, 353]],
-    thinking:  [[233, 406], [402, 376]],
-    speaking:  [[233, 374], [418, 379]],
-  },
+function applyMotionPreference() {
+  reduceMotion.value = Boolean(motionQuery?.matches)
+  if (reduceMotion.value) {
+    stopVideoRender()
+    hasVideoFrame.value = false
+  } else if (isVideoState.value) {
+    nextTick(() => startVideoRender())
+  }
 }
-
-/** 眼睛的水平半径（素材像素），决定闭眼弧线的宽度 */
-const EYE_HALF_WIDTH: Record<'girl' | 'boy', number> = { girl: 44, boy: 38 }
-
-const eyeArcs = computed(() => {
-  const g: 'girl' | 'boy' = props.gender === 'boy' ? 'boy' : 'girl'
-  const s = props.state && EYE_ANCHORS[g][props.state] ? props.state : 'idle'
-  const hw = EYE_HALF_WIDTH[g]
-  const lift = Math.round(hw * 0.5)
-  return EYE_ANCHORS[g][s].map(
-    ([cx, cy]) => `M${cx - hw} ${cy} Q${cx} ${cy - lift} ${cx + hw} ${cy}`,
-  )
-})
-
-const BLINK_INTERVAL_MIN = 4000
-const BLINK_INTERVAL_MAX = 8000
-const BLINK_SHOW_MS = 160
-
-function scheduleBlink() {
-  const delay =
-    BLINK_INTERVAL_MIN +
-    Math.random() * (BLINK_INTERVAL_MAX - BLINK_INTERVAL_MIN)
-  blinkTimerId = setTimeout(() => {
-    blinkVisible.value = true
-    blinkHideTimerId = setTimeout(() => {
-      blinkVisible.value = false
-      scheduleBlink()
-    }, BLINK_SHOW_MS)
-  }, delay)
-}
-
-import { nextTick } from 'vue'
 
 onMounted(() => {
-  scheduleBlink()
+  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+  applyMotionPreference()
+  motionQuery.addEventListener?.('change', applyMotionPreference)
   // 面板初始隐藏或尺寸变化后，重新按实际尺寸绘制。
   resizeObserver = new ResizeObserver(() => startVideoRender())
   const container = canvasRef.value?.parentElement
@@ -278,10 +215,9 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  motionQuery?.removeEventListener?.('change', applyMotionPreference)
   resizeObserver?.disconnect()
   stopVideoRender()
-  if (blinkTimerId !== null) clearTimeout(blinkTimerId)
-  if (blinkHideTimerId !== null) clearTimeout(blinkHideTimerId)
 })
 </script>
 
@@ -358,38 +294,7 @@ onBeforeUnmount(() => {
   height: 100%;
   object-fit: contain;
   object-position: bottom center;
-}
-
-/* ── 眨眼 SVG 覆盖层 ── */
-.cs-blink-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 2;
-}
-.cs-blink-svg {
-  width: 100%;
-  height: 100%;
-}
-.cs-eye-curve {
-  fill: none;
-  stroke: #5a3a32;
-  /* viewBox 单位＝素材像素(625 宽)，11 ≈ 120px 宽头像上的 2.1px */
-  stroke-width: 11;
-  stroke-linecap: round;
-  opacity: 0.82;
-}
-
-.cs-blink-fade-enter-active,
-.cs-blink-fade-leave-active {
-  transition: opacity 80ms ease-out;
-}
-.cs-blink-fade-enter-from,
-.cs-blink-fade-leave-to {
-  opacity: 0;
+  z-index: 1;
 }
 
 /* ── 共情心形 ── */
@@ -414,10 +319,6 @@ onBeforeUnmount(() => {
 @media (prefers-reduced-motion: reduce) {
   .cs-shadow, .cs-char, .cs-heart {
     animation: none !important;
-  }
-  .cs-blink-fade-enter-active,
-  .cs-blink-fade-leave-active {
-    transition: none !important;
   }
 }
 </style>

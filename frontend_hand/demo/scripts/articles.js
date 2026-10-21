@@ -9,7 +9,18 @@
   var list = document.querySelector('ul.arts')
   var note = document.querySelector('.panel__note')
   var foot = document.querySelector('.cat-foot, .panel__foot')
+  var pager = document.querySelector('[data-pager]')
+  var pagerCount = document.querySelector('[data-pager-count]')
+  var prevButton = document.querySelector('[data-prev]')
+  var nextButton = document.querySelector('[data-next]')
   if (!list) return
+
+  var PAGE_SIZE = 10
+  var queryParams = new URLSearchParams(window.location.search)
+  var currentCategoryId = queryParams.get('categoryId') || null
+  var state = { page: Math.max(1, Number(queryParams.get('page')) || 1) }
+  var lastPagination = {}
+  var requestGeneration = 0
 
   /* 内容短的时候别让页脚那条提醒一进页面就露在首屏里：给正文一个「至少一屏」的高度
      （页头占掉多少按实际量），页脚自然落到折线以下。文章多的时候正文本来就更高，不受影响。 */
@@ -29,7 +40,7 @@
 
   function row(article) {
     return (
-      '<li><a class="art-row" href="article-detail.html?id=' + article.id + '">' +
+      '<li><a class="art-row" href="' + api.url('article-detail.html', { id: article.id }) + '">' +
       '<img class="art-row__art" src="' + cover(article) + '" width="560" height="545" alt="" aria-hidden="true" />' +
       '<span><span class="art-row__title">' + api.esc(article.title) + '</span>' +
       '<span class="art-row__summary">' + api.esc(article.summary || '') + '</span></span>' +
@@ -40,16 +51,45 @@
     )
   }
 
-  var currentCategoryId = null
+  function syncUrl() {
+    try {
+      var params = new URLSearchParams()
+      if (new URLSearchParams(window.location.search).has('live')) params.set('live', '1')
+      if (currentCategoryId) params.set('categoryId', currentCategoryId)
+      if (state.page > 1) params.set('page', String(state.page))
+      var search = params.toString()
+      window.history.replaceState(null, '', 'articles.html' + (search ? '?' + search : ''))
+    } catch (error) {
+      /* file:// 下不改地址栏 */
+    }
+  }
 
-  function load() {
-    var query = '/articles?page=1&pageSize=50'
+  function updatePager(pagination) {
+    lastPagination = pagination || {}
+    if (!pager) return
+    pager.hidden = false
+    var total = Number(lastPagination.totalItems) || 0
+    var pages = Math.max(1, Number(lastPagination.totalPages) || 1)
+    pagerCount.textContent = '第 ' + state.page + ' / ' + pages + ' 页 · 每页 ' + PAGE_SIZE + ' 篇 · 共 ' + total + ' 篇'
+    prevButton.disabled = state.page <= 1
+    nextButton.disabled = state.page >= pages
+  }
+
+  function load(page) {
+    if (page !== undefined) state.page = page
+    var generation = ++requestGeneration
+    var query = '/articles?page=' + state.page + '&pageSize=' + PAGE_SIZE
     if (currentCategoryId) query += '&categoryId=' + currentCategoryId
+    if (pagerCount) pagerCount.textContent = '正在读取第 ' + state.page + ' 页…'
+    if (prevButton) prevButton.disabled = true
+    if (nextButton) nextButton.disabled = true
     return api
       .get(query)
       .then(function (data) {
+        if (generation !== requestGeneration) return
         var items = (data && data.items) || []
-        if (note) note.textContent = '共 ' + items.length + ' 篇 · 来自平台内容库'
+        updatePager(data && data.pagination)
+        if (note) note.textContent = '共 ' + (Number(lastPagination.totalItems) || items.length) + ' 篇 · 来自平台内容库'
         /* 列表下面那句（「…为示例数据，接入后来自平台真实内容库」）在接后端模式下**直接去掉**：
            真后端只有三篇文章，列表短，那句话会正好落在第一屏里 —— 一进页面就被一条说明挡住。
            「内容来自平台内容库」这层意思，页脚最后一行已经说过了，不必在列表里再说一遍。
@@ -65,7 +105,9 @@
         list.innerHTML = items.map(row).join('')
       })
       .catch(function (error) {
+        if (generation !== requestGeneration) return
         api.fail(list, error)
+        if (pagerCount) pagerCount.textContent = '读取失败'
       })
   }
 
@@ -75,11 +117,12 @@
       var categories = (data && data.items) || []
       if (!catsList || !categories.length) return
       catsList.innerHTML =
-        '<li><button class="key is-current" type="button" data-cat="">全部</button></li>' +
+        '<li><button class="key' + (currentCategoryId ? '' : ' is-current') + '" type="button" data-cat="">全部</button></li>' +
         categories
           .map(function (category) {
             return (
-              '<li><button class="key" type="button" data-cat="' +
+              '<li><button class="key' + (String(currentCategoryId) === String(category.id) ? ' is-current' : '') +
+              '" type="button" data-cat="' +
               category.id +
               '">' +
               api.esc(category.name) +
@@ -91,15 +134,36 @@
         var button = event.target.closest('[data-cat]')
         if (!button) return
         currentCategoryId = button.getAttribute('data-cat') || null
+        state.page = 1
+        syncUrl()
         Array.prototype.forEach.call(catsList.querySelectorAll('.key'), function (key) {
           key.classList.toggle('is-current', key === button)
         })
-        load()
+        load(1)
       })
     })
     .catch(function () {
       /* 分类取不到就留着页面原来的那几个 */
     })
 
+  if (prevButton) {
+    prevButton.addEventListener('click', function () {
+      if (state.page <= 1) return
+      state.page -= 1
+      syncUrl()
+      load()
+    })
+  }
+  if (nextButton) {
+    nextButton.addEventListener('click', function () {
+      var pages = Math.max(1, Number(lastPagination.totalPages) || 1)
+      if (state.page >= pages) return
+      state.page += 1
+      syncUrl()
+      load()
+    })
+  }
+
+  syncUrl()
   load()
 })()

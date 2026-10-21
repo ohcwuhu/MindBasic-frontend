@@ -4,7 +4,7 @@
   参考：Daylio / Reflectly / Moodflow 的视觉语言——大圆点表情、柔和卡片、充足留白。
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   PhCheck as Check,
@@ -13,7 +13,7 @@ import {
   PhCaretRight as CaretRight,
   PhHeartStraight,
 } from '@phosphor-icons/vue'
-import { del, get, post } from '@/api/client'
+import { del, get, post, type Paginated } from '@/api/client'
 import type { EmotionCalendar, EmotionJournal, EmotionTrend } from '@/api/types'
 import ErrorBanner from '@/components/ErrorBanner.vue'
 import EmptyState from '@/components/EmptyState.vue'
@@ -37,16 +37,37 @@ type MoodKey = (typeof moods)[number]['key']
 const selectedMood = ref<MoodKey | null>(null)
 const content = ref('')
 const journals = ref<EmotionJournal[]>([])
+const dayJournals = ref<EmotionJournal[]>([])
 const trend = ref<EmotionTrend | null>(null)
 const calendar = ref<EmotionCalendar | null>(null)
 const calYear = ref(new Date().getFullYear())
 const calMonth = ref(new Date().getMonth() + 1)
 const selectedDate = ref<string | null>(null)
-const loading = ref(true)
+const listLoading = ref(true)
+const dayLoading = ref(false)
+const calendarLoading = ref(true)
+const trendLoading = ref(true)
 const submitting = ref(false)
 const error = ref('')
+const listError = ref('')
+const dayError = ref('')
+const calendarError = ref('')
+const trendError = ref('')
+const notice = ref('')
 const lastFeedback = ref('')
 const pendingSource = ref<{ source: string; conversationId: number } | null>(null)
+const pagination = ref<Paginated<EmotionJournal>['pagination'] | null>(null)
+const journalPage = ref(1)
+const confirmDeleteId = ref<number | null>(null)
+const deletingId = ref<number | null>(null)
+const targetJournalId = ref<number | null>(null)
+let journalRequest = 0
+let dayRequest = 0
+let calendarRequest = 0
+let trendRequest = 0
+
+const JOURNAL_PAGE_SIZE = 10
+const DAY_SCAN_PAGE_SIZE = 50
 
 onMounted(() => {
   const mood = String(route.query.mood ?? '')
@@ -74,14 +95,9 @@ const calendarGrid = computed<Array<string | null>>(() => {
   ]
 })
 
-const filteredJournals = computed(() => {
-  if (!selectedDate.value) return journals.value
-  return journals.value.filter((journal) => {
-    const date = new Date(journal.createdAt)
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-    return key === selectedDate.value
-  })
-})
+const visibleJournals = computed(() => (selectedDate.value ? dayJournals.value : journals.value))
+const visibleLoading = computed(() => (selectedDate.value ? dayLoading.value : listLoading.value))
+const visibleError = computed(() => (selectedDate.value ? dayError.value : listError.value))
 
 const trendMax = computed(() => {
   if (!trend.value) return 0
@@ -92,36 +108,109 @@ const hasTrendData = computed(() =>
   Object.values(trend.value?.summary ?? {}).some((count) => count > 0),
 )
 
-async function fetchAll() {
-  const [list, trendData, calData] = await Promise.all([
-    get<{ items: EmotionJournal[] }>('/emotion-journals?page=1&pageSize=50'),
-    get<EmotionTrend>('/emotion-journals/trend?days=30'),
-    get<EmotionCalendar>(`/emotion-journals/calendar?month=${calYear.value}-${String(calMonth.value).padStart(2, '0')}`),
-  ])
-  journals.value = list.items
-  trend.value = trendData
-  calendar.value = calData
+function journalDate(iso: string): string {
+  const date = new Date(iso)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-async function load() {
-  loading.value = true
-  error.value = ''
+async function loadJournalPage(page: number): Promise<boolean> {
+  const request = ++journalRequest
+  listLoading.value = true
+  listError.value = ''
   try {
-    await fetchAll()
+    const data = await get<Paginated<EmotionJournal>>(
+      `/emotion-journals?page=${page}&pageSize=${JOURNAL_PAGE_SIZE}`,
+    )
+    if (request !== journalRequest) return true
+    journals.value = data.items
+    pagination.value = data.pagination
+    journalPage.value = data.pagination.page
+    return true
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '日记加载失败'
+    if (request === journalRequest) {
+      listError.value = e instanceof Error ? e.message : '日记加载失败'
+    }
+    return false
   } finally {
-    loading.value = false
+    if (request === journalRequest) listLoading.value = false
   }
 }
 
-async function loadCalendar() {
+/**
+ * 现有接口没有日期筛选。按时间倒序继续翻页，直到目标日期之后；
+ * 在读取完整前只显示加载中，不能提前给出“这一天没有记录”。
+ */
+async function loadDay(date: string): Promise<boolean> {
+  const request = ++dayRequest
+  dayLoading.value = true
+  dayError.value = ''
+  dayJournals.value = []
   try {
-    calendar.value = await get<EmotionCalendar>(
+    let page = 1
+    let totalPages = 1
+    do {
+      const data = await get<Paginated<EmotionJournal>>(
+        `/emotion-journals?page=${page}&pageSize=${DAY_SCAN_PAGE_SIZE}`,
+      )
+      if (request !== dayRequest || selectedDate.value !== date) return true
+      totalPages = Math.max(1, data.pagination.totalPages)
+      const matches = data.items.filter((journal) => journalDate(journal.createdAt) === date)
+      dayJournals.value.push(...matches)
+      const oldest = data.items[data.items.length - 1]
+      if (!oldest || journalDate(oldest.createdAt) < date || page >= totalPages) break
+      page += 1
+    } while (page <= totalPages)
+    return true
+  } catch (e) {
+    if (request === dayRequest) {
+      dayError.value = e instanceof Error ? e.message : '这一天的记录没有完整读取'
+    }
+    return false
+  } finally {
+    if (request === dayRequest) dayLoading.value = false
+  }
+}
+
+async function loadTrend(): Promise<boolean> {
+  const request = ++trendRequest
+  trendLoading.value = true
+  trendError.value = ''
+  try {
+    const data = await get<EmotionTrend>('/emotion-journals/trend?days=30')
+    if (request !== trendRequest) return true
+    trend.value = data
+    return true
+  } catch (e) {
+    if (request === trendRequest) {
+      trendError.value = e instanceof Error ? e.message : '统计加载失败'
+    }
+    return false
+  } finally {
+    if (request === trendRequest) trendLoading.value = false
+  }
+}
+
+async function loadCalendar(): Promise<boolean> {
+  const request = ++calendarRequest
+  const month = `${calYear.value}-${String(calMonth.value).padStart(2, '0')}`
+  calendarLoading.value = true
+  calendarError.value = ''
+  try {
+    const data = await get<EmotionCalendar>(
       `/emotion-journals/calendar?month=${calYear.value}-${String(calMonth.value).padStart(2, '0')}`,
     )
+    if (request !== calendarRequest || month !== `${calYear.value}-${String(calMonth.value).padStart(2, '0')}`) {
+      return true
+    }
+    calendar.value = data
+    return true
   } catch (e) {
-    error.value = e instanceof Error ? e.message : '日历加载失败'
+    if (request === calendarRequest) {
+      calendarError.value = e instanceof Error ? e.message : '日历加载失败'
+    }
+    return false
+  } finally {
+    if (request === calendarRequest) calendarLoading.value = false
   }
 }
 
@@ -133,11 +222,31 @@ function shiftMonth(delta: number) {
   calYear.value = year
   calMonth.value = month
   selectedDate.value = null
-  loadCalendar()
+  calendar.value = null
+  dayRequest += 1
+  void loadCalendar()
 }
 
 function toggleDay(date: string) {
-  selectedDate.value = selectedDate.value === date ? null : date
+  if (selectedDate.value === date) {
+    clearDay()
+    return
+  }
+  selectedDate.value = date
+  void loadDay(date)
+}
+
+function clearDay() {
+  selectedDate.value = null
+  dayRequest += 1
+  dayJournals.value = []
+  dayLoading.value = false
+  dayError.value = ''
+}
+
+function changePage(next: number) {
+  if (!pagination.value || next < 1 || next > pagination.value.totalPages) return
+  void loadJournalPage(next)
 }
 
 function dayMoodKey(date: string): string | null {
@@ -170,6 +279,8 @@ async function submit() {
   if (!selectedMood.value || !content.value.trim()) return
   submitting.value = true
   error.value = ''
+  notice.value = ''
+  let saved: EmotionJournal
   try {
     const payload: Record<string, unknown> = {
       moodType: selectedMood.value,
@@ -179,29 +290,113 @@ async function submit() {
       payload.source = pendingSource.value.source
       payload.sourceConversationId = pendingSource.value.conversationId
     }
-    const journal = await post<EmotionJournal>('/emotion-journals', payload)
-    lastFeedback.value = journal.feedback ?? ''
-    content.value = ''
-    selectedMood.value = null
-    if (pendingSource.value) {
-      pendingSource.value = null
-      router.replace({ path: '/emotion-journal' })
-    }
-    await fetchAll()
+    saved = await post<EmotionJournal>('/emotion-journals', payload)
   } catch (e) {
     error.value = e instanceof Error ? e.message : '保存失败，请重试'
-  } finally {
     submitting.value = false
+    return
+  }
+
+  lastFeedback.value = saved.feedback ?? ''
+  content.value = ''
+  selectedMood.value = null
+  submitting.value = false
+  notice.value = '已保存。'
+  if (pendingSource.value) {
+    pendingSource.value = null
+    const hasLive = new URLSearchParams(window.location.search).has('live')
+    router.replace({ path: '/emotion-journal', query: hasLive ? { live: '1' } : {} })
+  }
+
+  if (journalPage.value === 1 && !selectedDate.value) {
+    journals.value = [saved, ...journals.value].slice(0, JOURNAL_PAGE_SIZE)
+  }
+  if (pagination.value) {
+    pagination.value.totalItems += 1
+    pagination.value.totalPages = Math.max(1, Math.ceil(pagination.value.totalItems / JOURNAL_PAGE_SIZE))
+  }
+
+  const refreshed = await Promise.all([
+    loadJournalPage(journalPage.value),
+    loadTrend(),
+    loadCalendar(),
+    selectedDate.value ? loadDay(selectedDate.value) : Promise.resolve(true),
+  ])
+  if (refreshed.some((ok) => !ok)) {
+    notice.value = '日记已保存；部分展示没有更新，可以单独重试。'
+  }
+}
+
+async function revealJournal(id: number) {
+  targetJournalId.value = id
+  listLoading.value = true
+  listError.value = ''
+  try {
+    let page = 1
+    let totalPages = 1
+    do {
+      const data = await get<Paginated<EmotionJournal>>(
+        `/emotion-journals?page=${page}&pageSize=${DAY_SCAN_PAGE_SIZE}`,
+      )
+      totalPages = Math.max(1, data.pagination.totalPages)
+      const foundIndex = data.items.findIndex((journal) => Number(journal.id) === id)
+      if (foundIndex >= 0) {
+        const targetPage = Math.floor(((page - 1) * DAY_SCAN_PAGE_SIZE + foundIndex) / JOURNAL_PAGE_SIZE) + 1
+        const exactPage = await get<Paginated<EmotionJournal>>(
+          `/emotion-journals?page=${targetPage}&pageSize=${JOURNAL_PAGE_SIZE}`,
+        )
+        journals.value = exactPage.items
+        pagination.value = exactPage.pagination
+        journalPage.value = exactPage.pagination.page
+        await nextTick()
+        const node = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`)
+        node?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        node?.focus({ preventScroll: true })
+        return
+      }
+      page += 1
+    } while (page <= totalPages)
+    listError.value = '没有找到这条日记，它可能已经被删除。'
+  } catch (e) {
+    listError.value = e instanceof Error ? e.message : '这条日记没有读取成功'
+  } finally {
+    listLoading.value = false
   }
 }
 
 async function removeJournal(id: number) {
+  if (deletingId.value !== null) return
+  deletingId.value = id
+  listError.value = ''
   try {
     await del(`/emotion-journals/${id}`)
-    await fetchAll()
-  } catch {
-    error.value = '删除失败，请重试'
+    journals.value = journals.value.filter((journal) => journal.id !== id)
+    dayJournals.value = dayJournals.value.filter((journal) => journal.id !== id)
+    if (pagination.value) {
+      pagination.value.totalItems = Math.max(0, pagination.value.totalItems - 1)
+      pagination.value.totalPages = Math.max(1, Math.ceil(pagination.value.totalItems / JOURNAL_PAGE_SIZE))
+    }
+    confirmDeleteId.value = null
+    notice.value = '已删除。'
+    const refreshed = await Promise.all([loadTrend(), loadCalendar()])
+    if (refreshed.some((ok) => !ok)) notice.value = '日记已删除；部分展示没有更新，可以单独重试。'
+    if (!selectedDate.value && journals.value.length === 0 && journalPage.value > 1) {
+      await loadJournalPage(journalPage.value - 1)
+    }
+  } catch (e) {
+    listError.value = e instanceof Error ? e.message : '删除失败，请重试'
+  } finally {
+    deletingId.value = null
   }
+}
+
+async function load() {
+  const journalId = Number(route.query.journalId || 0)
+  const results = await Promise.all([loadJournalPage(1), loadTrend(), loadCalendar()])
+  if (results.some((ok) => !ok)) {
+    error.value = '部分内容没有加载成功，可以分别重试。'
+  }
+  if (journalId) await revealJournal(journalId)
 }
 
 onMounted(load)
@@ -222,6 +417,12 @@ onMounted(load)
       </header>
 
       <ErrorBanner v-if="error" :message="error" class="mt-6" />
+      <p
+        v-if="notice"
+        class="ej-status mt-4"
+        role="status"
+        aria-live="polite"
+      >{{ notice }}</p>
 
       <!-- ===== 记录区：情绪选择 + 文字输入 ===== -->
     <div
@@ -313,10 +514,18 @@ onMounted(load)
           </div>
 
           <div class="ej-calendar-card">
-            <div v-if="loading && !calendar" class="ej-cal-skeleton">
+            <div v-if="calendarLoading && !calendar" class="ej-cal-skeleton">
               <div v-for="i in 35" :key="i" class="ej-cal-dot-skel"></div>
             </div>
-            <template v-else>
+            <div v-else-if="calendarError && !calendar" class="ej-section-state" role="alert">
+              <p>{{ calendarError }}</p>
+              <button type="button" class="ej-retry-btn" @click="loadCalendar">重试日历</button>
+            </div>
+            <template v-else-if="calendar">
+              <p v-if="calendarError" class="ej-inline-error" role="status">
+                月历没有更新：{{ calendarError }}
+                <button type="button" @click="loadCalendar">重试</button>
+              </p>
               <div class="ej-cal-weekdays">
                 <span v-for="wd in ['日','一','二','三','四','五','六']" :key="wd" class="ej-cal-wd">{{ wd }}</span>
               </div>
@@ -351,22 +560,36 @@ onMounted(load)
               <p class="ej-section-label">记录</p>
               <h2 class="ej-section-title">{{ selectedDate ? `${selectedDate} 的记录` : '心情记录' }}</h2>
             </div>
-            <button v-if="selectedDate" type="button" class="ej-clear-btn" @click="selectedDate = null">
+            <button v-if="selectedDate" type="button" class="ej-clear-btn" @click="clearDay">
               清除筛选
             </button>
           </div>
 
           <!-- 骨架屏 -->
-          <div v-if="loading" class="ej-list-skeleton">
+          <div v-if="visibleLoading" class="ej-list-skeleton" aria-label="正在读取日记">
             <div v-for="i in 3" :key="i" class="ej-card-skel"></div>
           </div>
 
+          <div v-else-if="visibleError" class="ej-section-state" role="alert">
+            <p>{{ visibleError }}</p>
+            <button
+              type="button"
+              class="ej-retry-btn"
+              @click="selectedDate ? loadDay(selectedDate) : loadJournalPage(journalPage)"
+            >
+              重新读取
+            </button>
+          </div>
+
           <!-- 日记卡片 -->
-          <div v-else-if="filteredJournals.length" class="ej-journal-list">
+          <div v-else-if="visibleJournals.length" class="ej-journal-list">
             <article
-              v-for="journal in filteredJournals"
+              v-for="journal in visibleJournals"
               :key="journal.id"
               class="ej-journal-card"
+              :class="{ 'ej-journal-card--target': targetJournalId === journal.id }"
+              :data-journal-id="journal.id"
+              tabindex="-1"
             >
               <div class="ej-card-left">
                 <div class="ej-card-mood-orb" :style="{ '--mc': moodColor(journal.moodType), '--mb': moodBg(journal.moodType) }">
@@ -393,11 +616,24 @@ onMounted(load)
                   <time class="ej-card-time">{{ new Date(journal.createdAt).toLocaleString('zh-CN', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false }) }}</time>
                 </div>
               </div>
+              <div v-if="confirmDeleteId === journal.id" class="ej-delete-confirm">
+                <span>删除这条？</span>
+                <button
+                  type="button"
+                  class="ej-clear-btn"
+                  :disabled="deletingId === journal.id"
+                  @click="removeJournal(journal.id)"
+                >
+                  {{ deletingId === journal.id ? '删除中…' : '确认' }}
+                </button>
+                <button type="button" class="ej-clear-btn" @click="confirmDeleteId = null">取消</button>
+              </div>
               <button
+                v-else
                 type="button"
                 class="ej-card-delete"
                 :aria-label="`删除这条日记`"
-                @click="removeJournal(journal.id)"
+                @click="confirmDeleteId = journal.id"
               >
                 <Trash :size="14" />
               </button>
@@ -410,11 +646,39 @@ onMounted(load)
               :hint="selectedDate ? '换一天看看，或写下这一天的感受。' : '写下第一条，观察自己的情绪变化。'"
             />
           </div>
+
+          <nav
+            v-if="!selectedDate && pagination && pagination.totalPages > 1"
+            class="ej-pager"
+            aria-label="日记分页"
+          >
+            <p>第 {{ journalPage }} / {{ pagination.totalPages }} 页 · 共 {{ pagination.totalItems }} 条</p>
+            <div>
+              <button
+                type="button"
+                class="ej-nav-btn"
+                :disabled="journalPage <= 1 || listLoading"
+                aria-label="上一页日记"
+                @click="changePage(journalPage - 1)"
+              >
+                <CaretLeft :size="14" />
+              </button>
+              <button
+                type="button"
+                class="ej-nav-btn"
+                :disabled="journalPage >= pagination.totalPages || listLoading"
+                aria-label="下一页日记"
+                @click="changePage(journalPage + 1)"
+              >
+                <CaretRight :size="14" />
+              </button>
+            </div>
+          </nav>
         </section>
       </div>
 
       <!-- ===== 近 30 天分布 ===== -->
-      <section v-if="trend" class="ej-section">
+      <section v-if="trendLoading || trendError || trend" class="ej-section">
         <div class="ej-section-head">
           <div>
             <p class="ej-section-label">统计</p>
@@ -422,7 +686,19 @@ onMounted(load)
           </div>
         </div>
         <div class="ej-trend-card">
-          <div v-if="hasTrendData" class="ej-trend-list">
+          <div v-if="trendLoading && !trend" class="ej-list-skeleton" aria-label="正在读取统计">
+            <div class="ej-card-skel" style="height:72px"></div>
+          </div>
+          <div v-else-if="trendError && !trend" class="ej-section-state" role="alert">
+            <p>{{ trendError }}</p>
+            <button type="button" class="ej-retry-btn" @click="loadTrend">重试统计</button>
+          </div>
+          <template v-else-if="trend">
+            <p v-if="trendError" class="ej-inline-error" role="status">
+              统计没有更新：{{ trendError }}
+              <button type="button" @click="loadTrend">重试</button>
+            </p>
+            <div v-if="hasTrendData" class="ej-trend-list">
             <div v-for="mood in moods" :key="mood.key" class="ej-trend-row">
               <span class="ej-trend-name">
                 <MoodFace :mood="mood.key" class="ej-trend-icon" />
@@ -435,8 +711,9 @@ onMounted(load)
               </div>
               <span class="ej-trend-count">{{ trend.summary[mood.key] ?? 0 }}</span>
             </div>
-          </div>
-          <p v-else class="ej-trend-empty">近 30 天还没有记录，写下第一条开始观察变化。</p>
+            </div>
+            <p v-else class="ej-trend-empty">近 30 天还没有记录，写下第一条开始观察变化。</p>
+          </template>
         </div>
       </section>
 
@@ -481,6 +758,14 @@ onMounted(load)
 .ej-title { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; margin-top: 0.35rem; }
 @media (min-width: 768px) { .ej-title { font-size: 2.25rem; } }
 .ej-subtitle { font-size: 0.9rem; color: var(--color-ink-soft); line-height: 1.65; margin-top: 0.6rem; max-width: 46ch; }
+.ej-status {
+  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-pine) 24%, var(--color-hairline));
+  border-radius: 10px;
+  background: var(--color-pine-soft);
+  color: var(--color-pine-deep);
+  font-size: 0.84rem;
+}
 
 /* ===== 记录卡 ===== */
 .ej-write-card {
@@ -633,6 +918,41 @@ onMounted(load)
 .ej-cal-skeleton { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
 .ej-cal-dot-skel { aspect-ratio: 1; border-radius: 10px; background: var(--color-hairline); animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+.ej-section-state {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px dashed var(--color-hairline);
+  border-radius: 12px;
+  color: var(--color-ink-soft);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+.ej-retry-btn,
+.ej-inline-error button {
+  margin-top: 0.55rem;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  background: var(--color-pine-soft);
+  color: var(--color-pine-deep);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.ej-retry-btn:focus-visible,
+.ej-inline-error button:focus-visible,
+.ej-clear-btn:focus-visible,
+.ej-nav-btn:focus-visible {
+  outline: 2px solid var(--color-pine);
+  outline-offset: 2px;
+}
+.ej-inline-error {
+  margin-bottom: 0.75rem;
+  color: #7d3a4a;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
 
 .ej-clear-btn { font-size: 0.82rem; font-weight: 600; color: var(--color-pine); cursor: pointer; background: none; border: none; padding: 0.3rem 0.6rem; border-radius: 8px; transition: background 0.15s; }
 .ej-clear-btn:hover { background: var(--color-pine-soft); }
@@ -649,6 +969,10 @@ onMounted(load)
   transition: box-shadow 0.2s, transform 0.2s; position: relative;
 }
 .ej-journal-card:hover { box-shadow: 0 4px 20px rgba(107,91,149,0.06); transform: translateY(-1px); }
+.ej-journal-card--target {
+  border-color: var(--color-pine);
+  box-shadow: 0 0 0 3px rgba(107,91,149,0.12);
+}
 
 .ej-card-left { flex-shrink: 0; }
 .ej-card-mood-orb {
@@ -670,8 +994,39 @@ onMounted(load)
 .ej-card-delete { position: absolute; top: 0.85rem; right: 0.85rem; width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent; color: var(--color-ink-faint); opacity: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
 .ej-journal-card:hover .ej-card-delete { opacity: 1; }
 .ej-card-delete:hover { color: #dc2626; background: rgba(220,38,38,0.08); }
+.ej-delete-confirm {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.25rem 0.2rem 0.65rem;
+  border: 1px solid var(--color-hairline);
+  border-radius: 999px;
+  background: var(--color-card);
+  box-shadow: 0 3px 12px rgba(80,65,52,0.08);
+  font-size: 0.74rem;
+  color: var(--color-ink-soft);
+}
+.ej-delete-confirm:focus-within { border-color: var(--color-pine); }
+.ej-delete-confirm .ej-clear-btn { padding: 0.25rem 0.4rem; font-size: 0.74rem; }
 
 .ej-empty { margin-top: 2rem; }
+.ej-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--color-hairline);
+  color: var(--color-ink-faint);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.ej-pager > div { display: flex; gap: 0.4rem; }
+.ej-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ===== 分布图 ===== */
 .ej-trend-card { background: var(--color-card); border: 1px solid var(--color-hairline); border-radius: 16px; padding: 1.4rem; }
@@ -694,6 +1049,8 @@ onMounted(load)
   .ej-mood-icon { width: 18px; height: 18px; }
   .ej-journal-card { flex-direction: column; gap: 0.85rem; }
   .ej-card-delete { position: static; align-self: flex-end; opacity: 0.6; }
+  .ej-delete-confirm { position: static; align-self: flex-end; }
   .ej-trend-name { width: 60px; font-size: 0.78rem; }
+  .ej-pager { align-items: flex-start; flex-direction: column; }
 }
 </style>

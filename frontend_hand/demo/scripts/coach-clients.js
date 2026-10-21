@@ -22,11 +22,20 @@
   var caseStatus = document.querySelector('[data-case-status]')
   var statsList = document.querySelector('[data-stats]')
   var statStatus = document.querySelector('[data-stat-status]')
+  var pager = document.querySelector('[data-pager]')
+  var pagerCount = document.querySelector('[data-pager-count]')
+  var prevButton = document.querySelector('[data-prev]')
+  var nextButton = document.querySelector('[data-next]')
   if (!clientRows || !caseRows || !caseForm) return
 
   var clients = []
   var cases = []
   var busy = false
+  var PAGE_SIZE = 20
+  var query = new URLSearchParams(window.location.search)
+  var state = { page: Math.max(1, Number(query.get('page')) || 1) }
+  var pagination = {}
+  var casesGeneration = 0
 
   function say(node, text) {
     if (node) node.textContent = text || ''
@@ -73,6 +82,14 @@
           })
           .join('')
       : '<tr><td colspan="5">' + (api.empty ? api.empty('还没有案例记录', '每次谈完记一条，回头看会有用。') : '还没有案例记录。') + '</td></tr>'
+    if (pager) {
+      pager.hidden = !live
+      var total = Number(pagination.totalItems) || 0
+      var pages = Math.max(1, Number(pagination.totalPages) || 1)
+      pagerCount.textContent = '第 ' + state.page + ' / ' + pages + ' 页 · 每页 ' + PAGE_SIZE + ' 条 · 共 ' + total + ' 条'
+      prevButton.disabled = state.page <= 1
+      nextButton.disabled = state.page >= pages
+    }
   }
 
   function drawStats(stats) {
@@ -82,6 +99,59 @@
       '<li class="stat"><strong>' + Math.round(((stats.serviceMinutes || 0) / 60) * 10) / 10 + '</strong><span>累计服务小时</span></li>' +
       '<li class="stat"><strong>' + (stats.clientCount || 0) + '</strong><span>位客户</span></li>'
     if (statStatus) statStatus.textContent = api.dateTime(new Date().toISOString())
+  }
+
+  function syncUrl() {
+    try {
+      var params = new URLSearchParams()
+      if (new URLSearchParams(window.location.search).has('live')) params.set('live', '1')
+      if (state.page > 1) params.set('page', String(state.page))
+      var search = params.toString()
+      window.history.replaceState(null, '', 'coach-clients.html' + (search ? '?' + search : ''))
+    } catch (error) {
+      /* file:// 下不改地址栏 */
+    }
+  }
+
+  function loadCases(page) {
+    if (page !== undefined) state.page = page
+    var generation = ++casesGeneration
+    caseRows.innerHTML = '<tr aria-hidden="true"><td colspan="5"><span class="skl" style="--skl-w:68%"></span></td></tr>'
+    return api
+      .get('/coach/cases?page=' + state.page + '&pageSize=' + PAGE_SIZE)
+      .then(function (data) {
+        if (generation !== casesGeneration) return
+        cases = (data && data.items) || []
+        pagination = (data && data.pagination) || {}
+        drawCases()
+      })
+      .catch(function (error) {
+        if (generation !== casesGeneration) return
+        cases = []
+        pagination = {}
+        caseRows.innerHTML =
+          '<tr><td colspan="5">' + api.note((error && error.message) || '案例记录没读出来。', true) + '</td></tr>'
+        say(caseStatus, '案例记录没有读取成功，可以刷新后重试。')
+        if (pagerCount) pagerCount.textContent = '读取失败'
+      })
+  }
+
+  function loadStats() {
+    if (statsList) statsList.innerHTML = '<li class="stat"><strong>—</strong><span>正在读取案例统计…</span></li>'
+    if (statStatus) statStatus.textContent = ''
+    return api
+      .get('/coach/cases/stats')
+      .then(drawStats)
+      .catch(function (error) {
+        if (statsList) {
+          statsList.innerHTML =
+            '<li class="stat"><strong>—</strong><span>统计读取失败</span>' +
+            '<button class="link-quiet" type="button" data-stat-retry>重试</button></li>'
+          var retry = statsList.querySelector('[data-stat-retry]')
+          if (retry) retry.addEventListener('click', loadStats)
+        }
+        if (statStatus) statStatus.textContent = (error && error.message) || '案例统计没有读取成功。'
+      })
   }
 
   function closeEditor() {
@@ -140,11 +210,8 @@
     var request = live ? api.del('/coach/cases/' + Number(id)) : Promise.resolve()
     request
       .then(function () {
-        cases = cases.filter(function (item) {
-          return Number(item.id) !== Number(id)
-        })
-        drawCases()
         say(caseStatus, '这条案例记录已删除。')
+        return loadCases()
       })
       .catch(function (error) {
         say(caseStatus, (error && error.message) || '删除没成功。')
@@ -203,10 +270,10 @@
         })
     request
       .then(function (item) {
-        cases = [item].concat(cases)
         caseForm.reset()
-        drawCases()
         say(caseStatus, '记下了。')
+        if (pagination.totalItems) pagination.totalItems += 1
+        return loadCases(1)
       })
       .catch(function (error) {
         fail(caseError, (error && error.message) || '没记上，再试一次。')
@@ -231,6 +298,9 @@
     drawCases()
     say(caseStatus, '设计演示：客户与案例都是示例，备注与新增会在页内生效。')
   } else {
+    clientRows.innerHTML = '<tr aria-hidden="true"><td colspan="5"><span class="skl" style="--skl-w:64%"></span></td></tr>'
+    caseRows.innerHTML = '<tr aria-hidden="true"><td colspan="5"><span class="skl" style="--skl-w:64%"></span></td></tr>'
+    if (statsList) statsList.innerHTML = '<li class="stat"><strong>—</strong><span>正在读取案例统计…</span></li>'
     api
       .get('/coach/clients')
       .then(function (data) {
@@ -238,22 +308,30 @@
         drawClients()
       })
       .catch(function (error) {
+        clients = []
+        clientRows.innerHTML =
+          '<tr><td colspan="5">' + api.note((error && error.message) || '客户列表没读出来。', true) + '</td></tr>'
         say(clientStatus, (error && error.message) || '客户列表没读出来。')
       })
-    api
-      .get('/coach/cases?page=1&pageSize=50')
-      .then(function (data) {
-        cases = (data && data.items) || []
-        drawCases()
+    loadCases()
+    loadStats()
+    if (prevButton) {
+      prevButton.addEventListener('click', function () {
+        if (state.page <= 1) return
+        state.page -= 1
+        syncUrl()
+        loadCases()
       })
-      .catch(function (error) {
-        say(caseStatus, (error && error.message) || '案例记录没读出来。')
+    }
+    if (nextButton) {
+      nextButton.addEventListener('click', function () {
+        var pages = Math.max(1, Number(pagination.totalPages) || 1)
+        if (state.page >= pages) return
+        state.page += 1
+        syncUrl()
+        loadCases()
       })
-    api
-      .get('/coach/cases/stats')
-      .then(drawStats)
-      .catch(function () {
-        /* 读不到就留着页面里的示例数字 */
-      })
+    }
+    syncUrl()
   }
 })()

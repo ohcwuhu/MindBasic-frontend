@@ -27,7 +27,7 @@ import { chromium } from 'playwright'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const DEMO = path.resolve(HERE, '..')
-const BACKEND = path.resolve(DEMO, '..', '..', '项目代码', 'MindBasic-backend')
+const BACKEND = path.resolve(DEMO, '..', '..', 'MindBasic-backend')
 const HELPER = path.join(HERE, 'test-account.py')
 const SHOTS = path.join(DEMO, '.cache', 'review')
 const BASE = 'http://127.0.0.1:5178'

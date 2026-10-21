@@ -9,6 +9,10 @@
    退出会真的打 `POST /auth/logout`（后端清掉 httpOnly 的 refresh Cookie），再清掉本地的
    `mb_access_token` / `feisi_backend` / 昵称 / 角色，最后回首页 —— 首页不需要登录，不会绕回登录页。
 
+   **例外：管理员与教练**。这两种角色的页头按钮分别指向 `admin.html` / `coach.html`，
+   而这两套页面里没有个人中心，也就永远走不到个人中心那颗「退出登录」——人被锁在账号里。
+   所以只有这两种角色的页头额外长一颗「退出登录」；普通用户仍然回个人中心退。
+
    只在**真接后端**时改：`file://` 打开（双击 .html 看设计演示稿）与后端不在时一律不动 ——
    `演示图/` 出图、`verify.mjs` / `collisions.mjs` 记录的还是页面里写好的静态样子。 */
 ;(function () {
@@ -62,12 +66,16 @@
       var buttons = document.querySelectorAll('[data-logout]')
       Array.prototype.forEach.call(buttons, function (button) {
         button.hidden = false
+        /* 角色刷新时会重画一次页头，同一颗按钮不能被挂两遍监听（否则点一下退两次） */
+        if (button.dataset.logoutBound) return
+        button.dataset.logoutBound = '1'
         button.addEventListener('click', function () {
           button.disabled = true
           button.textContent = '正在退出…'
+          var latestToken = token()
           fetch('/api/v1/auth/logout', {
             method: 'POST',
-            headers: { Authorization: 'Bearer ' + accessToken },
+            headers: latestToken ? { Authorization: 'Bearer ' + latestToken } : {},
             credentials: 'include',
           })
             .catch(function () {
@@ -111,7 +119,18 @@
         homeLabel +
         '</a>'
 
+      /* 管理员 / 教练没有个人中心页，退出入口只能落在页头（见文件头注释）。
+         普通用户不在这里放：他们的退出仍然只长在个人中心那一页。
+         页面自己已经有 [data-logout] 时（比如管理员点开了个人中心）就不再重复长一颗。 */
+      if ((isAdmin || isCoach) && !document.querySelector('[data-logout]')) {
+        actions.insertAdjacentHTML(
+          'beforeend',
+          '<button class="link-quiet" type="button" data-logout hidden>退出登录</button>'
+        )
+      }
+
       paintNote(name, role, '')
+      bindLogout()
     }
 
     /* 个人中心那一页上「现在是谁登录着」：昵称 + 角色（昵称本身就叫「管理员」时不重复）
@@ -126,17 +145,21 @@
 
     /* 未读数：没读过的消息有几条，就写在「通知」后面那枚小标签上 */
     function badge() {
-      fetch('/api/v1/notifications/unread-count', {
-        headers: { Authorization: 'Bearer ' + accessToken },
-        credentials: 'include',
-      })
-        .then(function (response) {
-          return response.ok ? response.json() : null
-        })
-        .then(function (payload) {
+      var request = window.FeisiAPI && window.FeisiAPI.get
+        ? window.FeisiAPI.get('/notifications/unread-count')
+        : fetch('/api/v1/notifications/unread-count', {
+            headers: { Authorization: 'Bearer ' + token() },
+            credentials: 'include',
+          }).then(function (response) {
+            return response.ok ? response.json() : null
+          }).then(function (payload) {
+            return payload && payload.data
+          })
+      request
+        .then(function (data) {
           var spot = actions.querySelector('[data-unread]')
-          if (!spot || !payload) return
-          var count = Number((payload.data || {}).count) || 0
+          if (!spot) return
+          var count = Number((data || {}).count) || 0
           spot.textContent = count > 99 ? '99+' : String(count)
           spot.hidden = count <= 0
         })
@@ -147,6 +170,10 @@
 
     /* 别的页面（通知中心）把消息标成已读之后，顺手把页头那枚角标也叫新一下 */
     window.FeisiNav = { refreshUnread: badge }
+
+    window.addEventListener('mb:logout', function () {
+      if (window.FeisiAPI && window.FeisiAPI.expireSession) window.FeisiAPI.expireSession()
+    })
 
     function reveal() {
       var pending = document.querySelector('style[data-session-nav="pending"]')
@@ -160,27 +187,32 @@
     bindLogout()
 
     /* 再问一次后端：昵称变了就刷新，顺手把新昵称缓存起来 */
-    fetch('/api/v1/users/me', {
-      headers: { Authorization: 'Bearer ' + accessToken },
-      credentials: 'include',
-    })
-      .then(function (response) {
-        if (response.status === 401) return null /* 失效就别动，守卫会把人送回登录页 */
-        if (!response.ok) return null
-        return response.json()
-      })
-      .then(function (payload) {
-        if (!payload) return
-        var me = payload.data || {}
+    var meRequest = window.FeisiAPI && window.FeisiAPI.get
+      ? window.FeisiAPI.get('/users/me')
+      : fetch('/api/v1/users/me', {
+          headers: { Authorization: 'Bearer ' + accessToken },
+          credentials: 'include',
+        }).then(function (response) {
+          if (response.status === 401) return null
+          if (!response.ok) return null
+          return response.json()
+        }).then(function (payload) {
+          return payload && payload.data
+        })
+    meRequest
+      .then(function (me) {
+        if (!me) return
         var name = me.nickname || ''
         var role = me.role || ''
+        var previousName = cachedNickname()
+        var previousRole = cachedRole()
         try {
           window.localStorage.setItem(NICK_KEY, name)
           window.localStorage.setItem(ROLE_KEY, role)
         } catch (error) {
           /* 忽略 */
         }
-        if (name !== cachedNickname() || role !== cachedRole()) show(name, role)
+        if (name !== previousName || role !== previousRole) show(name, role)
         paintNote(name, role, me.phone || '')
       })
       .catch(function () {
