@@ -19,7 +19,7 @@
   document.querySelector('.plate__lede').textContent = '按最近两周真实的感受作答。结果用于自我回顾，不作诊断。'
   document.querySelector('[data-template-note]').textContent = '题目来自当前启用的成长自评量表。'
   document.querySelector('[data-result-title]').textContent = '最近一次结果'
-  document.querySelector('.footer__note--demo').textContent = '© 2026 斐思同行 · 测评结果来自你的账号'
+  document.querySelector('.footer__note--demo').textContent = '© 2026 知心同行 · 测评结果来自你的账号'
   view.state(quiz, '正在读取测评题目…')
   document.documentElement.removeAttribute('data-live-pending')
   view.load(document.querySelector('[data-assessment-result]'), document.querySelector('[data-result-note]'))

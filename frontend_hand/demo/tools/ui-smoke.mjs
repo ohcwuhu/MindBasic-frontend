@@ -88,7 +88,7 @@ async function run() {
     }
     if (pathname === '/api/v1/platform/config') {
       return route.fulfill({
-        json: envelope({ platformName: '斐思同行', hotline: '12356', aiDisclaimer: 'AI 内容仅供参考' }),
+        json: envelope({ platformName: '知心同行', hotline: '12356', aiDisclaimer: 'AI 内容仅供参考' }),
       })
     }
     if (pathname === '/api/v1/notifications/unread-count') {

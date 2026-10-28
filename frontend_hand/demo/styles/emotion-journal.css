@@ -1,4 +1,4 @@
-/* 斐思同行 · 情绪日记（画风层）
+/* 知心同行 · 情绪日记（画风层）
 
    这一页的 DOM 全部来自原前端的 Vue 组件 —— `views/EmotionJournalView.vue` 与它带的
    `MoodFace` / `QuoteBlock` / `EmptyState` / `ErrorBanner`，由 `vue/` 里那份构建编成

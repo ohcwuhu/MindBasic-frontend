@@ -14,7 +14,7 @@
   var dimNote = document.getElementById('dim-title').closest('.panel').querySelector('.panel__foot')
   var timelineNote = document.getElementById('tl-title').closest('.panel').querySelector('.panel__foot')
   var timelineHeadingNote = panelNote('tl-title')
-  document.querySelector('.footer__note--demo').textContent = '© 2026 斐思同行 · 记录与测评来自你的账号'
+  document.querySelector('.footer__note--demo').textContent = '© 2026 知心同行 · 记录与测评来自你的账号'
   count.textContent = '正在读取打卡统计…'; streakNote.textContent = ''
   badgeNote.textContent = '正在读取…'; account.textContent = '正在读取账号…'
   timelineNote.textContent = ''; timelineHeadingNote.textContent = '最近记录 · 不等于累计数量'

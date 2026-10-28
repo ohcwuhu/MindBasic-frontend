@@ -61,7 +61,7 @@
     setText(nameBoxes, data.name || '社群')
     setText(descBoxes, data.description || '')
     if (crumb) crumb.textContent = data.name || '社群'
-    document.title = (data.name || '社群') + ' · 斐思同行'
+    document.title = (data.name || '社群') + ' · 知心同行'
     if (art && !data.coverUrl) {
       art.src = 'assets/' + COVERS[Math.abs(Number(data.id) || 0) % COVERS.length] + '.webp'
     } else if (art && data.coverUrl) {

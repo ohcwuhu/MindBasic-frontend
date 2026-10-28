@@ -177,6 +177,7 @@ const VIDEO_CONSTRAINTS: MediaTrackConstraints = {
 }
 
 const consentCamera = ref(false)
+// 语气与表情默认开启，界面不再提供开关
 const consentMultimodal = ref(true)
 const cameraStarting = ref(false)
 // 非阻塞提示（摄像头不可用等）：不打断对话，只在画面上说明当前模式
@@ -1272,18 +1273,6 @@ const handleCameraTrackEnded = () => {
   cameraNotice.value = '摄像头已断开，已切换为语音模式'
 }
 
-/** 多模态线索开关：关闭后语音语调与表情不再参与对话策略 */
-const toggleMultimodal = () => {
-  consentMultimodal.value = !consentMultimodal.value
-  if (!consentMultimodal.value) {
-    // 清掉上一轮的线索展示，避免关闭后仍显示过期的语调/表情结果
-    emotionResult.value = null
-  }
-  emitConsentChange(
-    consentMultimodal.value ? 'USER_ENABLE_MULTIMODAL' : 'USER_DISABLE_MULTIMODAL',
-  )
-}
-
 // ================================================================
 //  视频帧上传（供 VLM 使用，与面部识别的 upload_frame 独立）
 // ================================================================
@@ -1577,7 +1566,7 @@ const displayMessages = computed(() => {
             <li class="consent-item">
               <PhEye :size="16" weight="duotone" aria-hidden="true" />
               <span class="consent-text">
-              <span class="consent-name">语气与表情</span>
+                <span class="consent-name">语气与表情</span>
                 <span class="consent-note">用语调与表情补充情境，可随时关闭</span>
               </span>
               <button
@@ -1677,58 +1666,6 @@ const displayMessages = computed(() => {
             对话
           </span>
           <span v-if="partialAssistantText" class="typing-hint">AI 正在回复…</span>
-        </div>
-
-        <!-- 多模态线索：开关 + 本轮线索（关闭后不再展示语调 / 表情 / 融合结果） -->
-        <div v-if="isDeviceActive" class="signal-panel">
-          <div class="signal-head">
-            <span class="signal-title">语气与表情</span>
-            <button
-              type="button"
-              class="switch"
-              role="switch"
-              :aria-checked="consentMultimodal"
-              aria-label="语气与表情"
-              @click="toggleMultimodal"
-            >
-              <span class="switch-track" :class="{ on: consentMultimodal }">
-                <span class="switch-thumb"></span>
-              </span>
-              <span class="signal-state">{{ consentMultimodal ? '已开启' : '已关闭' }}</span>
-            </button>
-          </div>
-
-          <p v-if="!consentMultimodal" class="signal-hint">
-            语音语调与表情不再参与对话，仅按文字内容理解
-          </p>
-
-          <div v-else-if="emotionResult" class="emotion-strip">
-            <div v-if="emotionResult.fusion" class="emo-chip">
-              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.fusion.final_emotion) }"></span>
-              <span class="emo-name">融合</span>
-              <span class="emo-val">{{ emotionResult.fusion.final_emotion_cn }}</span>
-            </div>
-            <div v-if="emotionResult.voice_emotion" class="emo-chip">
-              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.voice_emotion.emotion) }"></span>
-              <span class="emo-name">语调</span>
-              <span class="emo-val">{{ emotionResult.voice_emotion.emotion_cn }}</span>
-            </div>
-            <div v-if="emotionResult.text_emotion" class="emo-chip">
-              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.text_emotion.emotion) }"></span>
-              <span class="emo-name">文本</span>
-              <span class="emo-val">{{ emotionResult.text_emotion.emotion_cn }}</span>
-            </div>
-            <div v-if="emotionResult.facial_emotion && emotionResult.facial_emotion.frame_count > 0" class="emo-chip">
-              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.facial_emotion.dominant_emotion) }"></span>
-              <span class="emo-name">面部</span>
-              <span class="emo-val">{{ emotionResult.facial_emotion.dominant_emotion_cn }}</span>
-            </div>
-            <div class="emo-chip">
-              <span class="emo-dot" :style="{ backgroundColor: getEmotionColor(emotionResult.asr_emo) }"></span>
-              <span class="emo-name">ASR</span>
-              <span class="emo-val">{{ getEmotionCn(emotionResult.asr_emo) }}</span>
-            </div>
-          </div>
         </div>
 
         <div ref="chatBodyRef" class="chat-body">
@@ -2372,22 +2309,30 @@ const displayMessages = computed(() => {
   color: var(--color-ink-soft);
 }
 
+/* 两列等宽：同一行的标签宽度一致；线索个数为奇数时，最后一枚横跨两列并居中收尾，
+   不会再出现「2 + 2 + 1」里那个孤零零靠左的标签。 */
 .emotion-strip {
-  display: flex;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 8px;
   padding: 0 14px 10px;
-  flex-wrap: wrap;
 }
 .emo-chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
+  min-width: 0;
   background: var(--color-paper);
   border: 1px solid var(--color-hairline);
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 12px;
   color: var(--color-ink-soft);
+}
+.emo-chip:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  justify-self: center;
 }
 .emo-dot {
   width: 7px;

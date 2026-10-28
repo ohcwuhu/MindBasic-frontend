@@ -47,7 +47,7 @@
   }
 
   function renderProfile(coach) {
-    document.title = coach.nickname + ' · 教练档案 · 斐思同行'
+    document.title = coach.nickname + ' · 教练档案 · 知心同行'
     var plateTitle = document.querySelector('.plate__title')
     if (plateTitle) plateTitle.textContent = coach.nickname
     var crumb = document.querySelector('.crumbs span:last-child')

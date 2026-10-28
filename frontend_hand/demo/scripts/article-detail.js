@@ -88,7 +88,7 @@
       }
       return api.get('/articles/' + articleId).then(function (article) {
         currentArticleId = Number(article.id) || articleId
-        document.title = article.title + ' · 斐思同行'
+        document.title = article.title + ' · 知心同行'
         var plateTitle = document.querySelector('.plate__title')
         if (plateTitle) plateTitle.textContent = article.title
         var meta = document.querySelector('.article-head__meta')

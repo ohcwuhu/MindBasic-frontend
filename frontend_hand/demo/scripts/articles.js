@@ -97,7 +97,7 @@
         if (foot) foot.remove()
         /* 页脚那行「设计演示稿：文章条目为示例内容」同理：接了真后端就不是示例了 */
         var demoLine = document.querySelector('.footer__note--demo')
-        if (demoLine) demoLine.textContent = '© 2026 斐思同行 · 内容来自平台内容库'
+        if (demoLine) demoLine.textContent = '© 2026 知心同行 · 内容来自平台内容库'
         if (!items.length) {
           list.innerHTML = api.empty('这一类还没有文章', '换个分类看看，或回到「全部」。')
           return

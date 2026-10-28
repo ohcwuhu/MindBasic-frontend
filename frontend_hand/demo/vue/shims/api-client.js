@@ -40,7 +40,7 @@ export class ApiError extends Error {
 
 /** 演示用的平台配置：与页脚、AI 免责声明横幅上的口径一致 */
 const PLATFORM = {
-  platformName: '斐思同行',
+  platformName: '知心同行',
   hotline: '12356',
   emergencyHint: '如有危机或伤害自己的念头，请立即拨打热线，或前往就近医院急诊。',
   disclaimer: 'AI 陪伴不能替代专业诊疗，也不做任何医疗诊断。',

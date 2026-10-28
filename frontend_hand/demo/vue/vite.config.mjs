@@ -1,4 +1,4 @@
-/* 斐思同行 · 自我教练页的构建
+/* 知心同行 · 自我教练页的构建
 
    这一页不再手抄原前端的 DOM：原项目
    `项目主体/项目代码/MindBasic-frontend/src` 里的 `VideoCallView.vue` +
