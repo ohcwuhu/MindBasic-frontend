@@ -1,16 +1,1 @@
 node_modules/
-dist/
-.vite/
-*.local
-.env
-.env.*
-!.env.example
-npm-debug.log*
-dev-*.log
-*.out.log
-*.err.log
-
-# 通用日志与本地产物
-*.log
-coverage/
-.DS_Store

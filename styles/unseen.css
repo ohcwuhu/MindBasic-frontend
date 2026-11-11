@@ -1,0 +1,136 @@
+/* 素材库 3.0 视觉层，置于业务组件样式之后；不改变业务状态与语义颜色。 */
+:root {
+  --font-hand: var(--font-ui);
+  --surface:#fdfbf9; --paper:#f1ecee; --paper-edge:#e5dce0;
+  --ink:#3d323b; --ink-body:#3d323b; --ink-muted:#786a74;
+  --hairline:#e5dce0; --ink-line:#cdbcc5; --ink-line-soft:#e5dce0;
+  --green:#795368; --green-deep:#634354; --green-soft:#efe4eb; --green-ink:#795368;
+  --yellow:#e9dfe5; --yellow-deep:#ddcdd6; --yellow-soft:#f7f1f4; --yellow-ink:#786a74;
+  --lilac:#eee9ef; --blush:#f0e5eb; --sky:#eee8ed; --grass:#f7f5f4; --focus:#795368;
+}
+/* 背景由根画布绘制，覆盖导航外边距；避免顶部露出另一层纯色底。 */
+html { background:#f7f5f4; }
+/* 页面滚动仍由浏览器处理；不让原奶白滚动条在画布右侧形成色带。 */
+html { scrollbar-width:none; }
+html::-webkit-scrollbar { display:none; width:0; height:0; }
+body,body.field-tree,body.field-cabin {
+  background:transparent;
+  --color-paper:#f1ecee; --color-paper-2:#eee7eb; --color-card:#fdfbf9;
+  --color-ink:#3d323b; --color-ink-soft:#786a74; --color-ink-faint:#81717c;
+  --color-hairline:#e5dce0; --color-pine:#795368; --color-pine-deep:#634354;
+  --color-pine-soft:#efe4eb; --color-gold:#846474; --color-gold-soft:#f1ecee;
+  --color-gold-deep:#705264; --color-sand:#f1ecee;
+}
+h1,h2,h3,h4 { letter-spacing:.025em; }
+/* 与页面留出空隙的奶白磨砂玻璃卡片；不用边框勾勒外沿。 */
+.masthead { width:calc(100% - 40px); max-width:1240px; margin:18px auto 0; border:1px solid rgb(229 220 224 / 70%); border-radius:22px; background:rgb(253 251 249 / 88%); backdrop-filter:blur(20px) saturate(110%); -webkit-backdrop-filter:blur(20px) saturate(110%); box-shadow:0 8px 32px rgb(80 52 66 / 5%); }
+.masthead__inner { padding-inline:24px; }
+.masthead__inner { min-height:72px; }
+.brand__name { letter-spacing:.08em; }
+.nav__link { font-size:15px; font-weight:500; }
+.nav__link.is-current { color:#795368; background:rgb(255 253 249 / 48%); }
+.btn { border:1px solid transparent; border-radius:999px; background:#795368; color:#fff; box-shadow:0 5px 16px #79536818; }
+.btn:hover { background:#634354; }
+.btn--yellow,.btn--paper { background:#fdfbf9; color:#795368; border-color:#e5dce0; box-shadow:none; }
+.btn--yellow:hover,.btn--paper:hover { background:#f1ecee; }
+.btn__arrow { filter:brightness(0) invert(1); }
+.btn--yellow .btn__arrow,.btn--paper .btn__arrow { filter:none; }
+.panel,.note { background:#fdfbf9; border:1px solid #e5dce0; border-radius:24px; box-shadow:0 12px 36px #70465b0a; rotate:0deg; }
+.stamp,.chip,.key,.tab,.input,.textarea,.select { border-radius:12px; border-width:1px; rotate:0deg; }
+.input,.textarea,.select { background:#fffdfc; border-color:#cdbcc5; }
+.pin { display:none; }
+.mark { background:none; color:#795368; }
+.plate,.ground { background:none; }
+.footer { background:#f1ecee; border-top:1px solid #e5dce0; }
+.table th { background:#f1ecee; }
+.table tbody { background:#fdfbf9; }
+.panel:has(> .table) { overflow-x:auto; }
+.unseen-decoration { position:absolute; right:max(8%,calc((100% - 1100px) / 2)); bottom:10px; width:150px; height:180px; object-fit:contain; pointer-events:none; }
+.unseen-decoration--cat { background:#fdfbf9; border-radius:24px; padding:12px; }
+/* 六种情绪使用新瓷质表情，保留原标签、分类和数据。 */
+#app .ej-page::before,#app .ej-page::after,#app .quote-block::before { display:none; }
+#app .ej-page,#app .ej-card,#app .quote-block { rotate:0deg; border-radius:24px; border-color:#e5dce0; }
+#app .ej-inner > .bg-pine-soft\/70,#app .ej-card,#app .ej-cal { background-color:#fdfbf9; }
+#app .ej-inner > .bg-pine-soft\/70::before { display:none; }
+#app .ej-submit-btn { color:#fff; }
+#app .video-call-page { --color-paper:#f1ecee; --color-card:#fdfbf9; }
+@media(max-width:767px) {
+  .masthead__inner { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 12px; padding-block:10px; }
+  .masthead__actions { gap:10px; }
+  .masthead__actions .btn { min-height:38px; padding:6px 14px; font-size:14px; }
+  .brand__name { font-size:20px; }
+  .brand__mark { width:26px; }
+  .nav { grid-column:1 / -1; grid-row:2; margin:0; min-width:0; max-width:100%; overflow-x:auto; }
+  .nav__list { width:max-content; }
+  .nav__link { padding-inline:11px; font-size:14px; min-height:40px; }
+  .masthead__inner { min-height:64px; }
+  .unseen-decoration { display:none; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html { scroll-behavior:auto; }
+}
+
+body:not(.unseen-home) .plate:has(.unseen-decoration) .plate__inner { padding-right:220px; }
+@media(max-width:767px) { body:not(.unseen-home) .plate:has(.unseen-decoration) .plate__inner { padding-right:var(--gutter); } }
+
+/* 共享导航与品牌：新视觉沿用原 Logo 与服务入口。 */
+.brand__mark { width:36px; height:36px; object-fit:contain; }
+.brand__name { font-weight:500; letter-spacing:.15em; }
+h1,h2,h3,h4 { font-weight:500; }
+/* 无底小猫倚在表单上沿，前爪接近面板边缘。 */
+.auth { position:relative; margin-top:70px; }
+.auth-cat { position:absolute; width:160px; height:105px; object-fit:contain; right:18px; top:-85px; pointer-events:none; }
+/* 对话栏回归简洁标题，不放置小猫装饰。 */
+#app .vc-sidebar { border:1px solid #e5dce0; border-radius:22px; }
+#app .sidebar-header { padding:14px 18px; }
+.bg-pine.text-card, #app .start-call-btn { color:#fff; }
+#app .start-call-btn { border:1px solid transparent; border-radius:999px; }
+#app .vc-stage { border-width:1px; border-radius:22px; }
+#app .vc-stage:has(.stage-idle) { overflow-y:auto; align-items:flex-start; }
+#app .stage-idle { flex:0 0 auto; margin-inline:auto; width:min(100%,420px); }
+#app .consent-list { border-radius:16px; }
+#app .ej-mood-check { background:none; color:#795368; }
+#app .ej-mood-check svg { display:block; }
+@media(max-width:767px) {
+  .auth { width:100%; margin-top:76px; padding:28px 22px; }
+  .auth-cat { width:142px; right:14px; }
+}
+
+.week li.is-on { color:#fff; }
+
+@media(max-width:767px) {
+  .masthead { width:calc(100% - 24px); margin-top:12px; border-radius:22px; }
+  .masthead__inner { padding-inline:14px; }
+  .nav__link { padding-inline:8px; font-size:13px; }
+}
+/* 分类插图完整展示，和真实文字分开，避免拉伸猫咪姿态。 */
+.art-row { grid-template-columns:116px minmax(0,1fr) auto; gap:24px; padding-block:22px; }
+.art-row__art { width:116px; height:104px; object-fit:contain; }
+.coach-card .figure { width:86px; height:86px; background:transparent; }
+.coach-card .figure img { width:82px; height:82px; object-fit:contain; }
+@media(max-width:767px) {
+  .art-row { grid-template-columns:76px minmax(0,1fr); gap:14px; }
+  .art-row__art { width:76px; height:82px; }
+  .art-row__side { grid-column:2; justify-self:start; }
+  .coach-card .figure { width:72px; height:72px; }
+  .coach-card .figure img { width:68px; height:68px; }
+}
+
+/* 原生横竖构图分别加载；无损发布图不再使用旧低分辨率背景。 */
+.hero__scene { position:absolute; inset:0; z-index:-1; pointer-events:none; }
+.hero__scene img { width:100%; height:100%; object-fit:cover; object-position:center; }
+
+/* 内页的共享表面与操作反馈。 */
+.nav__link { font-weight:400; transition:background-color 180ms,color 180ms; }
+.nav__link.is-current { color:var(--green); background:var(--green-soft); }
+.nav__link:hover { background:var(--green-soft); color:var(--green-deep); }
+.btn { transition:background-color 180ms,box-shadow 180ms,transform 180ms; }
+.btn:active { transform:translateY(1px); }
+.panel,.note { box-shadow:0 8px 32px rgb(79 54 68 / 3%); }
+.input:focus,.textarea:focus,.select:focus { outline:2px solid var(--green); outline-offset:2px; }
+.footer { color:var(--ink-muted); }
+@media (min-width:768px) and (max-width:1100px) {
+  .masthead__inner { gap:12px; padding-inline:20px; flex-wrap:wrap; }
+  .masthead__actions { margin-left:auto; }
+  .masthead__inner:has(.masthead__actions [data-logout]) .nav { order:3; width:100%; }
+}

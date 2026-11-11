@@ -1,0 +1,15 @@
+/* 首页与主要服务页面共用的中文艺术字。 */
+@font-face {
+  font-family:'Ma Shan Zheng';
+  src:url('../fonts/ma-shan-zheng-display.woff2') format('woff2');
+  font-weight:400;
+  font-style:normal;
+  font-display:swap;
+}
+@font-face {
+  font-family:'Long Cang';
+  src:url('../fonts/longcang-brush.ttf') format('truetype');
+  font-weight:400;
+  font-style:normal;
+  font-display:swap;
+}

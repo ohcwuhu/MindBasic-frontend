@@ -1,0 +1,155 @@
+/* 情绪日记：沿用首页的雾白留白、灰梅色与毛笔标题，只改视觉层。 */
+body.journal-page { background:#f7f5f4; }
+.journal-page .page { padding:0; }
+.boot-note { padding:64px 22px; text-align:center; color:var(--ink-muted); }
+#app .ej-page { position:relative; width:calc(100% - 80px); max-width:1200px; margin:0 auto 70px; padding:0; border:0; border-radius:0; background:transparent; }
+#app .ej-page::before,#app .ej-page::after,#app .ej-glow { display:none; }
+#app .ej-inner { position:relative; }
+#app .ej-header { position:relative; min-height:235px; margin:0 0 30px; padding:50px 285px 35px 0; }
+#app .ej-label { display:none; }
+#app .ej-title { font-family:'Ma Shan Zheng','LXGW WenKai',cursive; font-size:60px; font-weight:400; line-height:1.3; letter-spacing:.03em; margin:0; color:var(--ink); }
+#app .ej-subtitle { max-width:520px; margin-top:20px; font-size:14px; color:#70616c; line-height:1.9; }
+#app .ej-header::before { content:''; position:absolute; right:14px; bottom:16px; width:230px; height:190px; border-radius:120px 120px 24px 24px; background:#ede5eb; }
+#app .ej-header::after { content:''; position:absolute; right:30px; bottom:8px; width:205px; height:205px; background:url('../assets/star/pose-typing.png') center/contain no-repeat; pointer-events:none; }
+#app .ej-inner > .bg-pine-soft\/70 { padding:16px 20px; margin-bottom:20px; background:#efe4eb; color:#634354; border-radius:14px; }
+#app .ej-status { margin:0 0 20px; background:#efe4eb; border-color:#d5c2ce; }
+#app .ej-write-card { display:grid; grid-template-columns:.95fr 1.05fr; gap:40px; margin:0; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
+#app .ej-mood-fieldset { min-width:0; border:0; padding:0; margin:0; }
+#app .ej-mood-legend { font-family:var(--font-ui); font-size:21px; font-weight:500; color:var(--ink); margin:0 0 18px; padding:0; letter-spacing:.02em; }
+#app .ej-mood-bar { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+#app .ej-mood-pill { position:relative; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:9px; min-height:108px; padding:14px 10px; border:1px solid transparent; border-radius:16px; background:#ede8eb; box-shadow:none; transition:background-color 180ms,border-color 180ms,transform 180ms; }
+#app .ej-mood-pill:hover { background:#e8dfe5; transform:translateY(-2px); box-shadow:none; }
+#app .ej-mood-pill.ej-mood-active { background:#e5d8e1; border-color:#795368; box-shadow:none !important; }
+#app .ej-mood-icon-wrap { width:48px; height:48px; }
+#app .ej-mood-icon { width:48px; height:48px; }
+#app .ej-mood-label { font-size:13px; font-weight:400; color:#634354; }
+#app .ej-mood-active .ej-mood-label { font-weight:600; }
+#app .ej-mood-check { position:absolute; top:9px; right:9px; width:18px; height:18px; margin:0; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#795368; color:white; }
+#app .ej-mood-check svg { display:block; }
+#app .ej-input-wrap { display:flex; flex-direction:column; min-width:0; margin:0; padding:23px 25px; border:1px solid #ded1d9; border-radius:24px; background:#fdfbf9; box-shadow:none; transition:border-color 180ms; }
+#app .ej-input-wrap:focus-within { border-color:#795368; outline:2px solid #795368; outline-offset:3px; }
+#app .ej-feeling-label { display:block; position:static; width:auto; height:auto; clip-path:none; overflow:visible; font-size:14px; font-weight:500; color:#634354; }
+#app .ej-textarea { flex:1; width:100%; min-height:145px; margin-top:13px; padding:0; border:0; border-radius:0; background:transparent; font-family:var(--font-ui); font-size:15px; line-height:1.9; color:var(--ink); box-shadow:none; resize:vertical; }
+#app .ej-textarea::placeholder { color:#786a74; opacity:1; }
+#app .ej-textarea:focus,#app .ej-textarea:focus-visible { box-shadow:none; border:0; outline:none; }
+#app .ej-input-footer { margin-top:20px; gap:12px; }
+#app .ej-char-count { font-size:12px; color:#70616c; font-variant-numeric:tabular-nums; }
+#app .ej-submit-btn { min-height:44px; height:auto; padding:10px 22px; border:1px solid transparent; border-radius:999px; background:#795368; font-family:var(--font-ui); font-size:14px; font-weight:400; color:#fff; letter-spacing:0; box-shadow:none; transition:background-color 180ms; }
+#app .ej-submit-btn:hover:not(:disabled) { background:#634354; transform:none; box-shadow:none; }
+#app .ej-submit-btn:disabled { background:#e8e0e5; color:#70616c; border-color:transparent; opacity:1; cursor:not-allowed; }
+#app .ej-feedback { margin-top:24px; padding:20px 24px; border:0; border-radius:16px; background:#ede5eb; rotate:0deg; }
+#app .ej-feedback-text { font-family:var(--font-ui); font-size:14px; line-height:1.9; font-style:normal; color:#634354; }
+#app .ej-duo { display:grid; grid-template-columns:.86fr 1.14fr; gap:40px; align-items:start; margin-top:58px; }
+#app .ej-section { margin-top:48px; min-width:0; }
+#app .ej-duo .ej-section { margin-top:0; }
+#app .ej-section-head { align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+#app .ej-section-label { display:none; }
+#app .ej-section-title { margin:0; font-family:var(--font-ui); font-size:22px; font-weight:500; line-height:1.5; letter-spacing:.015em; }
+#app .ej-month-nav { gap:9px; }
+#app .ej-nav-btn { width:34px; height:34px; border:1px solid #ded1d9; border-radius:50%; background:transparent; color:#634354; }
+#app .ej-nav-btn:hover:not(:disabled) { background:#ebe3e8; border-color:#795368; }
+#app .ej-nav-btn:disabled { opacity:.4; cursor:not-allowed; }
+#app .ej-month-label { min-width:96px; font-family:var(--font-ui); font-size:13px; font-weight:400; color:var(--ink); }
+#app .ej-calendar-card { max-width:none; padding:22px; border:0; border-radius:24px; background:#eee8ed; box-shadow:none; }
+#app .ej-cal-weekdays { margin-bottom:10px; }
+#app .ej-cal-wd { padding-bottom:4px; font-size:12px; font-weight:400; color:#70616c; }
+#app .ej-cal-grid { gap:4px; }
+#app .ej-cal-cell { aspect-ratio:1; border:1px solid transparent; border-radius:12px; background:transparent; color:var(--ink); }
+#app .ej-cal-cell:hover:not(.ej-cal-empty) { background:#fdfbf9; }
+#app .ej-cal-day-num { font-size:13px; font-variant-numeric:tabular-nums; }
+#app .ej-cal-mood-dot { width:6px; height:6px; border-radius:50%; }
+#app .ej-cal-today { background:#fdfbf9; border-color:#c9afbf; }
+#app .ej-cal-today::before { content:none; }
+#app .ej-cal-selected,#app .ej-cal-selected:hover { background:#795368; border-color:#795368; box-shadow:none; color:#fff; }
+#app .ej-cal-selected .ej-cal-day-num { color:#fff; }
+#app .ej-cal-hint { margin-top:13px; padding-top:12px; border-top:1px solid #ded1d9; font-size:12px; color:#70616c; }
+#app .ej-journal-list { display:grid; gap:0; margin:0; }
+#app .ej-journal-card,#app .ej-journal-card:hover { gap:14px; padding:20px 0; background:transparent; border:0; border-bottom:1px solid #e5dce0; border-radius:0; box-shadow:none; rotate:0deg; transform:none; }
+#app .ej-journal-card:first-child { padding-top:8px; }
+#app .ej-journal-card--target { outline:2px solid #795368; outline-offset:5px; }
+#app .ej-card-mood-orb { width:42px; height:42px; border:0; border-radius:50%; background:#eee8ed; }
+#app .ej-card-mood-face { width:32px; height:32px; }
+#app .ej-card-body { min-width:0; }
+#app .ej-card-text { font-family:var(--font-ui); font-size:14px; line-height:1.9; color:var(--ink); }
+#app .ej-card-feedback { margin-top:8px; padding-left:12px; border-left:1px solid #d5c2ce; font-size:13px; line-height:1.8; font-style:normal; color:#70616c; opacity:1; }
+#app .ej-card-meta { gap:7px; flex-wrap:wrap; margin-top:13px; }
+#app .ej-card-tag { padding:3px 8px; border-radius:6px; font-size:11px; font-weight:400; color:#634354; background:#ebe3e8; }
+#app .ej-card-time { margin-left:0; font-size:11px; color:#70616c; font-variant-numeric:tabular-nums; }
+#app .ej-card-delete { width:32px; height:32px; border:0; border-radius:50%; background:transparent; color:#70616c; opacity:1; }
+#app .ej-card-delete:hover { color:#795368; background:#ebe3e8; }
+#app .ej-delete-confirm { flex-wrap:wrap; gap:8px; }
+#app .ej-empty { margin-top:0; padding:20px 0; }
+#app .ej-pager { margin-top:18px; font-size:12px; color:#70616c; }
+#app .ej-clear-btn,#app .ej-retry-btn { color:#795368; }
+#app .ej-trend-card { padding:25px 28px; border:0; border-radius:24px; background:#efe9e6; box-shadow:none; }
+#app .ej-trend-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px 36px; }
+#app .ej-trend-row { display:grid; grid-template-columns:minmax(0,1fr) 24px; gap:10px 12px; align-items:center; }
+#app .ej-trend-name { display:flex; gap:9px; width:auto; font-size:13px; font-weight:400; color:var(--ink); }
+#app .ej-trend-icon { width:28px; height:28px; }
+#app .ej-trend-bar-wrap { grid-column:1/-1; grid-row:2; }
+#app .ej-trend-bar-track { height:4px; border-radius:4px; background:#dfd5d3; box-shadow:none; overflow:hidden; }
+#app .ej-trend-bar-fill { height:100%; border-radius:4px; }
+#app .ej-trend-count { grid-column:2; grid-row:1; width:auto; text-align:right; font-size:14px; font-weight:500; color:var(--ink); font-variant-numeric:tabular-nums; }
+#app .ej-trend-empty { padding:10px 0; font-size:14px; color:#70616c; }
+#app .ej-quote,#app .quote-block { margin:58px 0 0; padding:36px 20px; background:transparent; border:0; border-radius:0; box-shadow:none; rotate:0deg; text-align:center; }
+#app .quote-block::before { content:none; }
+#app .quote-label { color:#70616c; font-size:12px; font-weight:400; letter-spacing:.03em; }
+#app .quote-text { margin:14px 0 0; font-family:var(--font-ui); font-size:23px; font-weight:400; line-height:1.7; font-style:normal; color:#795368; }
+#app .ej-section-state { padding:24px; border-radius:16px; background:#efe9ed; color:#634354; }
+#app .ej-cal-dot-skel,#app .ej-card-skel { background:#e7dfe5; border-radius:12px; }
+#app .ej-cal-skeleton { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+#app .ej-cal-dot-skel { aspect-ratio:1; }
+#app .ej-card-skel { height:96px; }
+#app .ej-mood-icon,#app .ej-card-mood-face,#app .ej-trend-icon { background-position:center; background-size:contain; background-repeat:no-repeat; }
+#app .ej-mood-icon > *,#app .ej-card-mood-face > *,#app .ej-trend-icon > * { display:none; }
+#app .ej-mood-pill:nth-child(1) .ej-mood-icon,#app .ej-trend-row:nth-child(1) .ej-trend-icon,#app .ej-card-mood-orb[style*='#9cae8e'] .ej-card-mood-face { background-image:url('../assets/star/mood-calm.png'); }
+#app .ej-mood-pill:nth-child(2) .ej-mood-icon,#app .ej-trend-row:nth-child(2) .ej-trend-icon,#app .ej-card-mood-orb[style*='#e0a14c'] .ej-card-mood-face { background-image:url('../assets/star/mood-happy.png'); }
+#app .ej-mood-pill:nth-child(3) .ej-mood-icon,#app .ej-trend-row:nth-child(3) .ej-trend-icon,#app .ej-card-mood-orb[style*='#d9a441'] .ej-card-mood-face { background-image:url('../assets/star/mood-anxious.png'); }
+#app .ej-mood-pill:nth-child(4) .ej-mood-icon,#app .ej-trend-row:nth-child(4) .ej-trend-icon,#app .ej-card-mood-orb[style*='#c08aa6'] .ej-card-mood-face { background-image:url('../assets/star/mood-low.png'); }
+#app .ej-mood-pill:nth-child(5) .ej-mood-icon,#app .ej-trend-row:nth-child(5) .ej-trend-icon,#app .ej-card-mood-orb[style*='#c97a5b'] .ej-card-mood-face { background-image:url('../assets/star/mood-irritable.png'); }
+#app .ej-mood-pill:nth-child(6) .ej-mood-icon,#app .ej-trend-row:nth-child(6) .ej-trend-icon,#app .ej-card-mood-orb[style*='#b5a392'] .ej-card-mood-face { background-image:url('../assets/star/mood-other.png'); }
+@media (max-width:1000px) {
+  #app .ej-write-card { gap:26px; }
+  #app .ej-duo { grid-template-columns:1fr 1fr; gap:28px; }
+  #app .ej-section-head { align-items:flex-start; }
+  #app .ej-header { padding-right:240px; }
+  #app .ej-title { font-size:52px; }
+}
+@media (max-width:767px) {
+  #app .ej-page { width:calc(100% - 44px); margin-bottom:36px; }
+  #app .ej-header { min-height:0; padding:35px 0 22px; margin-bottom:20px; }
+  #app .ej-title { font-size:clamp(32px,9.4vw,44px); letter-spacing:.01em; }
+  #app .ej-subtitle { max-width:36ch; font-size:12px; line-height:1.9; margin-top:16px; }
+  #app .ej-header::before,#app .ej-header::after { display:none; }
+  #app .ej-write-card { grid-template-columns:1fr; gap:24px; }
+  #app .ej-mood-legend { font-size:19px; margin-bottom:15px; }
+  #app .ej-mood-bar { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+  #app .ej-mood-pill { min-height:94px; padding:12px 8px; gap:7px; }
+  #app .ej-mood-icon-wrap,#app .ej-mood-icon { width:40px; height:40px; }
+  #app .ej-input-wrap { padding:20px; border-radius:20px; }
+  #app .ej-textarea { min-height:122px; font-size:14px; }
+  #app .ej-duo { grid-template-columns:1fr; gap:36px; margin-top:40px; }
+  #app .ej-section { margin-top:36px; }
+  #app .ej-section-title { font-size:20px; }
+  #app .ej-section-head { gap:12px; margin-bottom:16px; align-items:center; }
+  #app .ej-month-nav { gap:5px; }
+  #app .ej-month-label { min-width:90px; font-size:12px; }
+  #app .ej-nav-btn { width:30px; height:30px; }
+  #app .ej-calendar-card { border-radius:20px; padding:18px; }
+  #app .ej-cal-grid { gap:2px; }
+  #app .ej-cal-day-num { font-size:12px; }
+  #app .ej-journal-card { gap:10px; }
+  #app .ej-card-mood-orb { width:34px; height:34px; }
+  #app .ej-card-mood-face { width:29px; height:29px; }
+  #app .ej-card-text { font-size:13px; }
+  #app .ej-card-feedback { font-size:12px; }
+  #app .ej-card-delete { width:28px; height:28px; }
+  #app .ej-card-tag { font-size:10px; }
+  #app .ej-card-time { display:block; width:100%; }
+  #app .ej-trend-card { padding:22px 18px; border-radius:20px; }
+  #app .ej-trend-list { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 25px; }
+  #app .ej-quote,#app .quote-block { margin-top:35px; padding:24px 4px; }
+  #app .quote-text { font-size:19px; }
+}
+
+.journal-page .footer { --ink-muted:#70616c; }

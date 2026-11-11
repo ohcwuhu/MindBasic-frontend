@@ -1,0 +1,370 @@
+/* 心澄 · 演示站的数据层（**只在接后端时生效**）
+
+   演示站里的十二个内层页是手写静态页，数据都写在 HTML 里（设计演示稿那批示例）。
+   这份脚本给它们一个统一的数据层：页面带 `?live=1`，或在本机登录页登录过
+   （localStorage `feisi_backend=live`）时，`FeisiAPI.live` 为 true，页面自己的脚本
+   就去真后端取数、按页面原来的类名重绘；否则**一个请求都不发**，页面里写好的示例原样保留
+   （所以 `演示图/` 出图、`verify.mjs` / `collisions.mjs` 都不受影响）。
+
+   约定与原前端一致：请求打同源 `/api/v1/...`（由 demo/vite.config.mjs 的代理转到
+   127.0.0.1:8000），token 取 `localStorage.mb_access_token`，响应是统一信封
+   `{ code, message, data, traceId }` —— 这里拆出 `data` 给页面用。 */
+;(function () {
+  'use strict'
+
+  var MODE_KEY = 'feisi_backend'
+
+  var adminPage = /^https?:$/.test(window.location.protocol) && typeof document !== 'undefined' && document.body && document.body.hasAttribute('data-admin-page')
+
+  var live = (function () {
+    try {
+      if (adminPage) return true
+      if (new URLSearchParams(window.location.search).has('live')) return true
+      return window.localStorage.getItem(MODE_KEY) === 'live'
+    } catch (error) {
+      return false
+    }
+  })()
+
+  function token() {
+    try {
+      return window.localStorage.getItem('mb_access_token')
+    } catch (error) {
+      return null
+    }
+  }
+
+  /* 登录页 / 注册页 / 找回密码页自己就在门口：这几页上收到 401 不再往登录页送，免得绕圈 */
+  var DOOR_PAGES = ['login.html', 'register.html', 'forgot-password.html']
+  var expiring = false
+
+  function returnPage() {
+    var next = new URLSearchParams(window.location.search).get('next') || ''
+    var match = /^([\w-]+\.html)(?:\?[^#]*)?(?:#.*)?$/i.exec(next)
+    return match && DOOR_PAGES.indexOf(match[1].toLowerCase()) < 0 ? next : ''
+  }
+
+  function loginUrl() {
+    var here = window.location.pathname.split('/').pop() || 'index.html'
+    return 'login.html?next=' + encodeURIComponent(here + window.location.search + window.location.hash)
+  }
+
+  function accountUrl(path, params) {
+    var next = returnPage()
+    return siteUrl(path, Object.assign({ next: next }, params))
+  }
+
+  if (typeof document !== 'undefined' && DOOR_PAGES.indexOf(window.location.pathname.split('/').pop()) >= 0) {
+    document.addEventListener('DOMContentLoaded', function () {
+      DOOR_PAGES.forEach(function (path) {
+        document.querySelectorAll('a[href="' + path + '"]').forEach(function (link) {
+          link.href = accountUrl(path)
+        })
+      })
+    })
+  }
+
+  /** 401：这份 token 已经不作数了 —— 清掉本地凭证，把人送回登录页并带上要回的那一页 */
+  function sessionExpired() {
+    if (expiring) return
+    expiring = true
+    var here = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase()
+    try {
+      ;['mb_access_token', 'feisi_backend', 'feisi_nickname', 'feisi_role'].forEach(function (key) {
+        window.localStorage.removeItem(key)
+      })
+    } catch (error) {
+      /* localStorage 不可用就忽略 */
+    }
+    if (DOOR_PAGES.indexOf(here) >= 0) return
+    window.location.replace(loginUrl())
+  }
+
+  /** 用当前地址栏作为底稿生成站内链接：只保留跨页真正需要延续的参数。 */
+  function siteUrl(path, params) {
+    var search = new URLSearchParams()
+    try {
+      if (new URLSearchParams(window.location.search).has('live')) search.set('live', '1')
+    } catch (error) {
+      /* 地址栏不可读时就不追加参数 */
+    }
+    if (params) {
+      Object.keys(params).forEach(function (key) {
+        var value = params[key]
+        if (value === null || value === undefined || value === '') search.delete(key)
+        else search.set(key, String(value))
+      })
+    }
+    var query = search.toString()
+    return path + (query ? '?' + query : '')
+  }
+
+  /* 只用 `?live=1` 联调、没有写模式缓存时，普通站内链接也要把 live 带过去。 */
+  if (typeof document !== 'undefined') document.addEventListener('click', function (event) {
+    if (!live) return
+    var anchor = event.target && event.target.closest ? event.target.closest('a[href]') : null
+    if (!anchor || anchor.target || anchor.hasAttribute('download')) return
+    try {
+      var url = new URL(anchor.getAttribute('href'), window.location.href)
+      if (url.origin !== window.location.origin || !/\.html$/i.test(url.pathname)) return
+      if (!url.searchParams.has('live')) url.searchParams.set('live', '1')
+      anchor.setAttribute('href', url.pathname.split('/').pop() + url.search + url.hash)
+    } catch (error) {
+      /* 不合法链接交给浏览器原样处理 */
+    }
+  })
+
+  var refreshing = null
+  function refreshAccessToken() {
+    if (!refreshing) {
+      refreshing = fetch('/api/v1/auth/refresh', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }, body: '{}',
+      }).then(function (response) {
+        return response.json().then(function (payload) {
+          if (!response.ok || payload.code !== 'OK' || !payload.data.accessToken) throw new Error('登录续期失败')
+          window.localStorage.setItem('mb_access_token', payload.data.accessToken)
+          return payload.data.accessToken
+        })
+      }).then(function (value) { refreshing = null; return value }, function (error) { refreshing = null; throw error })
+    }
+    return refreshing
+  }
+
+  function request(method, path, body, retried) {
+    var headers = { 'Content-Type': 'application/json' }
+    var accessToken = token()
+    if (accessToken) headers.Authorization = 'Bearer ' + accessToken
+    var controller = typeof AbortController === 'function' ? new AbortController() : null
+    var timeout = window.setTimeout(function () {
+      if (controller) controller.abort()
+    }, 15000)
+    return fetch('/api/v1' + path, {
+      method: method,
+      headers: headers,
+      credentials: 'include',
+      signal: controller ? controller.signal : undefined,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }).then(function (response) {
+      return response
+        .json()
+        .catch(function () {
+          return {}
+        })
+        .then(function (payload) {
+          if (!response.ok || (payload && payload.code && payload.code !== 'OK')) {
+            if (response.status === 401 && payload.code === 'TOKEN_EXPIRED' && !retried) {
+              var renewal = token() && token() !== accessToken ? Promise.resolve(token()) : refreshAccessToken()
+              return renewal.then(function () {
+                return request(method, path, body, true)
+              }, function (error) {
+                sessionExpired()
+                throw error
+              })
+            }
+            var message = (payload && payload.message) || '请求失败（' + response.status + '）'
+            /* 把状态码与后端的错误码一起带上：调用方要能分辨 401 / 403
+               （例如管理工作台对非管理员要请回首页，而不是只显示一句文案） */
+            var failure = new Error(message)
+            failure.status = response.status
+            failure.code = (payload && payload.code) || ''
+            /* token 失效：不用等用户自己发现，直接送回登录页（页面上的提示只是给来不及跳的情况） */
+            if (response.status === 401) {
+              failure.message = '登录状态已过期，正在带你回登录页…'
+              sessionExpired()
+            } else if (response.status === 403 && adminPage && path.indexOf('/admin/') === 0) {
+              window.location.replace('index.html')
+            }
+            throw failure
+          }
+          return payload.data
+        })
+    })
+      .catch(function (error) {
+        if (error && error.name === 'AbortError') {
+          var timeoutError = new Error('请求超时，请检查网络后重试。')
+          timeoutError.code = 'NETWORK_TIMEOUT'
+          throw timeoutError
+        }
+        throw error
+      })
+      .finally(function () {
+        window.clearTimeout(timeout)
+      })
+  }
+
+  /** 下载也要走同一份 token 与续期逻辑，避免长期打开的页面拿着过期 token 重登录。 */
+  function download(path, filename, retried) {
+    var accessToken = token()
+    return fetch('/api/v1' + path, {
+      headers: accessToken ? { Authorization: 'Bearer ' + accessToken } : {},
+      credentials: 'include',
+    }).then(function (response) {
+      if (response.ok) return response.blob()
+      return response
+        .json()
+        .catch(function () {
+          return {}
+        })
+        .then(function (payload) {
+          if (response.status === 401 && payload.code === 'TOKEN_EXPIRED' && !retried) {
+            var renewal = token() && token() !== accessToken ? Promise.resolve(token()) : refreshAccessToken()
+            return renewal.then(function () {
+              return download(path, filename, true)
+            }, function (error) {
+              sessionExpired()
+              throw error
+            })
+          }
+          var failure = new Error((payload && payload.message) || '下载失败（' + response.status + '）')
+          failure.status = response.status
+          failure.code = (payload && payload.code) || ''
+          if (response.status === 401) sessionExpired()
+          throw failure
+        })
+    }).then(function (blob) {
+      var url = URL.createObjectURL(blob)
+      var link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.setTimeout(function () {
+        URL.revokeObjectURL(url)
+      }, 0)
+      return blob
+    })
+  }
+
+  /** HTML 转义：后端来的文字一律先过这里，再拼进页面 */
+  function esc(value) {
+    return String(value === null || value === undefined ? '' : value).replace(
+      /[&<>"']/g,
+      function (ch) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+      },
+    )
+  }
+
+  /** 后端没有头像时，按 id 稳定选用星星表情与姿态示例插图（八种轮换） */
+  var SYMBOLS = [
+    'star/mood-calm',
+    'star/mood-happy',
+    'star/mood-anxious',
+    'star/mood-low',
+    'star/mood-irritable',
+    'star/mood-other',
+    'star/pose-listen',
+    'star/pose-think',
+  ]
+  function symbol(id) {
+    var index = Math.abs(Number(id) || 0) % SYMBOLS.length
+    return 'assets/' + SYMBOLS[index] + '.png'
+  }
+
+  function dateTime(iso) {
+    if (!iso) return ''
+    var date = new Date(iso)
+    if (isNaN(date.getTime())) return ''
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    })
+  }
+
+  function dateOnly(iso) {
+    if (!iso) return ''
+    var date = new Date(iso)
+    if (isNaN(date.getTime())) return ''
+    return (
+      date.getFullYear() +
+      ' · ' +
+      String(date.getMonth() + 1).padStart(2, '0') +
+      ' · ' +
+      String(date.getDate()).padStart(2, '0')
+    )
+  }
+
+  /** 出错时在容器里放一条与页面同风格的提示（不挡住原来的内容） */
+  function fail(container, error) {
+    if (!container) return
+    container.innerHTML =
+      '<li class="note" style="padding:16px 18px;font-size:var(--fs-small);color:#7d3a4a">' +
+      esc(error && error.message ? error.message : error) +
+      '</li>'
+  }
+
+  /** 空态的内芯：与 ui.css 的 `.empty` 同一套 */
+  function emptyInner(title, hint) {
+    return (
+      '<img src="assets/star/pose-sleep.png" width="320" height="320" alt="" aria-hidden="true" />' +
+      '<p class="empty__title">' +
+      esc(title) +
+      '</p><p class="empty__body">' +
+      esc(hint || '') +
+      '</p>'
+    )
+  }
+
+  function empty(title, hint) {
+    return '<div class="empty">' + emptyInner(title, hint) + '</div>'
+  }
+
+  /** 空态（列表版）：`.empty` 是一块 div，塞进 `ul` 之前得先有个 `li` 的壳 */
+  function emptyItem(title, hint) {
+    return '<li class="empty">' + emptyInner(title, hint) + '</li>'
+  }
+
+  /** 一行小字：放在动作旁边说清楚发生了什么（`.anote` 那一套） */
+  function note(text, danger) {
+    return '<span class="anote' + (danger ? ' anote--warn' : '') + '">' + esc(text) + '</span>'
+  }
+
+  /** 分 → 「¥99」：后端所有金额都是分 */
+  function money(cents) {
+    var value = (Number(cents) || 0) / 100
+    var negative = value < 0
+    var text = (Math.abs(value) % 1 === 0 ? String(Math.abs(value)) : Math.abs(value).toFixed(2))
+    return (negative ? '-' : '') + '¥' + text
+  }
+
+  window.FeisiAPI = {
+    live: live,
+    refreshAccessToken: refreshAccessToken,
+    expireSession: sessionExpired,
+    url: siteUrl,
+    loginUrl: loginUrl,
+    returnPage: returnPage,
+    accountUrl: accountUrl,
+    get: function (path) {
+      return request('GET', path)
+    },
+    post: function (path, body) {
+      return request('POST', path, body)
+    },
+    put: function (path, body) {
+      return request('PUT', path, body)
+    },
+    patch: function (path, body) {
+      return request('PATCH', path, body)
+    },
+    del: function (path) {
+      return request('DELETE', path)
+    },
+    download: download,
+    esc: esc,
+    symbol: symbol,
+    dateTime: dateTime,
+    dateOnly: dateOnly,
+    fail: fail,
+    note: note,
+    money: money,
+    empty: empty,
+    emptyItem: emptyItem,
+  }
+})()

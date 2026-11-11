@@ -1,0 +1,115 @@
+/* 首页：书写感标题、留白与山景。控件沿用共享业务入口。 */
+body.unseen-home { background:#f7f5f4; }
+.unseen-home { --page-max:1280px; --gutter:40px; }
+.unseen-home .hero { padding:56px 0 64px; background:transparent; position:relative; }
+.unseen-home .hero::before,.unseen-home .hero::after { content:none; }
+.unseen-home .hero__inner { display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center; }
+.unseen-home .hero__copy { padding:0 0 20px 18px; min-width:0; }
+.hero__eyebrow { font-size:13px; letter-spacing:.18em; color:#786a74; margin-bottom:26px; }
+.unseen-home .hero__title { font-family:'Ma Shan Zheng','LXGW WenKai',cursive; font-weight:400; font-size:clamp(60px,6.7vw,92px); line-height:1.22; letter-spacing:.025em; color:#3d323b; text-wrap:nowrap; }
+.unseen-home .hero__title span { display:block; }
+.unseen-home .hero__title span + span { color:#795368; padding-left:.43em; margin-top:8px; }
+.unseen-home .hero__lede { margin:27px 0 30px; color:#786a74; font-size:15px; line-height:2; letter-spacing:.035em; }
+.hero__actions { display:flex; flex-wrap:wrap; align-items:center; gap:26px; }
+.unseen-home .home-primary { min-height:50px; padding:12px 23px; gap:26px; font-size:14px; font-weight:400; box-shadow:none; }
+.home-primary span { font-size:22px; line-height:1; }
+.home-text-link { display:inline-flex; align-items:center; gap:12px; color:#634354; font-size:14px; line-height:1.8; padding-block:9px; }
+.home-text-link:hover { text-decoration:underline; }
+.home-text-link span { transition:transform 180ms; }
+.home-text-link:hover span { transform:translate(3px,-2px); }
+.hero__visual { position:relative; margin-right:6px; }
+.unseen-home .hero__scene { display:block; position:relative; inset:auto; z-index:auto; height:520px; overflow:hidden; border-radius:260px 260px 28px 28px; background:#ead6df; }
+.unseen-home .hero__scene img { width:100%; height:100%; max-width:none; object-fit:cover; object-position:50% 50%; transform:scale(1.02); }
+.hero__companion { position:absolute; left:-36px; bottom:-23px; width:180px; height:128px; object-fit:contain; pointer-events:none; filter:drop-shadow(0 8px 12px #7953680e); }
+.home-services { padding-top:35px; padding-bottom:20px; }
+.home-section-heading { padding-bottom:30px; }
+.home-section-heading h2 { font-family:var(--font-ui); font-size:29px; line-height:1.5; letter-spacing:.025em; }
+.home-section-heading p { margin-top:10px; color:#786a74; font-size:14px; }
+.home-services__grid { display:grid; grid-template-columns:1.12fr 1fr; gap:20px; }
+.service-card { position:relative; display:flex; align-items:center; justify-content:space-between; min-width:0; gap:12px; padding:34px 32px; border:1px solid transparent; border-radius:24px; overflow:hidden; transition:transform 220ms,box-shadow 220ms,border-color 220ms; }
+.service-card:hover { transform:translateY(-4px); border-color:#d4c3cc; box-shadow:0 12px 32px #79536809; }
+.service-card:active { transform:translateY(-1px); }
+.service-card--conversation { background:#eae3e9; }
+.service-card--journal { background:#eee8e2; }
+.service-card--coaches { background:#e9edeb; }
+.service-card--articles { background:#ece9ef; }
+.service-card__copy { position:relative; z-index:1; flex:1; }
+.service-card__label { font-size:12px; color:#786a74; letter-spacing:.07em; }
+.service-card h3 { font-family:var(--font-ui); font-size:26px; line-height:1.55; letter-spacing:.01em; margin:15px 0 12px; }
+.service-card p { font-size:13px; color:#786a74; line-height:1.9; }
+.service-card__action { display:inline-flex; align-items:center; gap:24px; font-size:13px; margin-top:25px; color:#634354; }
+.service-card__action span { font-size:20px; transition:transform 180ms; }
+.service-card:hover .service-card__action span { transform:translate(3px,-3px); }
+.service-card img { width:35%; max-width:190px; height:215px; object-fit:contain; flex-shrink:0; align-self:flex-end; }
+.service-card--coaches,.service-card--articles { padding-block:27px; }
+.service-card--coaches h3,.service-card--articles h3 { font-size:22px; margin-top:12px; }
+.service-card--coaches img,.service-card--articles img { height:150px; width:28%; }
+.home-pause { display:flex; justify-content:center; align-items:center; gap:44px; padding-block:70px 80px; }
+.home-pause > img { width:145px; height:175px; object-fit:contain; }
+.home-pause h2 { font-family:'Ma Shan Zheng','LXGW WenKai',cursive; font-size:37px; font-weight:400; line-height:1.5; letter-spacing:.02em; }
+.home-pause p { color:#786a74; font-size:14px; margin:12px 0 8px; }
+.unseen-home .footer { background:#efe9ec; border-top:0; padding-block:32px; }
+.unseen-home .footer__inner { gap:10px; }
+.unseen-home .footer__hotline { font-size:13px; }
+.unseen-home .footer__note,.unseen-home .footer__hint,.unseen-home .footer__links { font-size:12px; }
+@media (prefers-reduced-motion:no-preference) {
+  .hero__copy { animation:home-enter 700ms both; }
+  .hero__visual { animation:home-enter 900ms 100ms both; }
+  @keyframes home-enter { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+}
+@media (min-width:1600px) {
+  .unseen-home .hero { padding-top:70px; padding-bottom:85px; }
+  .unseen-home .hero__scene { height:580px; }
+}
+@media (max-width:1100px) {
+  .unseen-home .hero__inner { gap:24px; }
+  .unseen-home .hero__copy { padding-left:0; }
+  .unseen-home .hero__scene { height:470px; }
+  .unseen-home .hero__title { font-size:clamp(55px,6.6vw,76px); }
+  .hero__actions { gap:16px; }
+  .service-card { padding:26px; }
+  .service-card h3 { font-size:23px; }
+  .service-card img { width:30%; }
+}
+@media (max-width:767px) {
+  .unseen-home { --gutter:22px; }
+  .unseen-home .hero { padding:38px 0 20px; }
+  .unseen-home .hero__inner { grid-template-columns:1fr; gap:29px; }
+  .unseen-home .hero__copy { padding:0 5px; }
+  .hero__eyebrow { margin-bottom:18px; font-size:11px; letter-spacing:.14em; }
+  .unseen-home .hero__title { font-size:clamp(45px,14.7vw,78px); line-height:1.18; }
+  .unseen-home .hero__title span + span { margin-top:8px; }
+  .unseen-home .hero__lede { font-size:13px; margin:20px 0 21px; line-height:1.9; }
+  .hero__actions { gap:20px; }
+  .unseen-home .home-primary { padding:10px 18px; min-height:44px; font-size:12px; gap:20px; }
+  .hero__actions .home-text-link { font-size:12px; gap:9px; }
+  .hero__visual { margin:0 0 0 30px; }
+  .unseen-home .hero__scene { height:340px; border-radius:180px 180px 22px 22px; }
+  .unseen-home .hero__scene img { object-position:50% 48%; }
+  .hero__companion { width:130px; height:95px; left:-33px; bottom:-15px; }
+  .home-services { padding-top:47px; }
+  .home-section-heading { padding-bottom:22px; }
+  .home-section-heading h2 { font-size:22px; }
+  .home-section-heading p { font-size:12px; margin-top:7px; }
+  .home-services__grid { grid-template-columns:1fr; gap:14px; }
+  .service-card { padding:27px 23px; border-radius:20px; }
+  .service-card h3 { font-size:21px; }
+  .service-card p { font-size:12px; }
+  .service-card img { width:30%; height:170px; }
+  .service-card--coaches,.service-card--articles { padding-block:24px; }
+  .service-card--coaches h3,.service-card--articles h3 { font-size:20px; }
+  .service-card--coaches img,.service-card--articles img { height:125px; width:25%; }
+  .service-card__action { margin-top:18px; }
+  .home-pause { padding-block:44px 55px; gap:17px; align-items:center; }
+  .home-pause > img { width:76px; height:115px; }
+  .home-pause > div { flex:1; }
+  .home-pause h2 { font-size:27px; text-wrap:balance; }
+  .home-pause p { font-size:12px; margin-top:8px; }
+  .home-pause .home-text-link { font-size:12px; }
+  .unseen-home .footer { padding-block:27px; }
+  .unseen-home .footer__hint { display:block; margin-top:7px; line-height:1.8; }
+}
+@media (max-width:360px) {
+  .hero__actions { gap:12px; }
+  .unseen-home .home-primary { padding-inline:15px; gap:12px; }
+}
